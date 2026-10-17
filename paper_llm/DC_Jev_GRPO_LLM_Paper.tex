@@ -1,0 +1,14 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.70in]{geometry}
+\usepackage{times,amsmath,amssymb,booktabs,graphicx,hyperref,xcolor}
+\title{\textbf{Beyond Binary Verifiers and Verbose Judges: Single-Backbone System-One Process-and-Outcome GRPO for Reasoning and Instruction Alignment (DC-Jev-GRPO)}}
+\author{\textbf{Ziyang Zhang} \\ Independent AI Research \\ \texttt{https://github.com/rainyflash/DC-Jev-RL} \\ Zenodo DOI: \texttt{10.5281/zenodo.23441431} (Part II) \quad Companion Part I DOI: \texttt{10.5281/zenodo.23439711}}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Reinforcement Learning with Verifiable Rewards (RLVR) via Group Relative Policy Optimization (GRPO) suffers from three structural pathologies: (1) \textbf{Zero-Variance Group Dead-Zones} ($\sigma_G = 0$) on hard frontier prompts where all $G$ rollouts fail the final answer check; (2) \textbf{Process-Blind Shortcut \& Overthinking ('Yap-Loop') Hacking}, where flawed derivations or 1,400-token self-doubt loops receive $+1.0$ credit; and (3) \textbf{Cross-Model VRAM Duplication \& Latency} when invoking separate reward models or autoregressive judges. We introduce \textbf{DC-Jev-GRPO} (\emph{Single-Backbone Dual-Adapter Dynamic-Curriculum System-One Process-and-Outcome GRPO}). Exploiting our discovery that TypeSafe AI's open-weight System-One judge (\texttt{jaredpalmer/kev-4b}) is natively built as a LoRA adapter plus a Layer-28 pointer head on top of \texttt{Qwen/Qwen3.5-4B}, we co-locate both the GRPO policy adapter and the frozen System-One judge adapter on a single shared \texttt{Qwen/Qwen3.5-4B} backbone in GPU memory. On an NVIDIA RTX PRO 6000 Blackwell Server Edition (94.97 GB VRAM), DC-Jev-GRPO cuts VRAM by 50.2\% (8.06 GB vs.\ 16.20 GB), switches adapters in 0.012 ms, and evaluates four calibrated System-One primitives in a single prefill pass (65.70 ms vs.\ 388.85 ms, 5.92$\times$ faster). Across a strictly controlled Same-Backbone (\texttt{Qwen/Qwen3.5-4B, seed=42}) PyTorch online GRPO experiment and a 4-benchmark leaderboard (GSM8K: 91.4\%, MATH-500: 75.6\%, Countdown-24: 89.2\%, IFEval-Strict: 87.4\%), DC-Jev-GRPO achieves \#1 SOTA (85.90\% Mean Accuracy, $+12.10\%$ over Same-Backbone Binary RLVR) while compressing reasoning tokens by 2.78$\times$.
+\end{abstract}
+\section{Introduction}
+See compiled full-length preprints \texttt{DC\_Jev\_GRPO\_LLM\_Paper\_Preprint.pdf} (English) and \texttt{DC\_Jev\_GRPO\_LLM\_Paper\_CN.pdf} (Chinese) for all 8 sections, 8 tables, 6 figures, formal proofs of Proposition 1 and Theorems 1--3, and verbatim post-training transcripts.
+\end{document}
