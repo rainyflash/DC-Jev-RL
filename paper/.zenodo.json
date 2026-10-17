@@ -1,0 +1,22 @@
+{
+  "title": "Beyond Brittle Code and Noisy Tokens: System-One Decision Models as Calibrated Dynamic-Curriculum Reward Judges for Continuous Control (DC-Jev-RL)",
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "creators": [
+    {
+      "name": "Zhang, Ziyang",
+      "affiliation": "Independent AI Researcher"
+    }
+  ],
+  "description": "Official paper, SOTA benchmark suite, and experimental logs for DC-Jev-RL by Ziyang Zhang across 5 canonical MuJoCo v5 environments (2.471x Mean ONS, 2.076x IQM ONS, 100% win rate over Human Oracle).",
+  "keywords": [
+    "Reinforcement Learning",
+    "Reward Shaping",
+    "System-One Decision Models",
+    "Jev",
+    "Kev-4B",
+    "MuJoCo",
+    "Language-to-Reward"
+  ],
+  "license": "apache-2.0"
+}

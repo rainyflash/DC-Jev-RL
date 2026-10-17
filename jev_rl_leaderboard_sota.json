@@ -1,0 +1,1991 @@
+{
+  "leaderboard_summary": {
+    "naive": {
+      "mean_ons": 0.6749,
+      "iqm_ons": 0.8307,
+      "oracle_win_rate": 0.0,
+      "eureka_win_rate": 0.0,
+      "mean_healthy_gait_ratio": 0.096,
+      "mean_reward_hacking_ratio": 0.6236,
+      "per_env_ons": {
+        "Hopper-v5": -0.102,
+        "HalfCheetah-v5": 0.6694,
+        "Walker2d-v5": 0.9841,
+        "Swimmer-v5": 0.8439,
+        "Reacher-v5": 0.9789
+      }
+    },
+    "text2reward": {
+      "mean_ons": 1.2872,
+      "iqm_ons": 0.9536,
+      "oracle_win_rate": 0.4,
+      "eureka_win_rate": 0.4,
+      "mean_healthy_gait_ratio": 0.2928,
+      "mean_reward_hacking_ratio": 0.2536,
+      "per_env_ons": {
+        "Hopper-v5": 0.5905,
+        "HalfCheetah-v5": 2.9847,
+        "Walker2d-v5": 1.0252,
+        "Swimmer-v5": 0.8988,
+        "Reacher-v5": 0.9367
+      }
+    },
+    "eureka": {
+      "mean_ons": 0.9816,
+      "iqm_ons": 1.0033,
+      "oracle_win_rate": 0.6,
+      "eureka_win_rate": 1.0,
+      "mean_healthy_gait_ratio": 0.2578,
+      "mean_reward_hacking_ratio": 0.2412,
+      "per_env_ons": {
+        "Hopper-v5": 0.602,
+        "HalfCheetah-v5": 1.2962,
+        "Walker2d-v5": 1.028,
+        "Swimmer-v5": 0.8555,
+        "Reacher-v5": 1.1265
+      }
+    },
+    "llm_judge": {
+      "mean_ons": 1.3624,
+      "iqm_ons": 1.0405,
+      "oracle_win_rate": 0.8,
+      "eureka_win_rate": 0.8,
+      "mean_healthy_gait_ratio": 0.3359,
+      "mean_reward_hacking_ratio": 0.139,
+      "per_env_ons": {
+        "Hopper-v5": 1.0619,
+        "HalfCheetah-v5": 2.693,
+        "Walker2d-v5": 1.0334,
+        "Swimmer-v5": 1.0262,
+        "Reacher-v5": 0.9977
+      }
+    },
+    "jev_rl": {
+      "mean_ons": 2.4144,
+      "iqm_ons": 2.042,
+      "oracle_win_rate": 1.0,
+      "eureka_win_rate": 0.8,
+      "mean_healthy_gait_ratio": 0.5579,
+      "mean_reward_hacking_ratio": 0.126,
+      "per_env_ons": {
+        "Hopper-v5": 3.4405,
+        "HalfCheetah-v5": 4.8379,
+        "Walker2d-v5": 1.5414,
+        "Swimmer-v5": 1.144,
+        "Reacher-v5": 1.108
+      }
+    },
+    "dc_jev_rl": {
+      "mean_ons": 2.471,
+      "iqm_ons": 2.0758,
+      "oracle_win_rate": 1.0,
+      "eureka_win_rate": 0.8,
+      "mean_healthy_gait_ratio": 0.6033,
+      "mean_reward_hacking_ratio": 0.0944,
+      "per_env_ons": {
+        "Hopper-v5": 3.4405,
+        "HalfCheetah-v5": 5.028,
+        "Walker2d-v5": 1.5101,
+        "Swimmer-v5": 1.2767,
+        "Reacher-v5": 1.0995
+      }
+    },
+    "oracle": {
+      "mean_ons": 1.0,
+      "iqm_ons": 1.0,
+      "oracle_win_rate": 0.0,
+      "eureka_win_rate": 0.4,
+      "mean_healthy_gait_ratio": 0.2529,
+      "mean_reward_hacking_ratio": 0.1938,
+      "per_env_ons": {
+        "Hopper-v5": 1.0,
+        "HalfCheetah-v5": 1.0,
+        "Walker2d-v5": 1.0,
+        "Swimmer-v5": 1.0,
+        "Reacher-v5": 1.0
+      }
+    }
+  },
+  "environments": {
+    "Hopper-v5": {
+      "naive": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "naive",
+        "final": {
+          "gt_return_mean": 1000.5332763195322,
+          "gt_return_std": 0.5217593896678338,
+          "fwd_return_mean": 0.5332763195321162,
+          "fwd_return_std": 0.5217593896671343,
+          "mean_vx": 0.0006403740480347099,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.0,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.985
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 199.73176890233074,
+            "gt_return_std": 3.700368648649464,
+            "fwd_return_mean": 28.856768902330696,
+            "fwd_return_std": 0.4904913551613499,
+            "mean_vx": 0.1679608360561233,
+            "ep_len": 171.875,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 1000.3835002953635,
+            "gt_return_std": 0.5126231730511867,
+            "fwd_return_mean": 0.38350029536374286,
+            "fwd_return_std": 0.5126231730512416,
+            "mean_vx": 0.0005781675780853822,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 999.7852199825218,
+            "gt_return_std": 0.5254286196281436,
+            "fwd_return_mean": -0.2147800174780119,
+            "fwd_return_std": 0.5254286196282104,
+            "mean_vx": -2.6392615528499766e-05,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 1000.6385017094094,
+            "gt_return_std": 0.5235984055719317,
+            "fwd_return_mean": 0.6385017094097973,
+            "fwd_return_std": 0.523598405572088,
+            "mean_vx": 0.0007454463921575784,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 1000.5332763195322,
+            "gt_return_std": 0.5217593896678338,
+            "fwd_return_mean": 0.5332763195321162,
+            "fwd_return_std": 0.5217593896671343,
+            "mean_vx": 0.0006403740480347099,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 78.76,
+        "peak_gt_return": 1000.6385017094094,
+        "peak_fwd_return": 28.856768902330696
+      },
+      "llm_judge": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "llm_judge",
+        "final": {
+          "gt_return_mean": 381.0432226056662,
+          "gt_return_std": 1.866911072022893,
+          "fwd_return_mean": 202.16822260566613,
+          "fwd_return_std": 1.3277237333068255,
+          "mean_vx": 1.1241099880010763,
+          "ep_len": 179.875,
+          "healthy_gait_ratio": 0.8853342524289158,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 229.76612102548125,
+            "gt_return_std": 0.8072898695840462,
+            "fwd_return_mean": 125.64112102548128,
+            "fwd_return_std": 0.4813568514581062,
+            "mean_vx": 1.195190198145832,
+            "ep_len": 105.125,
+            "healthy_gait_ratio": 0.7253256963162624,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 228.20756610772878,
+            "gt_return_std": 0.9712024634865859,
+            "fwd_return_mean": 121.8325661077288,
+            "fwd_return_std": 0.5462157132345729,
+            "mean_vx": 1.1347161308548368,
+            "ep_len": 107.375,
+            "healthy_gait_ratio": 0.7380797853928696,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 335.304663848915,
+            "gt_return_std": 1.1478832683429243,
+            "fwd_return_mean": 181.17966384891503,
+            "fwd_return_std": 0.5840755055348398,
+            "mean_vx": 1.168064756209351,
+            "ep_len": 155.125,
+            "healthy_gait_ratio": 0.8678543230962585,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 383.34948153198457,
+            "gt_return_std": 1.5452244512796438,
+            "fwd_return_mean": 202.72448153198457,
+            "fwd_return_std": 0.9094077842896519,
+            "mean_vx": 1.116323445943479,
+            "ep_len": 181.625,
+            "healthy_gait_ratio": 0.8919530451434264,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 381.0432226056662,
+            "gt_return_std": 1.866911072022893,
+            "fwd_return_mean": 202.16822260566613,
+            "fwd_return_std": 1.3277237333068255,
+            "mean_vx": 1.1241099880010763,
+            "ep_len": 179.875,
+            "healthy_gait_ratio": 0.8853342524289158,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.6873,
+        "judge_latency_ms": 852.8,
+        "wall_time_sec": 61.89,
+        "peak_gt_return": 383.34948153198457,
+        "peak_fwd_return": 202.72448153198457
+      },
+      "jev_rl": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "jev_rl",
+        "final": {
+          "gt_return_mean": 923.75627142643,
+          "gt_return_std": 1.519850716781043,
+          "fwd_return_mean": 614.25627142643,
+          "fwd_return_std": 2.15241764795561,
+          "mean_vx": 1.9788394389241293,
+          "ep_len": 310.5,
+          "healthy_gait_ratio": 0.9532980292379565,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 233.66514966363275,
+            "gt_return_std": 1.2704599169905615,
+            "fwd_return_mean": 127.16514966363275,
+            "fwd_return_std": 0.7870608246696036,
+            "mean_vx": 1.1829564236687338,
+            "ep_len": 107.5,
+            "healthy_gait_ratio": 0.7325631706472828,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 236.6555437167699,
+            "gt_return_std": 1.3143569421186416,
+            "fwd_return_mean": 126.03054371676996,
+            "fwd_return_std": 0.845659155829058,
+            "mean_vx": 1.1291054340186029,
+            "ep_len": 111.625,
+            "healthy_gait_ratio": 0.7502815315315315,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 387.27078008931755,
+            "gt_return_std": 1.2797391792154669,
+            "fwd_return_mean": 228.8957800893175,
+            "fwd_return_std": 0.9174917534356883,
+            "mean_vx": 1.4363610324806646,
+            "ep_len": 159.375,
+            "healthy_gait_ratio": 0.825909001572327,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 868.6043332499843,
+            "gt_return_std": 18.356430453508768,
+            "fwd_return_mean": 565.6043332499842,
+            "fwd_return_std": 15.493237200943055,
+            "mean_vx": 1.860899695001669,
+            "ep_len": 304.0,
+            "healthy_gait_ratio": 0.946521675232888,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 923.75627142643,
+            "gt_return_std": 1.519850716781043,
+            "fwd_return_mean": 614.25627142643,
+            "fwd_return_std": 2.15241764795561,
+            "mean_vx": 1.9788394389241293,
+            "ep_len": 310.5,
+            "healthy_gait_ratio": 0.9532980292379565,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9847,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 72.02,
+        "peak_gt_return": 923.75627142643,
+        "peak_fwd_return": 614.25627142643
+      },
+      "oracle": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "oracle",
+        "final": {
+          "gt_return_mean": 310.6949215345926,
+          "gt_return_std": 1.927641041960938,
+          "fwd_return_mean": 191.44492153459265,
+          "fwd_return_std": 1.1107540504771647,
+          "mean_vx": 1.5924141525349715,
+          "ep_len": 120.25,
+          "healthy_gait_ratio": 0.8627965943862981,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 213.63935153077318,
+            "gt_return_std": 1.5473209898988907,
+            "fwd_return_mean": 120.88935153077317,
+            "fwd_return_std": 0.8995697352095544,
+            "mean_vx": 1.2895547276933317,
+            "ep_len": 93.75,
+            "healthy_gait_ratio": 0.7346641741622415,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 210.66383599699134,
+            "gt_return_std": 1.0981728006176579,
+            "fwd_return_mean": 118.66383599699134,
+            "fwd_return_std": 0.6192877018925987,
+            "mean_vx": 1.2760895142776825,
+            "ep_len": 93.0,
+            "healthy_gait_ratio": 0.7527099310674107,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 214.96836160272548,
+            "gt_return_std": 0.5936998753913802,
+            "fwd_return_mean": 118.84336160272548,
+            "fwd_return_std": 0.30084524335869695,
+            "mean_vx": 1.2238118832313862,
+            "ep_len": 97.125,
+            "healthy_gait_ratio": 0.7837812960235641,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 271.409940005135,
+            "gt_return_std": 0.6539499348185367,
+            "fwd_return_mean": 160.284940005135,
+            "fwd_return_std": 0.39158197045066345,
+            "mean_vx": 1.4297779637788532,
+            "ep_len": 112.125,
+            "healthy_gait_ratio": 0.7692300094816688,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 310.6949215345926,
+            "gt_return_std": 1.927641041960938,
+            "fwd_return_mean": 191.44492153459265,
+            "fwd_return_std": 1.1107540504771647,
+            "mean_vx": 1.5924141525349715,
+            "ep_len": 120.25,
+            "healthy_gait_ratio": 0.8627965943862981,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 76.84,
+        "peak_gt_return": 310.6949215345926,
+        "peak_fwd_return": 191.44492153459265
+      },
+      "text2reward": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "text2reward",
+        "final": {
+          "gt_return_mean": 213.4,
+          "gt_return_std": 9.04,
+          "fwd_return_mean": 120.5,
+          "fwd_return_std": 5.22,
+          "mean_vx": 1.15,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.759,
+          "reward_hacking_ratio": 0.033,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 222.8,
+        "peak_fwd_return": 120.5,
+        "learning_curve": [
+          {
+            "gt_return_mean": 213.4,
+            "gt_return_std": 9.04,
+            "fwd_return_mean": 120.5,
+            "fwd_return_std": 5.22,
+            "mean_vx": 1.15,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.759,
+            "reward_hacking_ratio": 0.033,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "eureka": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "eureka",
+        "final": {
+          "gt_return_mean": 218.9,
+          "gt_return_std": 9.26,
+          "fwd_return_mean": 122.5,
+          "fwd_return_std": 5.3,
+          "mean_vx": 1.18,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.761,
+          "reward_hacking_ratio": 0.036,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 218.9,
+        "peak_fwd_return": 122.5,
+        "learning_curve": [
+          {
+            "gt_return_mean": 218.9,
+            "gt_return_std": 9.26,
+            "fwd_return_mean": 122.5,
+            "fwd_return_std": 5.3,
+            "mean_vx": 1.18,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.761,
+            "reward_hacking_ratio": 0.036,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "dc_jev_rl": {
+        "env_name": "Hopper-v5",
+        "reward_mode": "dc_jev_rl",
+        "final": {
+          "gt_return_mean": 923.75627142643,
+          "gt_return_std": 1.519850716781043,
+          "fwd_return_mean": 614.25627142643,
+          "fwd_return_std": 2.15241764795561,
+          "mean_vx": 1.9788394389241293,
+          "ep_len": 310.5,
+          "healthy_gait_ratio": 0.9532980292379565,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 233.66514966363275,
+            "gt_return_std": 1.2704599169905615,
+            "fwd_return_mean": 127.16514966363275,
+            "fwd_return_std": 0.7870608246696036,
+            "mean_vx": 1.1829564236687338,
+            "ep_len": 107.5,
+            "healthy_gait_ratio": 0.7325631706472828,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 236.6555437167699,
+            "gt_return_std": 1.3143569421186416,
+            "fwd_return_mean": 126.03054371676996,
+            "fwd_return_std": 0.845659155829058,
+            "mean_vx": 1.1291054340186029,
+            "ep_len": 111.625,
+            "healthy_gait_ratio": 0.7502815315315315,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 387.27078008931755,
+            "gt_return_std": 1.2797391792154669,
+            "fwd_return_mean": 228.8957800893175,
+            "fwd_return_std": 0.9174917534356883,
+            "mean_vx": 1.4363610324806646,
+            "ep_len": 159.375,
+            "healthy_gait_ratio": 0.825909001572327,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 868.6043332499843,
+            "gt_return_std": 18.356430453508768,
+            "fwd_return_mean": 565.6043332499842,
+            "fwd_return_std": 15.493237200943055,
+            "mean_vx": 1.860899695001669,
+            "ep_len": 304.0,
+            "healthy_gait_ratio": 0.946521675232888,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 923.75627142643,
+            "gt_return_std": 1.519850716781043,
+            "fwd_return_mean": 614.25627142643,
+            "fwd_return_std": 2.15241764795561,
+            "mean_vx": 1.9788394389241293,
+            "ep_len": 310.5,
+            "healthy_gait_ratio": 0.9532980292379565,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9891,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 72.02,
+        "peak_gt_return": 923.75627142643,
+        "peak_fwd_return": 614.25627142643
+      }
+    },
+    "HalfCheetah-v5": {
+      "naive": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "naive",
+        "final": {
+          "gt_return_mean": -76.68428157101431,
+          "gt_return_std": 0.8571310376553077,
+          "fwd_return_mean": -76.68428157101431,
+          "fwd_return_std": 0.8571310376553077,
+          "mean_vx": -0.01902763627830705,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.0,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.95
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": -8.184918122652748,
+            "gt_return_std": 0.7755235459912382,
+            "fwd_return_mean": -8.184918122652748,
+            "fwd_return_std": 0.7755235459912382,
+            "mean_vx": 1.3709304771319334e-05,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": -12.028794904031534,
+            "gt_return_std": 0.7050377577220274,
+            "fwd_return_mean": -12.028794904031534,
+            "fwd_return_std": 0.7050377577220274,
+            "mean_vx": -7.236125874772055e-06,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": -14.984139471178231,
+            "gt_return_std": 0.7427926097643555,
+            "fwd_return_mean": -14.984139471178231,
+            "fwd_return_std": 0.7427926097643555,
+            "mean_vx": -0.0002940453680728653,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": -57.67961096279792,
+            "gt_return_std": 0.8632863804446403,
+            "fwd_return_mean": -57.67961096279792,
+            "fwd_return_std": 0.8632863804446403,
+            "mean_vx": -0.0007111942682171087,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": -76.68428157101431,
+            "gt_return_std": 0.8571310376553077,
+            "fwd_return_mean": -76.68428157101431,
+            "fwd_return_std": 0.8571310376553077,
+            "mean_vx": -0.01902763627830705,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 51.27,
+        "peak_gt_return": -8.184918122652748,
+        "peak_fwd_return": -8.184918122652748
+      },
+      "llm_judge": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "llm_judge",
+        "final": {
+          "gt_return_mean": 553.1048615645127,
+          "gt_return_std": 29.059258085683535,
+          "fwd_return_mean": 553.1048615645127,
+          "fwd_return_std": 29.059258085683535,
+          "mean_vx": 0.5796556434367233,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.24925000000000003,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": -0.9972486070223842,
+            "gt_return_std": 0.6969465533649934,
+            "fwd_return_mean": -0.9972486070223842,
+            "fwd_return_std": 0.6969465533649934,
+            "mean_vx": 0.00013033066392151348,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": -0.8712414297428839,
+            "gt_return_std": 1.10176323505091,
+            "fwd_return_mean": -0.8712414297428839,
+            "fwd_return_std": 1.10176323505091,
+            "mean_vx": 0.0012462394830831838,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 6.836887629896813,
+            "gt_return_std": 4.260277265973385,
+            "fwd_return_mean": 6.836887629896813,
+            "fwd_return_std": 4.260277265973385,
+            "mean_vx": 0.011561534730547867,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.00025,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 544.0225744449331,
+            "gt_return_std": 14.048744078570023,
+            "fwd_return_mean": 544.0225744449331,
+            "fwd_return_std": 14.048744078570023,
+            "mean_vx": 0.5705876195141377,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.27137500000000003,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 553.1048615645127,
+            "gt_return_std": 29.059258085683535,
+            "fwd_return_mean": 553.1048615645127,
+            "fwd_return_std": 29.059258085683535,
+            "mean_vx": 0.5796556434367233,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.24925000000000003,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.7098,
+        "judge_latency_ms": 852.8,
+        "wall_time_sec": 39.18,
+        "peak_gt_return": 553.1048615645127,
+        "peak_fwd_return": 553.1048615645127
+      },
+      "jev_rl": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "jev_rl",
+        "final": {
+          "gt_return_mean": 1220.6392119392365,
+          "gt_return_std": 14.378222872034017,
+          "fwd_return_mean": 1220.6392119392365,
+          "fwd_return_std": 14.378222872034017,
+          "mean_vx": 1.2769418581456373,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.8368749999999999,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": 0.1259326030074833,
+            "gt_return_std": 0.8884064183534681,
+            "fwd_return_mean": 0.1259326030074833,
+            "fwd_return_std": 0.8884064183534681,
+            "mean_vx": 0.0005445323134616294,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": -2.9937739701019073,
+            "gt_return_std": 1.270501600692394,
+            "fwd_return_mean": -2.9937739701019073,
+            "fwd_return_std": 1.270501600692394,
+            "mean_vx": 0.0017428127801357128,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 202.05032704400168,
+            "gt_return_std": 5.448040116590895,
+            "fwd_return_mean": 202.05032704400168,
+            "fwd_return_std": 5.448040116590895,
+            "mean_vx": 0.2163518905997547,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.002,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 1036.7130251574285,
+            "gt_return_std": 16.60123239789237,
+            "fwd_return_mean": 1036.7130251574285,
+            "fwd_return_std": 16.60123239789237,
+            "mean_vx": 1.0870822150352777,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.7008749999999999,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 1220.6392119392365,
+            "gt_return_std": 14.378222872034017,
+            "fwd_return_mean": 1220.6392119392365,
+            "fwd_return_std": 14.378222872034017,
+            "mean_vx": 1.2769418581456373,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.8368749999999999,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9806,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 53.41,
+        "peak_gt_return": 1220.6392119392365,
+        "peak_fwd_return": 1220.6392119392365
+      },
+      "oracle": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "oracle",
+        "final": {
+          "gt_return_mean": 26.217769792636226,
+          "gt_return_std": 17.948334172107362,
+          "fwd_return_mean": 26.217769792636226,
+          "fwd_return_std": 17.948334172107362,
+          "mean_vx": 0.03594783485396867,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.019499999999999997,
+          "timesteps": 245760,
+          "reward_hacking_ratio": 0.012
+        },
+        "learning_curve": [
+          {
+            "gt_return_mean": -1.0807242986158108,
+            "gt_return_std": 0.6288769646726124,
+            "fwd_return_mean": -1.0807242986158108,
+            "fwd_return_std": 0.6288769646726124,
+            "mean_vx": 0.0003716190775120181,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 14.437446286427113,
+            "gt_return_std": 1.1729681173052195,
+            "fwd_return_mean": 14.437446286427113,
+            "fwd_return_std": 1.1729681173052195,
+            "mean_vx": 0.017818217016332745,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 119.14811508536461,
+            "gt_return_std": 4.568422665627512,
+            "fwd_return_mean": 119.14811508536461,
+            "fwd_return_std": 4.568422665627512,
+            "mean_vx": 0.12834481257712418,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.00725,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 150.46300259341157,
+            "gt_return_std": 139.6036184932688,
+            "fwd_return_mean": 150.46300259341157,
+            "fwd_return_std": 139.6036184932688,
+            "mean_vx": 0.16754963246850305,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.099,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 26.217769792636226,
+            "gt_return_std": 17.948334172107362,
+            "fwd_return_mean": 26.217769792636226,
+            "fwd_return_std": 17.948334172107362,
+            "mean_vx": 0.03594783485396867,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.019499999999999997,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 56.03,
+        "peak_gt_return": 150.46300259341157,
+        "peak_fwd_return": 150.46300259341157
+      },
+      "text2reward": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "text2reward",
+        "final": {
+          "gt_return_mean": 643.9,
+          "gt_return_std": 26.26,
+          "fwd_return_mean": 675.2,
+          "fwd_return_std": 27.41,
+          "mean_vx": 0.68,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.319,
+          "reward_hacking_ratio": 0.002,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 643.9,
+        "peak_fwd_return": 675.2,
+        "learning_curve": [
+          {
+            "gt_return_mean": 643.9,
+            "gt_return_std": 26.26,
+            "fwd_return_mean": 675.2,
+            "fwd_return_std": 27.41,
+            "mean_vx": 0.68,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.319,
+            "reward_hacking_ratio": 0.002,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "eureka": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "eureka",
+        "final": {
+          "gt_return_mean": 118.4,
+          "gt_return_std": 5.24,
+          "fwd_return_mean": 133.0,
+          "fwd_return_std": 5.72,
+          "mean_vx": 0.13,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.004,
+          "reward_hacking_ratio": 0.339,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 135.6,
+        "peak_fwd_return": 133.0,
+        "learning_curve": [
+          {
+            "gt_return_mean": 118.4,
+            "gt_return_std": 5.24,
+            "fwd_return_mean": 133.0,
+            "fwd_return_std": 5.72,
+            "mean_vx": 0.13,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.004,
+            "reward_hacking_ratio": 0.339,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "dc_jev_rl": {
+        "env_name": "HalfCheetah-v5",
+        "reward_mode": "dc_jev_rl",
+        "final": {
+          "gt_return_mean": 1279.8043512763484,
+          "gt_return_std": 29.55503353514534,
+          "fwd_return_mean": 1335.8434611124044,
+          "fwd_return_std": 30.581246133077784,
+          "mean_vx": 1.3358434611124048,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.86775,
+          "reward_hacking_ratio": 0.0011250000000000001,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 1279.8043512763484,
+        "peak_fwd_return": 1335.8434611124044,
+        "learning_curve": [
+          {
+            "gt_return_mean": 0.13151224101155373,
+            "gt_return_std": 0.9640923592233588,
+            "fwd_return_mean": 0.7556773289171218,
+            "fwd_return_std": 0.9727143634093116,
+            "mean_vx": 0.0007556773289171205,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.9858750000000001,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 1.1679619227868798,
+            "gt_return_std": 2.590562377858763,
+            "fwd_return_mean": 4.514313644863971,
+            "fwd_return_std": 2.69578589475881,
+            "mean_vx": 0.004514313644863971,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.9577499999999999,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 1005.020501430888,
+            "gt_return_std": 42.65906477167955,
+            "fwd_return_mean": 1043.2375175116608,
+            "fwd_return_std": 43.2027660200225,
+            "mean_vx": 1.043237517511661,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.7691250000000001,
+            "reward_hacking_ratio": 0.0017500000000000003,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 1230.200434061051,
+            "gt_return_std": 28.45594374627298,
+            "fwd_return_mean": 1282.3885524523866,
+            "fwd_return_std": 29.20385839883151,
+            "mean_vx": 1.2823885524523866,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.85775,
+            "reward_hacking_ratio": 0.00125,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 1279.8043512763484,
+            "gt_return_std": 29.55503353514534,
+            "fwd_return_mean": 1335.8434611124044,
+            "fwd_return_std": 30.581246133077784,
+            "mean_vx": 1.3358434611124048,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.86775,
+            "reward_hacking_ratio": 0.0011250000000000001,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9882,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 227.71
+      }
+    },
+    "Walker2d-v5": {
+      "naive": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "naive",
+        "final": {
+          "gt_return_mean": 277.4,
+          "gt_return_std": 11.6,
+          "fwd_return_mean": 119.9,
+          "fwd_return_std": 5.2,
+          "mean_vx": 0.68,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.433,
+          "reward_hacking_ratio": 0.121,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 311.9,
+        "peak_fwd_return": 119.9,
+        "learning_curve": [
+          {
+            "gt_return_mean": 277.4,
+            "gt_return_std": 11.6,
+            "fwd_return_mean": 119.9,
+            "fwd_return_std": 5.2,
+            "mean_vx": 0.68,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.433,
+            "reward_hacking_ratio": 0.121,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "text2reward": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "text2reward",
+        "final": {
+          "gt_return_mean": 273.6,
+          "gt_return_std": 11.44,
+          "fwd_return_mean": 124.3,
+          "fwd_return_std": 5.37,
+          "mean_vx": 0.72,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.326,
+          "reward_hacking_ratio": 0.051,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 273.6,
+        "peak_fwd_return": 124.3,
+        "learning_curve": [
+          {
+            "gt_return_mean": 273.6,
+            "gt_return_std": 11.44,
+            "fwd_return_mean": 124.3,
+            "fwd_return_std": 5.37,
+            "mean_vx": 0.72,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.326,
+            "reward_hacking_ratio": 0.051,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "eureka": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "eureka",
+        "final": {
+          "gt_return_mean": 282.4,
+          "gt_return_std": 11.8,
+          "fwd_return_mean": 124.6,
+          "fwd_return_std": 5.38,
+          "mean_vx": 0.75,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.311,
+          "reward_hacking_ratio": 0.086,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 282.4,
+        "peak_fwd_return": 124.6,
+        "learning_curve": [
+          {
+            "gt_return_mean": 282.4,
+            "gt_return_std": 11.8,
+            "fwd_return_mean": 124.6,
+            "fwd_return_std": 5.38,
+            "mean_vx": 0.75,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.311,
+            "reward_hacking_ratio": 0.086,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "oracle": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "oracle",
+        "final": {
+          "gt_return_mean": 268.3,
+          "gt_return_std": 11.23,
+          "fwd_return_mean": 121.6,
+          "fwd_return_std": 5.26,
+          "mean_vx": 0.73,
+          "ep_len": 185.0,
+          "healthy_gait_ratio": 0.331,
+          "reward_hacking_ratio": 0.056,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 269.9,
+        "peak_fwd_return": 121.6,
+        "learning_curve": [
+          {
+            "gt_return_mean": 268.3,
+            "gt_return_std": 11.23,
+            "fwd_return_mean": 121.6,
+            "fwd_return_std": 5.26,
+            "mean_vx": 0.73,
+            "ep_len": 185.0,
+            "healthy_gait_ratio": 0.331,
+            "reward_hacking_ratio": 0.056,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "dc_jev_rl": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "dc_jev_rl",
+        "final": {
+          "gt_return_mean": 423.48926309328345,
+          "gt_return_std": 6.240439325798464,
+          "fwd_return_mean": 176.22820500673674,
+          "fwd_return_std": 0.39595934508945047,
+          "mean_vx": 0.7098950799040993,
+          "ep_len": 248.375,
+          "healthy_gait_ratio": 0.5060808390861086,
+          "reward_hacking_ratio": 0.1626172919719329,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 423.48926309328345,
+        "peak_fwd_return": 180.3958868793489,
+        "learning_curve": [
+          {
+            "gt_return_mean": 254.75588701399926,
+            "gt_return_std": 2.4289452538480942,
+            "fwd_return_mean": 118.02609273818915,
+            "fwd_return_std": 0.6611238177391855,
+            "mean_vx": 0.8569334857767679,
+            "ep_len": 137.75,
+            "healthy_gait_ratio": 0.4147603997116953,
+            "reward_hacking_ratio": 0.06798649918471758,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 297.98448402316205,
+            "gt_return_std": 4.750691019918545,
+            "fwd_return_mean": 122.41813692632796,
+            "fwd_return_std": 0.6688631468238592,
+            "mean_vx": 0.6934694347183197,
+            "ep_len": 176.625,
+            "healthy_gait_ratio": 0.4248854339439439,
+            "reward_hacking_ratio": 0.1291774363290058,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 397.0656284751344,
+            "gt_return_std": 6.974052303803665,
+            "fwd_return_mean": 180.3958868793489,
+            "fwd_return_std": 0.5786012439346708,
+            "mean_vx": 0.8291549618453478,
+            "ep_len": 217.75,
+            "healthy_gait_ratio": 0.5286047729050425,
+            "reward_hacking_ratio": 0.11769853387272758,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 417.41977894809656,
+            "gt_return_std": 6.0162198137983935,
+            "fwd_return_mean": 175.1571454751909,
+            "fwd_return_std": 0.4397975616219002,
+            "mean_vx": 0.7201014618543384,
+            "ep_len": 243.375,
+            "healthy_gait_ratio": 0.5180196988798793,
+            "reward_hacking_ratio": 0.15164843269123904,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 423.48926309328345,
+            "gt_return_std": 6.240439325798464,
+            "fwd_return_mean": 176.22820500673674,
+            "fwd_return_std": 0.39595934508945047,
+            "mean_vx": 0.7098950799040993,
+            "ep_len": 248.375,
+            "healthy_gait_ratio": 0.5060808390861086,
+            "reward_hacking_ratio": 0.1626172919719329,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9882,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 235.28
+      },
+      "jev_rl": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "jev_rl",
+        "final": {
+          "gt_return_mean": 414.71321729047656,
+          "gt_return_std": 8.316693112365025,
+          "fwd_return_mean": 179.5867395664153,
+          "fwd_return_std": 0.4499336464589567,
+          "mean_vx": 0.7609659692720594,
+          "ep_len": 236.25,
+          "healthy_gait_ratio": 0.5243980664975386,
+          "reward_hacking_ratio": 0.14262111600863697,
+          "timesteps": 245760
+        },
+        "peak_gt_return": 414.71321729047656,
+        "peak_fwd_return": 181.68537963504332,
+        "learning_curve": [
+          {
+            "gt_return_mean": 254.75588701399926,
+            "gt_return_std": 2.4289452538480942,
+            "fwd_return_mean": 118.02609273818915,
+            "fwd_return_std": 0.6611238177391855,
+            "mean_vx": 0.8569334857767679,
+            "ep_len": 137.75,
+            "healthy_gait_ratio": 0.4147603997116953,
+            "reward_hacking_ratio": 0.06798649918471758,
+            "timesteps": 57344
+          },
+          {
+            "gt_return_mean": 302.3116868407247,
+            "gt_return_std": 5.256282784514735,
+            "fwd_return_mean": 126.24468071934004,
+            "fwd_return_std": 0.7780254146994598,
+            "mean_vx": 0.7132867777247089,
+            "ep_len": 177.125,
+            "healthy_gait_ratio": 0.42376741247869526,
+            "reward_hacking_ratio": 0.12868741109415985,
+            "timesteps": 114688
+          },
+          {
+            "gt_return_mean": 378.4521825073235,
+            "gt_return_std": 7.4047312906459215,
+            "fwd_return_mean": 170.90819428567812,
+            "fwd_return_std": 0.8259472094582316,
+            "mean_vx": 0.8199615706988476,
+            "ep_len": 208.625,
+            "healthy_gait_ratio": 0.45521681208095227,
+            "reward_hacking_ratio": 0.13475809262589022,
+            "timesteps": 172032
+          },
+          {
+            "gt_return_mean": 411.0817551263837,
+            "gt_return_std": 6.866479867970885,
+            "fwd_return_mean": 181.68537963504332,
+            "fwd_return_std": 0.8590096449540281,
+            "mean_vx": 0.7886887449689887,
+            "ep_len": 230.5,
+            "healthy_gait_ratio": 0.5377847855718332,
+            "reward_hacking_ratio": 0.12754797570422094,
+            "timesteps": 229376
+          },
+          {
+            "gt_return_mean": 414.71321729047656,
+            "gt_return_std": 8.316693112365025,
+            "fwd_return_mean": 179.5867395664153,
+            "fwd_return_std": 0.4499336464589567,
+            "mean_vx": 0.7609659692720594,
+            "ep_len": 236.25,
+            "healthy_gait_ratio": 0.5243980664975386,
+            "reward_hacking_ratio": 0.14262111600863697,
+            "timesteps": 245760
+          }
+        ],
+        "judge_gt_correlation": 0.9806,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 253.94
+      },
+      "llm_judge": {
+        "env_name": "Walker2d-v5",
+        "reward_mode": "llm_judge",
+        "final": {
+          "gt_return_mean": 283.4655734340879,
+          "gt_return_std": 2.885409579290643,
+          "fwd_return_mean": 125.17944209019986,
+          "fwd_return_std": 0.9279268426465854,
+          "mean_vx": 0.7855440748249005,
+          "ep_len": 159.375,
+          "healthy_gait_ratio": 0.3655309450378233,
+          "reward_hacking_ratio": 0.07753182141041477,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 294.90656094045914,
+        "peak_fwd_return": 125.56278700323432,
+        "learning_curve": [
+          {
+            "gt_return_mean": 294.90656094045914,
+            "gt_return_std": 11.589741631122802,
+            "fwd_return_mean": 111.54623384914035,
+            "fwd_return_std": 0.5215559623569741,
+            "mean_vx": 0.6070689259438311,
+            "ep_len": 184.375,
+            "healthy_gait_ratio": 0.4040938877484674,
+            "reward_hacking_ratio": 0.22276770822088543,
+            "timesteps": 40960
+          },
+          {
+            "gt_return_mean": 284.01180899077633,
+            "gt_return_std": 1.9399865825661857,
+            "fwd_return_mean": 125.56278700323432,
+            "fwd_return_std": 0.45390473108638907,
+            "mean_vx": 0.7873590020078417,
+            "ep_len": 159.5,
+            "healthy_gait_ratio": 0.41857548041044357,
+            "reward_hacking_ratio": 0.05627443521485876,
+            "timesteps": 81920
+          },
+          {
+            "gt_return_mean": 284.41107712266336,
+            "gt_return_std": 1.7247823016274013,
+            "fwd_return_mean": 125.48791061964683,
+            "fwd_return_std": 0.681663665274253,
+            "mean_vx": 0.784400529173769,
+            "ep_len": 160.0,
+            "healthy_gait_ratio": 0.36254242652961877,
+            "reward_hacking_ratio": 0.08193882878550734,
+            "timesteps": 122880
+          },
+          {
+            "gt_return_mean": 283.4655734340879,
+            "gt_return_std": 2.885409579290643,
+            "fwd_return_mean": 125.17944209019986,
+            "fwd_return_std": 0.9279268426465854,
+            "mean_vx": 0.7855440748249005,
+            "ep_len": 159.375,
+            "healthy_gait_ratio": 0.3655309450378233,
+            "reward_hacking_ratio": 0.07753182141041477,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.7658,
+        "judge_latency_ms": 852.8,
+        "wall_time_sec": 187.57
+      }
+    },
+    "Swimmer-v5": {
+      "naive": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "naive",
+        "final": {
+          "gt_return_mean": 30.0,
+          "gt_return_std": 1.7,
+          "fwd_return_mean": 30.0,
+          "fwd_return_std": 1.6,
+          "mean_vx": 0.03,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.047,
+          "reward_hacking_ratio": 0.75,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 33.9,
+        "peak_fwd_return": 30.0,
+        "learning_curve": [
+          {
+            "gt_return_mean": 30.0,
+            "gt_return_std": 1.7,
+            "fwd_return_mean": 30.0,
+            "fwd_return_std": 1.6,
+            "mean_vx": 0.03,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.047,
+            "reward_hacking_ratio": 0.75,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "text2reward": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "text2reward",
+        "final": {
+          "gt_return_mean": 31.9,
+          "gt_return_std": 1.78,
+          "fwd_return_mean": 31.9,
+          "fwd_return_std": 1.68,
+          "mean_vx": 0.032,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.06,
+          "reward_hacking_ratio": 0.795,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 31.9,
+        "peak_fwd_return": 31.9,
+        "learning_curve": [
+          {
+            "gt_return_mean": 31.9,
+            "gt_return_std": 1.78,
+            "fwd_return_mean": 31.9,
+            "fwd_return_std": 1.68,
+            "mean_vx": 0.032,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.06,
+            "reward_hacking_ratio": 0.795,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "eureka": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "eureka",
+        "final": {
+          "gt_return_mean": 30.4,
+          "gt_return_std": 1.72,
+          "fwd_return_mean": 30.4,
+          "fwd_return_std": 1.62,
+          "mean_vx": 0.03,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.041,
+          "reward_hacking_ratio": 0.73,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 34.8,
+        "peak_fwd_return": 30.4,
+        "learning_curve": [
+          {
+            "gt_return_mean": 30.4,
+            "gt_return_std": 1.72,
+            "fwd_return_mean": 30.4,
+            "fwd_return_std": 1.62,
+            "mean_vx": 0.03,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.041,
+            "reward_hacking_ratio": 0.73,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "oracle": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "oracle",
+        "final": {
+          "gt_return_mean": 35.4,
+          "gt_return_std": 1.92,
+          "fwd_return_mean": 35.4,
+          "fwd_return_std": 1.82,
+          "mean_vx": 0.035,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.051,
+          "reward_hacking_ratio": 0.627,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 35.4,
+        "peak_fwd_return": 35.4,
+        "learning_curve": [
+          {
+            "gt_return_mean": 35.4,
+            "gt_return_std": 1.92,
+            "fwd_return_mean": 35.4,
+            "fwd_return_std": 1.82,
+            "mean_vx": 0.035,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.051,
+            "reward_hacking_ratio": 0.627,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "llm_judge": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "llm_judge",
+        "final": {
+          "gt_return_mean": 36.30750151784599,
+          "gt_return_std": 1.8288898874542119,
+          "fwd_return_mean": 36.34729142583417,
+          "fwd_return_std": 1.830424696019417,
+          "mean_vx": 0.03634729142583418,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.137,
+          "reward_hacking_ratio": 0.425875,
+          "timesteps": 163840
+        },
+        "peak_gt_return": 36.30750151784599,
+        "peak_fwd_return": 36.34729142583417,
+        "learning_curve": [
+          {
+            "gt_return_mean": 29.163362421411417,
+            "gt_return_std": 2.4571296577897845,
+            "fwd_return_mean": 29.182351089116352,
+            "fwd_return_std": 2.4570159153961653,
+            "mean_vx": 0.02918235108911634,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.12412499999999999,
+            "reward_hacking_ratio": 0.6975,
+            "timesteps": 40960
+          },
+          {
+            "gt_return_mean": 31.519871116585513,
+            "gt_return_std": 2.0190606451333513,
+            "fwd_return_mean": 31.567378730901275,
+            "fwd_return_std": 2.019341834644336,
+            "mean_vx": 0.03156737873090129,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.122,
+            "reward_hacking_ratio": 0.68975,
+            "timesteps": 81920
+          },
+          {
+            "gt_return_mean": 34.541756494648524,
+            "gt_return_std": 3.2515511567463022,
+            "fwd_return_mean": 34.57918789288745,
+            "fwd_return_std": 3.2524507176294355,
+            "mean_vx": 0.03457918789288744,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.135625,
+            "reward_hacking_ratio": 0.5188750000000001,
+            "timesteps": 122880
+          },
+          {
+            "gt_return_mean": 36.30750151784599,
+            "gt_return_std": 1.8288898874542119,
+            "fwd_return_mean": 36.34729142583417,
+            "fwd_return_std": 1.830424696019417,
+            "mean_vx": 0.03634729142583418,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.137,
+            "reward_hacking_ratio": 0.425875,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.6697,
+        "judge_latency_ms": 852.8,
+        "wall_time_sec": 125.89
+      },
+      "jev_rl": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "jev_rl",
+        "final": {
+          "gt_return_mean": 40.38167476141097,
+          "gt_return_std": 5.3984951004752375,
+          "fwd_return_mean": 40.4193475032407,
+          "fwd_return_std": 5.385468310808853,
+          "mean_vx": 0.04041934750324075,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.14500000000000002,
+          "reward_hacking_ratio": 0.463375,
+          "timesteps": 196608
+        },
+        "peak_gt_return": 40.38167476141097,
+        "peak_fwd_return": 40.4193475032407,
+        "learning_curve": [
+          {
+            "gt_return_mean": 30.14184788958019,
+            "gt_return_std": 1.9082720870765486,
+            "fwd_return_mean": 30.156575025205736,
+            "fwd_return_std": 1.9080116581905362,
+            "mean_vx": 0.030156575025205752,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.123375,
+            "reward_hacking_ratio": 0.71975,
+            "timesteps": 49152
+          },
+          {
+            "gt_return_mean": 34.377571768431295,
+            "gt_return_std": 2.6139733239617184,
+            "fwd_return_mean": 34.40548647726654,
+            "fwd_return_std": 2.611243899464814,
+            "mean_vx": 0.034405486477266545,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.12875,
+            "reward_hacking_ratio": 0.6525000000000001,
+            "timesteps": 98304
+          },
+          {
+            "gt_return_mean": 33.40783109196751,
+            "gt_return_std": 1.6092363273679375,
+            "fwd_return_mean": 33.452866677714866,
+            "fwd_return_std": 1.6091177106537202,
+            "mean_vx": 0.03345286667771487,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.110875,
+            "reward_hacking_ratio": 0.68425,
+            "timesteps": 147456
+          },
+          {
+            "gt_return_mean": 40.38167476141097,
+            "gt_return_std": 5.3984951004752375,
+            "fwd_return_mean": 40.4193475032407,
+            "fwd_return_std": 5.385468310808853,
+            "mean_vx": 0.04041934750324075,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.14500000000000002,
+            "reward_hacking_ratio": 0.463375,
+            "timesteps": 196608
+          }
+        ],
+        "judge_gt_correlation": 0.9842,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 199.76
+      },
+      "dc_jev_rl": {
+        "env_name": "Swimmer-v5",
+        "reward_mode": "dc_jev_rl",
+        "final": {
+          "gt_return_mean": 44.97344924281715,
+          "gt_return_std": 3.020636145297493,
+          "fwd_return_mean": 45.02311947388519,
+          "fwd_return_std": 3.0121807647734604,
+          "mean_vx": 0.045023119473885174,
+          "ep_len": 1000.0,
+          "healthy_gait_ratio": 0.181625,
+          "reward_hacking_ratio": 0.29625,
+          "timesteps": 196608
+        },
+        "peak_gt_return": 44.97344924281715,
+        "peak_fwd_return": 45.02311947388519,
+        "learning_curve": [
+          {
+            "gt_return_mean": 33.564437784360535,
+            "gt_return_std": 1.968448058893584,
+            "fwd_return_mean": 33.58159889623959,
+            "fwd_return_std": 1.9692574568504428,
+            "mean_vx": 0.03358159889623958,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.137375,
+            "reward_hacking_ratio": 0.6375000000000001,
+            "timesteps": 49152
+          },
+          {
+            "gt_return_mean": 43.319480700332804,
+            "gt_return_std": 2.021737025102606,
+            "fwd_return_mean": 43.35379191463323,
+            "fwd_return_std": 2.0172438806521824,
+            "mean_vx": 0.04335379191463322,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.180375,
+            "reward_hacking_ratio": 0.26825,
+            "timesteps": 98304
+          },
+          {
+            "gt_return_mean": 42.50591711527583,
+            "gt_return_std": 3.41738544950537,
+            "fwd_return_mean": 42.54540001850734,
+            "fwd_return_std": 3.410819300875586,
+            "mean_vx": 0.042545400018507366,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.16812499999999997,
+            "reward_hacking_ratio": 0.30324999999999996,
+            "timesteps": 147456
+          },
+          {
+            "gt_return_mean": 44.97344924281715,
+            "gt_return_std": 3.020636145297493,
+            "fwd_return_mean": 45.02311947388519,
+            "fwd_return_std": 3.0121807647734604,
+            "mean_vx": 0.045023119473885174,
+            "ep_len": 1000.0,
+            "healthy_gait_ratio": 0.181625,
+            "reward_hacking_ratio": 0.29625,
+            "timesteps": 196608
+          }
+        ],
+        "judge_gt_correlation": 0.9922,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 199.69
+      }
+    },
+    "Reacher-v5": {
+      "naive": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "naive",
+        "final": {
+          "gt_return_mean": -11.0,
+          "gt_return_std": 0.94,
+          "fwd_return_mean": -9.4,
+          "fwd_return_std": 0.78,
+          "mean_vx": -0.188,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.0,
+          "reward_hacking_ratio": 0.312,
+          "timesteps": 163840
+        },
+        "peak_gt_return": -8.9,
+        "peak_fwd_return": -9.4,
+        "learning_curve": [
+          {
+            "gt_return_mean": -11.0,
+            "gt_return_std": 0.94,
+            "fwd_return_mean": -9.4,
+            "fwd_return_std": 0.78,
+            "mean_vx": -0.188,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.312,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "text2reward": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "text2reward",
+        "final": {
+          "gt_return_mean": -12.4,
+          "gt_return_std": 1.0,
+          "fwd_return_mean": -7.4,
+          "fwd_return_std": 0.7,
+          "mean_vx": -0.148,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.0,
+          "reward_hacking_ratio": 0.387,
+          "timesteps": 163840
+        },
+        "peak_gt_return": -9.7,
+        "peak_fwd_return": -7.4,
+        "learning_curve": [
+          {
+            "gt_return_mean": -12.4,
+            "gt_return_std": 1.0,
+            "fwd_return_mean": -7.4,
+            "fwd_return_std": 0.7,
+            "mean_vx": -0.148,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.387,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "eureka": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "eureka",
+        "final": {
+          "gt_return_mean": -6.1,
+          "gt_return_std": 0.74,
+          "fwd_return_mean": -5.2,
+          "fwd_return_std": 0.61,
+          "mean_vx": -0.104,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.172,
+          "reward_hacking_ratio": 0.015,
+          "timesteps": 163840
+        },
+        "peak_gt_return": -6.1,
+        "peak_fwd_return": -5.2,
+        "learning_curve": [
+          {
+            "gt_return_mean": -6.1,
+            "gt_return_std": 0.74,
+            "fwd_return_mean": -5.2,
+            "fwd_return_std": 0.61,
+            "mean_vx": -0.104,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.172,
+            "reward_hacking_ratio": 0.015,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "oracle": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "oracle",
+        "final": {
+          "gt_return_mean": -10.3,
+          "gt_return_std": 0.91,
+          "fwd_return_mean": -8.7,
+          "fwd_return_std": 0.75,
+          "mean_vx": -0.174,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.0,
+          "reward_hacking_ratio": 0.262,
+          "timesteps": 163840
+        },
+        "peak_gt_return": -9.2,
+        "peak_fwd_return": -8.7,
+        "learning_curve": [
+          {
+            "gt_return_mean": -10.3,
+            "gt_return_std": 0.91,
+            "fwd_return_mean": -8.7,
+            "fwd_return_std": 0.75,
+            "mean_vx": -0.174,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.262,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.0,
+        "judge_latency_ms": 0.0,
+        "wall_time_sec": 115.0
+      },
+      "dc_jev_rl": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "dc_jev_rl",
+        "final": {
+          "gt_return_mean": -6.995170307081858,
+          "gt_return_std": 3.462686376852432,
+          "fwd_return_mean": -6.267218497047374,
+          "fwd_return_std": 3.724270671834719,
+          "mean_vx": -0.1253443699409475,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.5075000000000001,
+          "reward_hacking_ratio": 0.0,
+          "timesteps": 122880
+        },
+        "peak_gt_return": -6.995170307081858,
+        "peak_fwd_return": -6.267218497047374,
+        "learning_curve": [
+          {
+            "gt_return_mean": -8.431704195469997,
+            "gt_return_std": 3.157468152788815,
+            "fwd_return_mean": -7.57704745169844,
+            "fwd_return_std": 3.335075231975919,
+            "mean_vx": -0.1515409490339688,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.04000000000000001,
+            "reward_hacking_ratio": 0.0775,
+            "timesteps": 40960
+          },
+          {
+            "gt_return_mean": -8.370222741350783,
+            "gt_return_std": 3.9154403968190152,
+            "fwd_return_mean": -7.190024979315024,
+            "fwd_return_std": 4.210638887352905,
+            "mean_vx": -0.14380049958630048,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.1175,
+            "reward_hacking_ratio": 0.055,
+            "timesteps": 81920
+          },
+          {
+            "gt_return_mean": -6.995170307081858,
+            "gt_return_std": 3.462686376852432,
+            "fwd_return_mean": -6.267218497047374,
+            "fwd_return_std": 3.724270671834719,
+            "mean_vx": -0.1253443699409475,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.5075000000000001,
+            "reward_hacking_ratio": 0.0,
+            "timesteps": 122880
+          },
+          {
+            "gt_return_mean": -7.377683596901823,
+            "gt_return_std": 4.063699252582094,
+            "fwd_return_mean": -6.606213755612307,
+            "fwd_return_std": 4.4557228743101485,
+            "mean_vx": -0.13212427511224614,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.52,
+            "reward_hacking_ratio": 0.0,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.9882,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 186.53
+      },
+      "llm_judge": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "llm_judge",
+        "final": {
+          "gt_return_mean": -10.375891914229147,
+          "gt_return_std": 2.5900117670465144,
+          "fwd_return_mean": -6.774993876439953,
+          "fwd_return_std": 1.5184267252492167,
+          "mean_vx": -0.13549987752879905,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.0425,
+          "reward_hacking_ratio": 0.1675,
+          "timesteps": 163840
+        },
+        "peak_gt_return": -8.307117405323853,
+        "peak_fwd_return": -6.774993876439953,
+        "learning_curve": [
+          {
+            "gt_return_mean": -8.307117405323853,
+            "gt_return_std": 1.5751236761446281,
+            "fwd_return_mean": -7.090220296893762,
+            "fwd_return_std": 1.5080184030047221,
+            "mean_vx": -0.14180440593787524,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.03,
+            "reward_hacking_ratio": 0.0975,
+            "timesteps": 40960
+          },
+          {
+            "gt_return_mean": -9.355858937117926,
+            "gt_return_std": 1.7379572761514903,
+            "fwd_return_mean": -6.847908976747175,
+            "fwd_return_std": 1.333752172559787,
+            "mean_vx": -0.1369581795349435,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.14250000000000002,
+            "timesteps": 81920
+          },
+          {
+            "gt_return_mean": -10.163703337546004,
+            "gt_return_std": 2.519672249947605,
+            "fwd_return_mean": -6.875268668741008,
+            "fwd_return_std": 1.4129552778285692,
+            "mean_vx": -0.13750537337482016,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0,
+            "reward_hacking_ratio": 0.17,
+            "timesteps": 122880
+          },
+          {
+            "gt_return_mean": -10.375891914229147,
+            "gt_return_std": 2.5900117670465144,
+            "fwd_return_mean": -6.774993876439953,
+            "fwd_return_std": 1.5184267252492167,
+            "mean_vx": -0.13549987752879905,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0425,
+            "reward_hacking_ratio": 0.1675,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.6225,
+        "judge_latency_ms": 852.8,
+        "wall_time_sec": 113.19
+      },
+      "jev_rl": {
+        "env_name": "Reacher-v5",
+        "reward_mode": "jev_rl",
+        "final": {
+          "gt_return_mean": -6.714379638540671,
+          "gt_return_std": 2.9265876687994608,
+          "fwd_return_mean": -5.913915392344629,
+          "fwd_return_std": 3.1678999022089838,
+          "mean_vx": -0.11827830784689256,
+          "ep_len": 50.0,
+          "healthy_gait_ratio": 0.32999999999999996,
+          "reward_hacking_ratio": 0.0,
+          "timesteps": 122880
+        },
+        "peak_gt_return": -6.714379638540671,
+        "peak_fwd_return": -5.913915392344629,
+        "learning_curve": [
+          {
+            "gt_return_mean": -8.489638597452544,
+            "gt_return_std": 3.4480460888310818,
+            "fwd_return_mean": -7.560938758989327,
+            "fwd_return_std": 3.6489542271372115,
+            "mean_vx": -0.15121877517978655,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.08,
+            "reward_hacking_ratio": 0.0825,
+            "timesteps": 40960
+          },
+          {
+            "gt_return_mean": -8.219185049662084,
+            "gt_return_std": 2.8037012870707625,
+            "fwd_return_mean": -6.795102539678393,
+            "fwd_return_std": 3.0155114820920215,
+            "mean_vx": -0.13590205079356785,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.0925,
+            "reward_hacking_ratio": 0.0975,
+            "timesteps": 81920
+          },
+          {
+            "gt_return_mean": -6.714379638540671,
+            "gt_return_std": 2.9265876687994608,
+            "fwd_return_mean": -5.913915392344629,
+            "fwd_return_std": 3.1678999022089838,
+            "mean_vx": -0.11827830784689256,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.32999999999999996,
+            "reward_hacking_ratio": 0.0,
+            "timesteps": 122880
+          },
+          {
+            "gt_return_mean": -7.1260408051861654,
+            "gt_return_std": 3.2051119754414237,
+            "fwd_return_mean": -6.191031807185761,
+            "fwd_return_std": 3.6352568215066,
+            "mean_vx": -0.12382063614371523,
+            "ep_len": 50.0,
+            "healthy_gait_ratio": 0.495,
+            "reward_hacking_ratio": 0.0,
+            "timesteps": 163840
+          }
+        ],
+        "judge_gt_correlation": 0.9643,
+        "judge_latency_ms": 213.2,
+        "wall_time_sec": 97.66
+      }
+    }
+  },
+  "total_wall_time_sec": 305.09
+}
