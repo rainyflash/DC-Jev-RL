@@ -1,9 +1,13 @@
 # DC-Jev-RL: Beyond Brittle Code and Noisy Tokens — System-One Decision Models as Calibrated Dynamic-Curriculum Reward Judges for Continuous Control
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23439711.svg)](https://doi.org/10.5281/zenodo.23439711)
+
 **Author:** **Ziyang Zhang (张子阳)** — *Independent AI Researcher*  
+🏛️ **Official CERN Zenodo Preprint & Permanent DOI (`10.5281/zenodo.23439711`):** [`https://doi.org/10.5281/zenodo.23439711`](https://doi.org/10.5281/zenodo.23439711)  
 📄 **English Full Paper Preprint (11 Pages, PDF):** [`paper/DC_Jev_RL_Paper_Preprint.pdf`](./paper/DC_Jev_RL_Paper_Preprint.pdf)  
 📘 **Chinese Full Paper (7 Pages, PDF):** [`paper/DC_Jev_RL_Paper_CN.pdf`](./paper/DC_Jev_RL_Paper_CN.pdf)  
-📝 **LaTeX Source:** [`paper/DC_Jev_RL_Paper.tex`](./paper/DC_Jev_RL_Paper.tex)  
+🤗 **Hugging Face Model & Benchmark Hub:** [`https://huggingface.co/huanguang/DC-Jev-RL`](https://huggingface.co/huanguang/DC-Jev-RL)  
+💬 **Hugging Face `Kev-4B` Community Announcement (`@jaredpalmer`):** [`https://huggingface.co/jaredpalmer/kev-4b/discussions/4`](https://huggingface.co/jaredpalmer/kev-4b/discussions/4)  
 🧠 **System-One Judge Backbone:** [`jaredpalmer/kev-4b`](https://huggingface.co/jaredpalmer/kev-4b) (TypeSafe AI `/v1/systemone` Architecture)
 
 ---
@@ -69,7 +73,9 @@ uv run --with matplotlib --with reportlab python -m jev_rl.build_full_paper
   author={Zhang, Ziyang},
   year={2026},
   month={October},
-  url={https://github.com/rainyflash/DC-Jev-RL},
-  note={DC-Jev-RL Open-Source Preprint and Benchmark Suite}
+  publisher={Zenodo},
+  doi={10.5281/zenodo.23439711},
+  url={https://doi.org/10.5281/zenodo.23439711},
+  note={Code & Benchmark Suite: https://github.com/rainyflash/DC-Jev-RL}
 }
 ```
