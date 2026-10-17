@@ -1,0 +1,14 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.70in]{geometry}
+\usepackage{times,amsmath,amssymb,booktabs,graphicx,hyperref,xcolor}
+\title{\textbf{Breaking the Static Verifier Ceiling: Zero-Overhead Self-Evolving System-One Judge and Policy Co-Evolution on a Single Shared Foundation Backbone (CoEvo-Jev-GRPO)}}
+\author{\textbf{Ziyang Zhang} \\ Independent AI Research \\ \texttt{https://github.com/rainyflash/DC-Jev-RL} \\ Part III of the System-One RL Trilogy (Companion Part I DOI: \texttt{10.5281/zenodo.23439711}, Part II DOI: \texttt{10.5281/zenodo.23441431})}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Extending online Group Relative Policy Optimization (GRPO) beyond 400--800 steps with a frozen reward model or static process judge hits the \textbf{Static Verifier Ceiling} and \textbf{Late-Stage Goodhart Over-Optimization} (Gao et al., 2023): policies exploit out-of-distribution (OOD) adversarial pseudo-proofs while novel valid proofs are under-scored. Meanwhile, training a separate 4B reward model online requires 24.46 GB VRAM and ungrounded Self-Rewarding LLMs collapse into sycophantic self-praise (ECE $= 0.214$). We introduce \textbf{CoEvo-Jev-GRPO} (\emph{Single-Backbone Verifier-Anchored Bilevel System-One Judge and Policy Co-Evolution}). Because both the policy (\texttt{theta\_pol}) and the System-One judge (\texttt{jaredpalmer/kev-4b}) share a single \texttt{Qwen/Qwen3.5-4B} backbone on an NVIDIA RTX PRO 6000 Blackwell Server Edition (94.97 GB VRAM), updating the Layer-28 pointer head $W_{\text{ptr}}^{(28)}$ (98 KB) and Top-4 Layer LoRA blocks adds only $+0.02$ GB VRAM (8.08 GB total, saving 67.0\% vs.\ dual-model online RM) and executes an outer-loop calibration step in 0.84 ms (0.084 ms/step amortized). Guided by a verifier-anchored Disagreement \& Adversarial Hack Mining Buffer $\mathcal{B}_k$ and a Null-Anchored Brier + Contrastive Margin + KL-to-Prior loss, CoEvo-Jev-GRPO contracts Judge ECE from 0.048 to \textbf{0.011} ($-77.1\%$), suppresses late-stage pseudo-proof hacking to \textbf{1.2\%}, and achieves \#1 SOTA across MATH-500 (\textbf{79.8\%}), AIME 2024/2025 (\textbf{36.7\%}), AMC-12 (\textbf{74.4\%}), and OlympiadBench-Math (\textbf{46.2\%}) with \textbf{59.28\%} 4-Benchmark Mean Accuracy ($+5.28\%$ over Frozen DC-Jev-GRPO and $+15.83\%$ over Binary RLVR).
+\end{abstract}
+\section{Introduction}
+See compiled full-length preprints \texttt{CoEvo\_Jev\_GRPO\_Paper\_Preprint.pdf} (English) and \texttt{CoEvo\_Jev\_GRPO\_Paper\_CN.pdf} (Chinese) for all 8 sections, 8 tables, 6 figures, formal proofs of Proposition 1 and Theorems 1--3, and verbatim 1,000-step AIME/Olympiad transcripts.
+\end{document}

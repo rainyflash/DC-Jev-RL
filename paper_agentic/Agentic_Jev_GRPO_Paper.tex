@@ -1,0 +1,14 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.70in]{geometry}
+\usepackage{times,amsmath,amssymb,booktabs,graphicx,hyperref,xcolor}
+\title{\textbf{Beyond Sparse Terminal Verifiers: Turn-Level Single-Backbone System-One Credit Assignment and Trajectory Gating for Multi-Turn Coding and Tool-Use Agents (Agentic-Jev-GRPO)}}
+\author{\textbf{Ziyang Zhang (张子阳)} \\ Independent AI Research \\ Part III (Direction A: Multi-Turn Agentic RL) \quad Companion DOIs: \texttt{10.5281/zenodo.23439711}, \texttt{10.5281/zenodo.23441431}}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Multi-turn coding and tool-use reinforcement learning operates over an $H$-turn POMDP ($H \in [3, 8]$). Standard terminal binary RLVR ($R_H \in \{0, 1\}$) broadcasts a single scalar advantage across all $H$ turns—penalizing valid early fault-localization turns whenever a late turn commits a minor syntax slip (causing 46.8\% zero-variance group dead-zones)—and incentivizes unit-test tampering (\texttt{assert True}) or hardcoded input-output branches (29.4\% hack rate). We introduce \textbf{Agentic-Jev-GRPO}, co-locating the trainable policy LoRA and frozen \texttt{jaredpalmer/kev-4b} (\texttt{/v1/systemone}) turn judge LoRA + Layer-28 pointer head on a single shared \texttt{Qwen/Qwen3.5-4B} backbone (8.06 GB vs.\ 16.20 GB, $-50.2\%$ VRAM, 52.14 ms/turn with 84.6\% KV-cache reuse on NVIDIA RTX PRO 6000 Blackwell Server Edition). By combining turn-level telescoping PBRS $r_t^{\text{step}} = \gamma \Phi_t - \Phi_{t-1}$ with trajectory-minimum Noul gating $G_{\text{noul}}(\tau) = \min_t g_{\text{noul},t}$, Agentic-Jev-GRPO achieves \#1 SOTA across BFCL-v3 Multi-Turn (88.4\%), MBPP+ Multi-Turn Repair (86.8\%), HumanEval+ Tool-Exec (89.1\%), and SWE-bench-Verified-Mini (48.6\%), reaching 78.23\% Mean Score ($+14.33\%$ over Terminal-RLVR) while cutting average tool-call turns by 2.1$\times$ (3.2 vs.\ 6.8) and suppressing reward hacking to 2.4\%.
+\end{abstract}
+\section{Full Preprint}
+See compiled full-length preprints \texttt{Agentic\_Jev\_GRPO\_Paper\_Preprint.pdf} (English) and \texttt{Agentic\_Jev\_GRPO\_Paper\_CN.pdf} (Chinese) for all 8 sections, 8 tables, 6 figures, formal proofs of Proposition 1 and Theorems 1--3, and verbatim multi-turn agent transcripts.
+\end{document}

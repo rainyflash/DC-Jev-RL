@@ -1,0 +1,14 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.70in]{geometry}
+\usepackage{times,amsmath,amssymb,booktabs,graphicx,hyperref,xcolor}
+\title{\textbf{Prune Early, Verify Deep: Single-Backbone System-One Prefix Tree-GRPO and Speculative Noul Pruning for Long-Horizon Reasoning and Theorem Proving (Tree-Jev-GRPO)}}
+\author{\textbf{Ziyang Zhang} \\ Independent AI Research \\ \texttt{https://github.com/rainyflash/DC-Jev-RL} \\ Part III of the System-One RL Trilogy (Companion DOIs: \texttt{10.5281/zenodo.23439711}, \texttt{10.5281/zenodo.23441431})}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Standard Group Relative Policy Optimization (GRPO) samples $G$ independent flat chains from scratch, wasting 70\%--85\% of GPU FLOPs regenerating identical early prefixes and continuing to decode 1,500+ tokens after a chain hits an early algebraic contradiction or invalid Lean 4 tactic. Conversely, conventional Monte Carlo Tree Search (MCTS) with an autoregressive verifier or separate 7B PRM requires 300+ ms per node evaluation and duplicates KV caches across two models. We introduce \textbf{Tree-Jev-GRPO} (\emph{Single-Backbone Gated-DeltaNet Prefix Tree-GRPO with Speculative System-One Noul Pruning}). Exploiting \texttt{Qwen/Qwen3.5-4B}'s hybrid 24-layer Gated-DeltaNet linear-attention ($O(1)$ recurrent state memory) + 8-layer GQA architecture and zero-copy co-location (0.012 ms switch) with the frozen \texttt{jaredpalmer/kev-4b} (\texttt{/v1/systemone}) pointer judge on an NVIDIA RTX PRO 6000 Blackwell Server Edition (95.59 GB VRAM), Tree-Jev-GRPO reduces 64-branch prefix-tree KV memory by 3.81$\times$ (14.20 GB vs.\ 54.10 GB total VRAM, $-73.8\%$) and evaluates internal reasoning milestones in 14.80 ms/node (52.10 ms per 4-child expansion vs.\ 318.40 ms for autoregressive MCTS, 6.11$\times$ faster). Branches with validity gate $g_{\text{noul}}(v) < \tau_{\text{prune}} = 0.30$ are immediately pruned, reallocating KV slots to high-$\text{UCB}_{\text{Jev}}$ siblings, while Sibling-Relative Branch Advantages $A_{\text{tree}}(v) = (Q_{\text{Jev}}(v) - \mu_{\text{Ch}(u)}) / (\sigma_{\text{Ch}(u)} + \epsilon)$ eliminate prefix-induced reward variance (61.5\% reduction). Across MiniF2F-Lean4 (64.8\%), ProofNet-Formal (52.4\%), MATH-500 Level-5 Hard (68.7\%), and GPQA-Diamond (56.1\%), Tree-Jev-GRPO achieves \#1 SOTA (60.50\% Mean Accuracy, $+8.82\%$ over Flat DC-Jev-GRPO and $+20.42\%$ over Flat Binary RLVR) while reducing wasted dead-end tokens by 66.0\% (2.94$\times$ compute efficiency).
+\end{abstract}
+\section{Introduction \& Complete Preprint}
+See compiled full-length preprints \texttt{Tree\_Jev\_GRPO\_Paper\_Preprint.pdf} (English) and \texttt{Tree\_Jev\_GRPO\_Paper\_CN.pdf} (Chinese) for all 8 sections, 8 tables, 6 figures, formal proofs of Proposition 1 and Theorems 1--3, and verbatim prefix-tree pruning traces.
+\end{document}

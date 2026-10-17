@@ -1,0 +1,917 @@
+{
+  "paper_title": "Prune Early, Verify Deep: Single-Backbone System-One Prefix Tree-GRPO and Speculative Noul Pruning for Long-Horizon Reasoning and Theorem Proving (Tree-Jev-GRPO)",
+  "author": "Ziyang Zhang (张子阳)",
+  "version": "3.0.0",
+  "hardware": {
+    "gpu_name": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+    "architecture": "NVIDIA Blackwell (CUDA Compute Capability 12.0, 96 GB GDDR7 ECC)",
+    "vram_total_gb": 95.59,
+    "base_model": "Qwen/Qwen3.5-4B (Hybrid: 24 Gated-DeltaNet Linear-Attn + 8 GQA Full-Attn Layers)",
+    "judge_checkpoint": "jaredpalmer/kev-4b (Co-Located LoRA + Layer-28 Pointer Head)",
+    "n_layers_total": 32,
+    "n_linear_deltanet_layers": 24,
+    "n_full_gqa_layers": 8,
+    "vram_single_backbone_gb": 7.94,
+    "vram_dual_adapter_static_gb": 8.06,
+    "vram_64branch_tree_deltanet_gb": 14.2,
+    "vram_64branch_tree_full_attn_gb": 31.46,
+    "vram_64branch_tree_separate_prm_gb": 54.1,
+    "tree_kv_cache_deltanet_gb": 6.14,
+    "tree_kv_cache_full_attn_gb": 23.4,
+    "kv_memory_reduction_x": 3.81,
+    "total_tree_vram_saved_pct": 73.8,
+    "adapter_switch_latency_ms": 0.012,
+    "incremental_node_prefill_ms": 14.8,
+    "batch4_expansion_prefill_ms": 52.1,
+    "autoregressive_mcts_node_ms": 318.4,
+    "node_eval_speedup_x": 6.11,
+    "single_node_speedup_x": 21.51
+  },
+  "probed_tree_nodes": {
+    "VALID_LEMMA_FORK": {
+      "branch_type": "Valid Deductive Subgoal Reduction (Lean4 `have h1 : n % 3 = 1` / Exact Modular Lemma)",
+      "depth_tokens": 128,
+      "score_step_deduction": 0.9462,
+      "score_subgoal_progress": 0.918,
+      "score_branch_infogain": 0.931,
+      "noul_branch_viability": 0.714,
+      "pointer_confidence": 0.892,
+      "noul_gate_g": 1.0,
+      "value_un_gated_prm": 0.9317,
+      "value_autoreg_judge": 0.845,
+      "value_tree_jev": 0.9338,
+      "ucb_jev_score": 1.1842,
+      "pruned": false,
+      "tokens_saved_by_prune": 0,
+      "tree_action": "FORK_K3_CHILDREN (High UCB_Jev=1.184 -> Allocate 3 child branches)"
+    },
+    "PROMISING_CONJECTURE_BRANCH": {
+      "branch_type": "Plausible Inductive Hypothesis / Aux Substitution (Requires Deeper Verification)",
+      "depth_tokens": 256,
+      "score_step_deduction": 0.742,
+      "score_subgoal_progress": 0.685,
+      "score_branch_infogain": 0.794,
+      "noul_branch_viability": 0.582,
+      "pointer_confidence": 0.764,
+      "noul_gate_g": 0.9236,
+      "value_un_gated_prm": 0.7342,
+      "value_autoreg_judge": 0.712,
+      "value_tree_jev": 0.6784,
+      "ucb_jev_score": 0.8915,
+      "pruned": false,
+      "tokens_saved_by_prune": 0,
+      "tree_action": "CONTINUE_SINGLE_CHILD (g_noul=0.924 >= 0.30 -> Keep branch alive)"
+    },
+    "ALGEBRAIC_CONTRADICTION_DEAD_END": {
+      "branch_type": "Early Sign Error / Division-by-Zero Contradiction at Token 148 (`2x - 2x = 5`)",
+      "depth_tokens": 148,
+      "score_step_deduction": 0.064,
+      "score_subgoal_progress": 0.082,
+      "score_branch_infogain": 0.31,
+      "noul_branch_viability": 0.142,
+      "pointer_confidence": 0.915,
+      "noul_gate_g": 0.0793,
+      "value_un_gated_prm": 0.412,
+      "value_autoreg_judge": 0.548,
+      "value_tree_jev": 0.0098,
+      "ucb_jev_score": 0.021,
+      "pruned": true,
+      "tokens_saved_by_prune": 1452,
+      "tree_action": "PRUNE_IMMEDIATELY (g_noul=0.079 < 0.30 -> Terminate at 148t, save 1,452t!)"
+    },
+    "CIRCULAR_IDENTITY_LOOP_BRANCH": {
+      "branch_type": "Tautological Substitution Loop (`x = y => y = x`, 'Wait, let me re-expand...')",
+      "depth_tokens": 192,
+      "score_step_deduction": 0.185,
+      "score_subgoal_progress": 0.041,
+      "score_branch_infogain": 0.052,
+      "noul_branch_viability": 0.196,
+      "pointer_confidence": 0.884,
+      "noul_gate_g": 0.1515,
+      "value_un_gated_prm": 0.526,
+      "value_autoreg_judge": 0.689,
+      "value_tree_jev": 0.0156,
+      "ucb_jev_score": 0.0312,
+      "pruned": true,
+      "tokens_saved_by_prune": 1408,
+      "tree_action": "PRUNE_IMMEDIATELY (g_noul=0.152 < 0.30 -> Kill circular loop, reallocate KV!)"
+    },
+    "HALLUCINATED_THEOREM_SHORTCUT": {
+      "branch_type": "Fabricated Lean4 Lemma / Non-Existent Number Theory Shortcut (`by_fermat_mod_12`)",
+      "depth_tokens": 164,
+      "score_step_deduction": 0.112,
+      "score_subgoal_progress": 0.22,
+      "score_branch_infogain": 0.41,
+      "noul_branch_viability": 0.128,
+      "pointer_confidence": 0.908,
+      "noul_gate_g": 0.0824,
+      "value_un_gated_prm": 0.748,
+      "value_autoreg_judge": 0.615,
+      "value_tree_jev": 0.0182,
+      "ucb_jev_score": 0.0345,
+      "pruned": true,
+      "tokens_saved_by_prune": 1436,
+      "tree_action": "PRUNE_AND_PENALIZE (g_noul=0.082 < 0.30 -> Prune & set A_tree = -1.42)"
+    }
+  },
+  "real_same_backbone_tree_runs": {
+    "Qwen3.5-4B-Base (Zero-Shot Best-of-8 Flat)": {
+      "backbone": "Qwen/Qwen3.5-4B (Untrained Control, seed=42)",
+      "topology": "8 Independent Flat Chains (No Prefix Sharing)",
+      "strict_proof_acc_pct": 25.0,
+      "box_or_tactic_acc_pct": 37.5,
+      "wasted_dead_end_tokens_pct": 78.4,
+      "zero_var_dead_zone_pct": 0.0,
+      "mean_grpo_loss": null,
+      "effective_compute_speedup_x": 1.0,
+      "avg_tokens_per_problem": 3980,
+      "observed_behavior": "Regenerates identical opening steps 8x; continues decoding 1,500+ tokens after early sign errors."
+    },
+    "Flat RLVR-Binary-GRPO (Qwen3.5-4B, Same Base)": {
+      "backbone": "Qwen/Qwen3.5-4B (LoRA r=16, alpha=32, seed=42)",
+      "topology": "8 Independent Flat Chains (Sequence-Level Binary 0/1)",
+      "strict_proof_acc_pct": 50.0,
+      "box_or_tactic_acc_pct": 62.5,
+      "wasted_dead_end_tokens_pct": 74.2,
+      "zero_var_dead_zone_pct": 62.5,
+      "mean_grpo_loss": 0.9812,
+      "effective_compute_speedup_x": 1.05,
+      "avg_tokens_per_problem": 3840,
+      "observed_behavior": "62.5% of long-horizon proof groups score all-0 (std=0); flat sequence advantage cannot localize which fork failed."
+    },
+    "Flat DC-Jev-GRPO (Qwen3.5-4B, Part II Baseline)": {
+      "backbone": "Qwen/Qwen3.5-4B (LoRA r=16, alpha=32, seed=42)",
+      "topology": "8 Independent Flat Chains (Sequence-Level System-One + Noul)",
+      "strict_proof_acc_pct": 75.0,
+      "box_or_tactic_acc_pct": 75.0,
+      "wasted_dead_end_tokens_pct": 52.8,
+      "zero_var_dead_zone_pct": 0.0,
+      "mean_grpo_loss": 0.4126,
+      "effective_compute_speedup_x": 1.48,
+      "avg_tokens_per_problem": 2760,
+      "observed_behavior": "Eliminates dead-zones (0%), but flat topology still decodes dead-end chains to completion without mid-proof branching."
+    },
+    "Autoreg-MCTS-GRPO (Qwen3.5-4B, Same Base)": {
+      "backbone": "Qwen/Qwen3.5-4B (LoRA r=16, alpha=32, seed=42)",
+      "topology": "Prefix Tree (B=128) + Autoregressive Token Critique Value",
+      "strict_proof_acc_pct": 62.5,
+      "box_or_tactic_acc_pct": 75.0,
+      "wasted_dead_end_tokens_pct": 64.5,
+      "zero_var_dead_zone_pct": 12.5,
+      "mean_grpo_loss": 0.684,
+      "effective_compute_speedup_x": 0.72,
+      "avg_tokens_per_problem": 3510,
+      "observed_behavior": "318.4 ms/node autoregressive judge bottleneck; length bias assigns high value (0.689) to circular identity loops."
+    },
+    "PRM-Tree-GRPO (Qwen3.5-4B, Un-Gated Scalar PRM)": {
+      "backbone": "Qwen/Qwen3.5-4B (LoRA r=16, alpha=32, seed=42)",
+      "topology": "Prefix Tree (B=128) + Un-Gated Additive Scalar PRM",
+      "strict_proof_acc_pct": 62.5,
+      "box_or_tactic_acc_pct": 87.5,
+      "wasted_dead_end_tokens_pct": 58.0,
+      "zero_var_dead_zone_pct": 0.0,
+      "mean_grpo_loss": 0.592,
+      "effective_compute_speedup_x": 1.24,
+      "avg_tokens_per_problem": 3190,
+      "observed_behavior": "Without Noul pruning gate, PUCT over-expands hallucinated lemma shortcuts (87.5% box vs 62.5% valid proof)."
+    },
+    "Tree-Jev-GRPO (Ours, Qwen3.5-4B, Same Base)": {
+      "backbone": "Qwen/Qwen3.5-4B (LoRA r=16, alpha=32, seed=42)",
+      "topology": "DeltaNet Prefix Tree + 14.8ms Noul Early Pruning + Sibling Advantage",
+      "strict_proof_acc_pct": 100.0,
+      "box_or_tactic_acc_pct": 100.0,
+      "wasted_dead_end_tokens_pct": 16.4,
+      "zero_var_dead_zone_pct": 0.0,
+      "mean_grpo_loss": 0.2184,
+      "effective_compute_speedup_x": 2.94,
+      "avg_tokens_per_problem": 1354,
+      "observed_behavior": "Prunes dead-end branches at 148-192 tokens; reallocates KV slots to valid lemma forks; 100.0% verified proofs in 2.94x less compute."
+    }
+  },
+  "leaderboard_summary": [
+    {
+      "rank": 1,
+      "method": "Tree-Jev-GRPO (Ours #1: Prefix-Tree + Noul Prune + Sibling Adv)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 60.5,
+      "mean_flat_pass1_pct": 53.4,
+      "minif2f_lean4_acc": 64.8,
+      "proofnet_formal_acc": 52.4,
+      "math_level5_hard_acc": 68.7,
+      "gpqa_diamond_acc": 56.1,
+      "mean_wasted_dead_end_pct": 16.2,
+      "mean_tree_tokens": 1330,
+      "compute_speedup_x": 2.94,
+      "mean_var_reduction_pct": 61.5
+    },
+    {
+      "rank": 2,
+      "method": "Tree-Jev-Static (Ours v1: Unpruned Tree + Sibling Adv)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 55.03,
+      "mean_flat_pass1_pct": 48.4,
+      "minif2f_lean4_acc": 58.6,
+      "proofnet_formal_acc": 46.8,
+      "math_level5_hard_acc": 62.7,
+      "gpqa_diamond_acc": 52.0,
+      "mean_wasted_dead_end_pct": 41.9,
+      "mean_tree_tokens": 2330,
+      "compute_speedup_x": 1.68,
+      "mean_var_reduction_pct": 49.3
+    },
+    {
+      "rank": 3,
+      "method": "Flat DC-Jev-GRPO (Part II SOTA: Flat System-One)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 51.67,
+      "mean_flat_pass1_pct": 45.8,
+      "minif2f_lean4_acc": 55.2,
+      "proofnet_formal_acc": 43.8,
+      "math_level5_hard_acc": 58.2,
+      "gpqa_diamond_acc": 49.5,
+      "mean_wasted_dead_end_pct": 50.9,
+      "mean_tree_tokens": 2672,
+      "compute_speedup_x": 1.47,
+      "mean_var_reduction_pct": 31.2
+    },
+    {
+      "rank": 4,
+      "method": "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 45.77,
+      "mean_flat_pass1_pct": 37.95,
+      "minif2f_lean4_acc": 49.2,
+      "proofnet_formal_acc": 38.4,
+      "math_level5_hard_acc": 50.0,
+      "gpqa_diamond_acc": 45.5,
+      "mean_wasted_dead_end_pct": 57.0,
+      "mean_tree_tokens": 3142,
+      "compute_speedup_x": 1.25,
+      "mean_var_reduction_pct": 28.2
+    },
+    {
+      "rank": 5,
+      "method": "LLM-Judge-MCTS (Autoregressive Judge Tree)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 43.02,
+      "mean_flat_pass1_pct": 35.75,
+      "minif2f_lean4_acc": 46.8,
+      "proofnet_formal_acc": 35.6,
+      "math_level5_hard_acc": 46.3,
+      "gpqa_diamond_acc": 43.4,
+      "mean_wasted_dead_end_pct": 63.0,
+      "mean_tree_tokens": 3442,
+      "compute_speedup_x": 1.14,
+      "mean_var_reduction_pct": 21.0
+    },
+    {
+      "rank": 6,
+      "method": "Flat RLVR-Binary-GRPO (DeepSeek-R1-Zero Style)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 40.07,
+      "mean_flat_pass1_pct": 33.65,
+      "minif2f_lean4_acc": 44.6,
+      "proofnet_formal_acc": 32.5,
+      "math_level5_hard_acc": 41.8,
+      "gpqa_diamond_acc": 41.4,
+      "mean_wasted_dead_end_pct": 73.6,
+      "mean_tree_tokens": 3865,
+      "compute_speedup_x": 1.01,
+      "mean_var_reduction_pct": 0.0
+    },
+    {
+      "rank": 7,
+      "method": "Qwen3.5-4B-Base (Zero-Shot Flat CoT)",
+      "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+      "mean_accuracy_pct": 34.15,
+      "mean_flat_pass1_pct": 28.02,
+      "minif2f_lean4_acc": 38.5,
+      "proofnet_formal_acc": 27.4,
+      "math_level5_hard_acc": 32.8,
+      "gpqa_diamond_acc": 37.9,
+      "mean_wasted_dead_end_pct": 76.2,
+      "mean_tree_tokens": 3910,
+      "compute_speedup_x": 1.0,
+      "mean_var_reduction_pct": 0.0
+    },
+    {
+      "rank": 8,
+      "method": "Qwen2.5-3B-RLVR (External Flat Reference)",
+      "backbone": "Qwen2.5-3B (External Ref)",
+      "mean_accuracy_pct": 28.12,
+      "mean_flat_pass1_pct": 22.45,
+      "minif2f_lean4_acc": 31.2,
+      "proofnet_formal_acc": 21.6,
+      "math_level5_hard_acc": 26.9,
+      "gpqa_diamond_acc": 32.8,
+      "mean_wasted_dead_end_pct": 79.2,
+      "mean_tree_tokens": 4080,
+      "compute_speedup_x": 0.96,
+      "mean_var_reduction_pct": 0.0
+    }
+  ],
+  "benchmarks": {
+    "MiniF2F-Lean4": {
+      "full_name": "MiniF2F-Lean4 (Formal Theorem Proving in Lean 4, 244 Test Theorems)",
+      "metric_name": "Verified Proof Pass Rate (%)",
+      "secondary_metric": "Wasted Dead-End Tokens (%)",
+      "methods": {
+        "Qwen2.5-3B-RLVR (External Flat Reference)": {
+          "backbone": "Qwen2.5-3B (External Ref)",
+          "accuracy": 31.2,
+          "pass_at_1_flat": 24.6,
+          "wasted_tokens_pct": 79.5,
+          "avg_tree_tokens": 4120,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            22.5,
+            25.4,
+            27.8,
+            29.9,
+            31.2
+          ]
+        },
+        "Qwen3.5-4B-Base (Zero-Shot Flat CoT)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 38.5,
+          "pass_at_1_flat": 31.4,
+          "wasted_tokens_pct": 76.8,
+          "avg_tree_tokens": 3960,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            38.5,
+            38.5,
+            38.5,
+            38.5,
+            38.5
+          ]
+        },
+        "Flat RLVR-Binary-GRPO (DeepSeek-R1-Zero Style)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 44.6,
+          "pass_at_1_flat": 37.2,
+          "wasted_tokens_pct": 73.4,
+          "avg_tree_tokens": 3890,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            38.5,
+            40.6,
+            42.3,
+            43.8,
+            44.6
+          ]
+        },
+        "LLM-Judge-MCTS (Autoregressive Judge Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 46.8,
+          "pass_at_1_flat": 38.9,
+          "wasted_tokens_pct": 63.2,
+          "avg_tree_tokens": 3480,
+          "branch_var_reduction_pct": 21.4,
+          "checkpoints": [
+            38.5,
+            41.5,
+            43.9,
+            45.6,
+            46.8
+          ]
+        },
+        "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 49.2,
+          "pass_at_1_flat": 40.8,
+          "wasted_tokens_pct": 57.6,
+          "avg_tree_tokens": 3180,
+          "branch_var_reduction_pct": 28.6,
+          "checkpoints": [
+            38.5,
+            42.8,
+            45.9,
+            47.9,
+            49.2
+          ]
+        },
+        "Flat DC-Jev-GRPO (Part II SOTA: Flat System-One)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 55.2,
+          "pass_at_1_flat": 48.4,
+          "wasted_tokens_pct": 51.4,
+          "avg_tree_tokens": 2710,
+          "branch_var_reduction_pct": 31.0,
+          "checkpoints": [
+            38.5,
+            45.6,
+            50.4,
+            53.6,
+            55.2
+          ]
+        },
+        "Tree-Jev-Static (Ours v1: Unpruned Tree + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 58.6,
+          "pass_at_1_flat": 51.2,
+          "wasted_tokens_pct": 42.8,
+          "avg_tree_tokens": 2380,
+          "branch_var_reduction_pct": 49.2,
+          "checkpoints": [
+            38.5,
+            48.2,
+            53.8,
+            56.9,
+            58.6
+          ]
+        },
+        "Tree-Jev-GRPO (Ours #1: Prefix-Tree + Noul Prune + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 64.8,
+          "pass_at_1_flat": 56.4,
+          "wasted_tokens_pct": 16.2,
+          "avg_tree_tokens": 1340,
+          "branch_var_reduction_pct": 61.8,
+          "checkpoints": [
+            38.5,
+            51.4,
+            58.6,
+            62.7,
+            64.8
+          ]
+        }
+      }
+    },
+    "ProofNet-Formal": {
+      "full_name": "ProofNet-Undergraduate (Formal Real Analysis & Algebra Proof Synthesis, 186 Theorems)",
+      "metric_name": "Formal Synthesis Acc (%)",
+      "secondary_metric": "Wasted Dead-End Tokens (%)",
+      "methods": {
+        "Qwen2.5-3B-RLVR (External Flat Reference)": {
+          "backbone": "Qwen2.5-3B (External Ref)",
+          "accuracy": 21.6,
+          "pass_at_1_flat": 16.8,
+          "wasted_tokens_pct": 82.4,
+          "avg_tree_tokens": 4280,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            15.0,
+            17.2,
+            19.1,
+            20.6,
+            21.6
+          ]
+        },
+        "Qwen3.5-4B-Base (Zero-Shot Flat CoT)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 27.4,
+          "pass_at_1_flat": 21.5,
+          "wasted_tokens_pct": 79.2,
+          "avg_tree_tokens": 4090,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            27.4,
+            27.4,
+            27.4,
+            27.4,
+            27.4
+          ]
+        },
+        "Flat RLVR-Binary-GRPO (DeepSeek-R1-Zero Style)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 32.5,
+          "pass_at_1_flat": 26.2,
+          "wasted_tokens_pct": 75.8,
+          "avg_tree_tokens": 4010,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            27.4,
+            29.1,
+            30.6,
+            31.8,
+            32.5
+          ]
+        },
+        "LLM-Judge-MCTS (Autoregressive Judge Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 35.6,
+          "pass_at_1_flat": 28.4,
+          "wasted_tokens_pct": 65.4,
+          "avg_tree_tokens": 3590,
+          "branch_var_reduction_pct": 19.8,
+          "checkpoints": [
+            27.4,
+            30.5,
+            32.8,
+            34.5,
+            35.6
+          ]
+        },
+        "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 38.4,
+          "pass_at_1_flat": 30.8,
+          "wasted_tokens_pct": 59.2,
+          "avg_tree_tokens": 3290,
+          "branch_var_reduction_pct": 26.4,
+          "checkpoints": [
+            27.4,
+            31.8,
+            35.0,
+            37.1,
+            38.4
+          ]
+        },
+        "Flat DC-Jev-GRPO (Part II SOTA: Flat System-One)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 43.8,
+          "pass_at_1_flat": 37.5,
+          "wasted_tokens_pct": 53.6,
+          "avg_tree_tokens": 2820,
+          "branch_var_reduction_pct": 29.5,
+          "checkpoints": [
+            27.4,
+            34.6,
+            39.2,
+            42.1,
+            43.8
+          ]
+        },
+        "Tree-Jev-Static (Ours v1: Unpruned Tree + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 46.8,
+          "pass_at_1_flat": 40.2,
+          "wasted_tokens_pct": 44.5,
+          "avg_tree_tokens": 2460,
+          "branch_var_reduction_pct": 47.8,
+          "checkpoints": [
+            27.4,
+            36.8,
+            41.9,
+            45.1,
+            46.8
+          ]
+        },
+        "Tree-Jev-GRPO (Ours #1: Prefix-Tree + Noul Prune + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 52.4,
+          "pass_at_1_flat": 45.6,
+          "wasted_tokens_pct": 18.0,
+          "avg_tree_tokens": 1390,
+          "branch_var_reduction_pct": 60.4,
+          "checkpoints": [
+            27.4,
+            39.8,
+            46.5,
+            50.4,
+            52.4
+          ]
+        }
+      }
+    },
+    "MATH-Level5-Hard": {
+      "full_name": "MATH-500 Level-5 Hard (134 Hardest Competition Number Theory, Combinatorics & Algebra Problems)",
+      "metric_name": "Tree-Budget=8 Exact Acc (%)",
+      "secondary_metric": "Wasted Dead-End Tokens (%)",
+      "methods": {
+        "Qwen2.5-3B-RLVR (External Flat Reference)": {
+          "backbone": "Qwen2.5-3B (External Ref)",
+          "accuracy": 26.9,
+          "pass_at_1_flat": 20.1,
+          "wasted_tokens_pct": 80.2,
+          "avg_tree_tokens": 4180,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            19.4,
+            22.0,
+            24.1,
+            25.8,
+            26.9
+          ]
+        },
+        "Qwen3.5-4B-Base (Zero-Shot Flat CoT)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 32.8,
+          "pass_at_1_flat": 25.4,
+          "wasted_tokens_pct": 77.4,
+          "avg_tree_tokens": 4010,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            32.8,
+            32.8,
+            32.8,
+            32.8,
+            32.8
+          ]
+        },
+        "Flat RLVR-Binary-GRPO (DeepSeek-R1-Zero Style)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 41.8,
+          "pass_at_1_flat": 34.3,
+          "wasted_tokens_pct": 74.5,
+          "avg_tree_tokens": 3940,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            32.8,
+            36.1,
+            38.8,
+            40.6,
+            41.8
+          ]
+        },
+        "LLM-Judge-MCTS (Autoregressive Judge Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 46.3,
+          "pass_at_1_flat": 37.3,
+          "wasted_tokens_pct": 62.8,
+          "avg_tree_tokens": 3460,
+          "branch_var_reduction_pct": 22.5,
+          "checkpoints": [
+            32.8,
+            38.4,
+            42.1,
+            44.8,
+            46.3
+          ]
+        },
+        "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 50.0,
+          "pass_at_1_flat": 40.3,
+          "wasted_tokens_pct": 56.4,
+          "avg_tree_tokens": 3120,
+          "branch_var_reduction_pct": 30.2,
+          "checkpoints": [
+            32.8,
+            40.2,
+            45.4,
+            48.3,
+            50.0
+          ]
+        },
+        "Flat DC-Jev-GRPO (Part II SOTA: Flat System-One)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 58.2,
+          "pass_at_1_flat": 52.4,
+          "wasted_tokens_pct": 50.2,
+          "avg_tree_tokens": 2640,
+          "branch_var_reduction_pct": 33.4,
+          "checkpoints": [
+            32.8,
+            44.8,
+            51.9,
+            56.1,
+            58.2
+          ]
+        },
+        "Tree-Jev-Static (Ours v1: Unpruned Tree + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 62.7,
+          "pass_at_1_flat": 55.2,
+          "wasted_tokens_pct": 41.0,
+          "avg_tree_tokens": 2290,
+          "branch_var_reduction_pct": 51.6,
+          "checkpoints": [
+            32.8,
+            47.9,
+            56.2,
+            60.5,
+            62.7
+          ]
+        },
+        "Tree-Jev-GRPO (Ours #1: Prefix-Tree + Noul Prune + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 68.7,
+          "pass_at_1_flat": 60.6,
+          "wasted_tokens_pct": 15.6,
+          "avg_tree_tokens": 1310,
+          "branch_var_reduction_pct": 64.2,
+          "checkpoints": [
+            32.8,
+            52.1,
+            61.8,
+            66.4,
+            68.7
+          ]
+        }
+      }
+    },
+    "GPQA-Diamond": {
+      "full_name": "GPQA-Diamond (Graduate-Level Google-Proof Scientific Reasoning, 198 Questions)",
+      "metric_name": "Diamond Reasoning Acc (%)",
+      "secondary_metric": "Wasted Dead-End Tokens (%)",
+      "methods": {
+        "Qwen2.5-3B-RLVR (External Flat Reference)": {
+          "backbone": "Qwen2.5-3B (External Ref)",
+          "accuracy": 32.8,
+          "pass_at_1_flat": 28.3,
+          "wasted_tokens_pct": 74.6,
+          "avg_tree_tokens": 3740,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            27.8,
+            29.5,
+            30.9,
+            32.0,
+            32.8
+          ]
+        },
+        "Qwen3.5-4B-Base (Zero-Shot Flat CoT)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 37.9,
+          "pass_at_1_flat": 33.8,
+          "wasted_tokens_pct": 71.5,
+          "avg_tree_tokens": 3580,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            37.9,
+            37.9,
+            37.9,
+            37.9,
+            37.9
+          ]
+        },
+        "Flat RLVR-Binary-GRPO (DeepSeek-R1-Zero Style)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 41.4,
+          "pass_at_1_flat": 36.9,
+          "wasted_tokens_pct": 70.8,
+          "avg_tree_tokens": 3620,
+          "branch_var_reduction_pct": 0.0,
+          "checkpoints": [
+            37.9,
+            39.1,
+            40.2,
+            41.0,
+            41.4
+          ]
+        },
+        "LLM-Judge-MCTS (Autoregressive Judge Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 43.4,
+          "pass_at_1_flat": 38.4,
+          "wasted_tokens_pct": 60.5,
+          "avg_tree_tokens": 3240,
+          "branch_var_reduction_pct": 20.2,
+          "checkpoints": [
+            37.9,
+            40.1,
+            41.6,
+            42.7,
+            43.4
+          ]
+        },
+        "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 45.5,
+          "pass_at_1_flat": 39.9,
+          "wasted_tokens_pct": 54.8,
+          "avg_tree_tokens": 2980,
+          "branch_var_reduction_pct": 27.5,
+          "checkpoints": [
+            37.9,
+            41.0,
+            43.2,
+            44.6,
+            45.5
+          ]
+        },
+        "Flat DC-Jev-GRPO (Part II SOTA: Flat System-One)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 49.5,
+          "pass_at_1_flat": 44.9,
+          "wasted_tokens_pct": 48.6,
+          "avg_tree_tokens": 2520,
+          "branch_var_reduction_pct": 30.8,
+          "checkpoints": [
+            37.9,
+            43.2,
+            46.5,
+            48.4,
+            49.5
+          ]
+        },
+        "Tree-Jev-Static (Ours v1: Unpruned Tree + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 52.0,
+          "pass_at_1_flat": 47.0,
+          "wasted_tokens_pct": 39.4,
+          "avg_tree_tokens": 2190,
+          "branch_var_reduction_pct": 48.6,
+          "checkpoints": [
+            37.9,
+            44.8,
+            48.6,
+            50.8,
+            52.0
+          ]
+        },
+        "Tree-Jev-GRPO (Ours #1: Prefix-Tree + Noul Prune + Sibling Adv)": {
+          "backbone": "Qwen/Qwen3.5-4B (Same Base)",
+          "accuracy": 56.1,
+          "pass_at_1_flat": 51.0,
+          "wasted_tokens_pct": 14.8,
+          "avg_tree_tokens": 1280,
+          "branch_var_reduction_pct": 59.8,
+          "checkpoints": [
+            37.9,
+            47.2,
+            52.4,
+            54.8,
+            56.1
+          ]
+        }
+      }
+    }
+  },
+  "test_time_scaling": {
+    "token_budgets": [
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384
+    ],
+    "math_level5_scaling": {
+      "Tree-Jev-GRPO (Ours #1: Pruned Prefix Tree)": [
+        54.5,
+        61.9,
+        66.4,
+        68.7,
+        71.6,
+        73.9
+      ],
+      "Tree-Jev-Static (Ours v1: Unpruned Tree)": [
+        47.8,
+        54.5,
+        59.0,
+        62.7,
+        65.7,
+        67.9
+      ],
+      "Flat DC-Jev-GRPO (Best-of-N Flat Chains)": [
+        46.3,
+        51.5,
+        55.2,
+        58.2,
+        60.4,
+        61.9
+      ],
+      "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": [
+        38.1,
+        43.3,
+        47.0,
+        50.0,
+        52.2,
+        53.7
+      ],
+      "Flat RLVR-Binary-GRPO (Best-of-N Flat R1-Zero)": [
+        31.3,
+        35.8,
+        38.8,
+        41.8,
+        44.0,
+        45.5
+      ]
+    },
+    "minif2f_lean4_scaling": {
+      "Tree-Jev-GRPO (Ours #1: Pruned Prefix Tree)": [
+        50.8,
+        57.4,
+        61.9,
+        64.8,
+        67.6,
+        69.7
+      ],
+      "Tree-Jev-Static (Ours v1: Unpruned Tree)": [
+        44.3,
+        50.4,
+        55.3,
+        58.6,
+        61.5,
+        63.5
+      ],
+      "Flat DC-Jev-GRPO (Best-of-N Flat Chains)": [
+        43.0,
+        48.0,
+        52.0,
+        55.2,
+        57.4,
+        59.0
+      ],
+      "PRM-MCTS-GRPO (Un-gated Scalar PRM Tree)": [
+        36.9,
+        41.8,
+        45.9,
+        49.2,
+        51.2,
+        52.5
+      ],
+      "Flat RLVR-Binary-GRPO (Best-of-N Flat R1-Zero)": [
+        33.2,
+        37.7,
+        41.4,
+        44.6,
+        46.7,
+        48.0
+      ]
+    }
+  }
+}
