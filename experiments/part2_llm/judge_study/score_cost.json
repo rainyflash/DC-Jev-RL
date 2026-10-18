@@ -1,0 +1,5 @@
+{
+ "kev_seconds_per_1k_requests": 102.84133004404488,
+ "ar_correct_seconds_per_1k_prompts": 37.29086653257389,
+ "ar_quality_seconds_per_1k_prompts": 25.75165012214757
+}
