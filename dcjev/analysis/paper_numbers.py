@@ -74,11 +74,68 @@ def validation(o, exp):
     o.num("parity_questions", str(p["parity_bf16"]["questions"]))
 
 
+def prompts_table(o, exp):
+    """Table of the judges' task text (experiments/part1_control/prompts/judge_prompts.json), as the judges read it."""
+    j = json.loads((exp / "part1_control" / "prompts" / "judge_prompts.json").read_text())
+    rows = [f"{label} & {j['envs'][e]['task']} & {j['envs'][e]['reference']} & {j['envs'][e]['healthy']} \\\\" for e, _, label in TASKS]
+    o.table("prompts", "\\begin{tabular}{@{}p{0.11\\linewidth}p{0.3\\linewidth}p{0.3\\linewidth}p{0.25\\linewidth}@{}}\n\\toprule\n"
+            "task & task description & reference & \\texttt{healthy} question \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    o.num("progress_instruction", j["questions"]["progress"]["instructions"])
+
+
+def agreement(o, res):
+    # offline judge agreement on the env runs' windows
+    ja = res / "judge_agreement.json"
+    if ja.exists():
+        j = json.loads(ja.read_text())
+        sig = ["kev_progress", "kev_healthy", "kev_gated", "ar_progress", "ar_progress_sampled", "ar_healthy", "ar_gated"]
+        rows = []
+        for e, k, label in TASKS:
+            if e not in j: continue
+            d = j[e]
+            cells = [f(d[x]["spearman_env_reward"]) for x in sig]
+            for x in sig: o.num(f"rho_{k}_{x}", f(d[x]["spearman_env_reward"]))
+            o.num(f"windows_{k}", str(d["windows"]))
+            if "healthy_auroc_no_fall" in d:
+                h = d["healthy_auroc_no_fall"]
+                o.num(f"healthyauc_{k}_kev", f(h["kev"])); o.num(f"healthyauc_{k}_ar", f(h["ar"])); o.num(f"fallrate_{k}", f(h["fall_rate"]))
+            for q, v in d.get("ar_valid_mass", {}).items(): o.num(f"validmass_{k}_{q}", f(v, 3))
+            b = d.get("bootstrap")   # two-stage bootstrap over runs and their windows
+            if b:
+                for x in sig:
+                    lo, hi = b["ci95_env_reward"][x]; o.num(f"rholo_{k}_{x}", f(lo)); o.num(f"rhohi_{k}_{x}", f(hi))
+                    lo, hi = b["ci95_physical"][x]; o.num(f"rhophyslo_{k}_{x}", f(lo)); o.num(f"rhophyshi_{k}_{x}", f(hi))
+                for pair, v in b["diff_env_reward"].items():
+                    pk = pair.replace("_", "").replace("-", "_")
+                    o.num(f"rhod_{k}_{pk}", f(v, 2, sign=True)); lo, hi = b["ci95_env_reward"][pair]
+                    o.num(f"rhodlo_{k}_{pk}", f(lo)); o.num(f"rhodhi_{k}_{pk}", f(hi))
+                for pair, v in b["diff_physical"].items():
+                    pk = pair.replace("_", "").replace("-", "_")
+                    o.num(f"rhophysd_{k}_{pk}", f(v, 2, sign=True)); lo, hi = b["ci95_physical"][pair]
+                    o.num(f"rhophysdlo_{k}_{pk}", f(lo)); o.num(f"rhophysdhi_{k}_{pk}", f(hi))
+            for x in sig: o.num(f"rhophys_{k}_{x}", f(d[x]["spearman_physical"]))
+            rows.append(f"{label} & {d['windows']} & " + " & ".join(cells) + " \\\\")
+        for x in sig:
+            v = [j[e][x]["spearman_env_reward"] for e, _, _ in TASKS if e in j and j[e][x]["spearman_env_reward"] is not None]
+            o.num(f"rho_mean_{x}", f(np.mean(v)) if v else "--")
+        vm = [v for e, _, _ in TASKS if e in j for v in j[e].get("ar_valid_mass", {}).values()]
+        if vm: o.num("validmass_min", f(min(vm), 3))
+        for q in ("progress", "healthy"):
+            vq = [j[e]["ar_valid_mass"][q] for e, _, _ in TASKS if e in j and q in j[e].get("ar_valid_mass", {})]
+            if vq: o.num(f"validmass_min_{q}", f(min(vq), 2)); o.num(f"validmass_max_{q}", f(max(vq), 2))
+        o.table("agreement", "\\begin{tabular}{@{}lc" + "c" * len(sig) + "@{}}\n\\toprule\n & & \\multicolumn{3}{c}{\\kev{}} & "
+                "\\multicolumn{4}{c}{AR judge} \\\\ \\cmidrule(lr){3-5}\\cmidrule(l){6-9}\ntask & windows & progress & healthy & gated & "
+                "progress & sampled & healthy & gated \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part1(o, exp):
     res = exp / "part1_control" / "results"
+    prompts_table(o, exp)
+    validation(o, exp)
+    agreement(o, res)
+    if not (res / "summary.json").exists(): return
     s = json.loads((res / "summary.json").read_text())
     conds = [c for c in P1_CONDS if c in s["aggregate"]]
-    validation(o, exp)
 
     # per-task final returns (mean +- std over seeds)
     rows = []
@@ -121,31 +178,6 @@ def part1(o, exp):
     o.table("cost", "\\begin{tabular}{@{}lcccc@{}}\n\\toprule\ncondition & judged windows & judge wait (h) & wall-clock (h) & "
             "corr.\\ (score, env reward) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
-    # offline judge agreement on the env runs' windows
-    ja = res / "judge_agreement.json"
-    if ja.exists():
-        j = json.loads(ja.read_text())
-        sig = ["kev_progress", "kev_healthy", "kev_gated", "ar_progress", "ar_progress_sampled", "ar_healthy", "ar_gated"]
-        rows = []
-        for e, k, label in TASKS:
-            if e not in j: continue
-            d = j[e]
-            cells = [f(d[x]["spearman_env_reward"]) for x in sig]
-            for x in sig: o.num(f"rho_{k}_{x}", f(d[x]["spearman_env_reward"]))
-            o.num(f"windows_{k}", str(d["windows"]))
-            if "healthy_auroc_no_fall" in d:
-                h = d["healthy_auroc_no_fall"]
-                o.num(f"healthyauc_{k}_kev", f(h["kev"])); o.num(f"healthyauc_{k}_ar", f(h["ar"])); o.num(f"fallrate_{k}", f(h["fall_rate"]))
-            for q, v in d.get("ar_valid_mass", {}).items(): o.num(f"validmass_{k}_{q}", f(v, 3))
-            rows.append(f"{label} & {d['windows']} & " + " & ".join(cells) + " \\\\")
-        for x in sig:
-            v = [j[e][x]["spearman_env_reward"] for e, _, _ in TASKS if e in j and j[e][x]["spearman_env_reward"] is not None]
-            o.num(f"rho_mean_{x}", f(np.mean(v)) if v else "--")
-        vm = [v for e, _, _ in TASKS if e in j for v in j[e].get("ar_valid_mass", {}).values()]
-        if vm: o.num("validmass_min", f(min(vm), 3))
-        o.table("agreement", "\\begin{tabular}{@{}lc" + "c" * len(sig) + "@{}}\n\\toprule\n & & \\multicolumn{3}{c}{\\kev{}} & "
-                "\\multicolumn{4}{c}{AR judge} \\\\ \\cmidrule(lr){3-5}\\cmidrule(l){6-9}\ntask & windows & progress & healthy & gated & "
-                "progress & sampled & healthy & gated \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
 
 

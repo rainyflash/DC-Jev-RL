@@ -4,9 +4,16 @@
 
 \paragraph{\kev{}。} \kev{}~\cite{kev4b} 是一种“系统一”决策模型：在 Qwen3.5-4B-Base~\cite{qwen35}（一种混合架构模型，各层交替使用 Gated DeltaNet~\cite{yang2025gated} 和全注意力）上加一个 LoRA 适配器（秩 16）和一个指针头。一个请求包含一个\emph{状态}（JSON 对象，由 \texttt{kev.api} 渲染成文本）和一个或多个\emph{问题}。\texttt{score} 型问题列出有序的评判等级；\texttt{noul} 型问题要求回答是或否。\kev{} 不生成文本。每个问题作为一个分支接在渲染后的状态之后，指针头读取决策位置和各答案选项位置上的隐藏状态，再经过温度（存于检查点中，$T=2.406$）的 softmax 得到选项上的分布。同一请求的所有问题在一次前向传播中完成：共享的状态只算一次，各问题的短分支并行计算。我们原样使用 kev 代码中的模式定义、渲染、编码器和输出头（修订版 \texttt{6cfce5c}），我们的封装只改变行的批处理方式。在 \NUM{parity_questions} 个问题上，它的 bf16 概率与 kev 参考推理路径的差异最大为 \NUM{parity_bf16_max}（argmax 一致率 \NUM{parity_bf16_argmax}），fp32 下最大为 \NUM{parity_fp32_max}（\texttt{experiments/validation/kev\_parity.json}）。
 
-\paragraph{自回归（AR）评判模型。} 基线评判模型是 Qwen3.5-4B~\cite{qwen35}（修订版 \texttt{851bf6e}），即同一家族、同样大小的指令微调模型，关闭思考模式。它在对话提示中得到同样的渲染状态和同样的问题文本，后接编号的选项，并被要求只回答选项编号（或是/否）。我们读取一次下一词元分布，限制到合法答案对应的词元上并重新归一化。归一化之前合法答案上的概率质量会被记录下来，全程都接近 1（\S\ref{sec:agreement}）。因此 AR 评判与 \kev{} 一样，每个问题只需一次前向传播；不同的是，它每个问题需要单独一行，不能共享状态，而且没有做任何校准。
+\paragraph{自回归（AR）评判模型。} 基线评判模型是 Qwen3.5-4B~\cite{qwen35}（修订版 \texttt{851bf6e}），即同一家族、同样大小的指令微调模型，关闭思考模式。它在对话提示中得到同样的渲染状态和同样的问题文本，后接编号的选项，并被要求只回答选项编号（或是/否）。我们读取一次下一词元分布，限制到合法答案对应的词元上并重新归一化。归一化之前合法答案上的概率质量会被记录下来（\S\ref{sec:agreement}）：对是/否问题它至少为 \NUM{validmass_min_healthy}，但对五级 \texttt{progress} 问题只有 \NUM{validmass_min_progress} 到 \NUM{validmass_max_progress}，所以在那里重新归一化并非可有可无。AR 评判与 \kev{} 一样，每个问题只需一次前向传播；不同的是，它每个问题需要单独一行，不能共享状态，而且没有做任何校准。
 
 \paragraph{问题。} 每个任务的状态都是 \{任务描述，参考信息，片段摘要\}（表~\ref{tab:prompts}）；问题固定在 \texttt{experiments/part1\_control/prompts/judge\_prompts.json} 中，在网格实验开始前即已冻结。\texttt{progress} 是一个五级 \texttt{score} 问题（\emph{failing}、\emph{poor}、\emph{fair}、\emph{good}、\emph{excellent}，每级附一行说明），读出为期望等级除以 4，取值于 $[0,1]$。\texttt{healthy} 是一个 \texttt{noul} 问题（“机器人是否在以受控、直立的步态真正向前推进……？”），读出为 $p(\text{yes})$。
+
+\begin{table}[t]
+\centering\footnotesize
+\input{tables/prompts}
+\caption{两个评判模型读到的各任务文本（评判模型读的是英文原文）。每个请求还包含该窗口的摘要（\S\ref{sec:method} 所列各物理量）。\texttt{progress} 问题（“\NUM{progress_instruction}”）有五个随任务而定的等级，从 \emph{failing} 到 \emph{excellent}；全部内容见 \texttt{experiments/part1\_control/prompts/judge\_prompts.json}。}
+\label{tab:prompts}
+\end{table}
 
 \section{方法}\label{sec:method}
 

@@ -120,7 +120,11 @@ class Server:
         with Listener(("127.0.0.1", self.port), authkey=AUTHKEY, backlog=256) as lst:
             print(f"judge server ready on port {self.port}: {sorted(self.judges)}", flush=True)
             while True:
-                conn = lst.accept()
+                try:
+                    conn = lst.accept()
+                except (OSError, EOFError) as e:   # a client that fails the handshake (e.g. an HTTP probe) is dropped
+                    print(f"rejected a connection: {e!r}", flush=True)
+                    continue
                 threading.Thread(target=self.serve_client, args=(conn,), daemon=True).start()
 
 

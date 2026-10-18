@@ -19,8 +19,10 @@ batched. On \NUM{parity_questions} questions its bf16 probabilities differ from 
 instruction-tuned model of the same family and size, with thinking disabled. It gets the same rendered state and the
 same question text in a chat prompt, followed by the numbered options and the instruction to answer with the option
 number only (or with yes or no). We read the next-token distribution once, restrict it to the tokens of the valid
-answers and renormalise. The mass on valid answers before renormalisation is logged; it is close to one throughout
-(\S\ref{sec:agreement}). The AR judge therefore costs one forward pass per question, like \kev{}. It needs one row per
+answers and renormalise. The mass on valid answers before renormalisation is logged (\S\ref{sec:agreement}). It is at
+least \NUM{validmass_min_healthy} for the yes/no question, but only \NUM{validmass_min_progress} to
+\NUM{validmass_max_progress} for the five-level \texttt{progress} question, so the renormalisation is not a formality
+there. The AR judge costs one forward pass per question, like \kev{}. It needs one row per
 question instead of one shared state, and it is given no calibration.
 
 \paragraph{Questions.} For every task the state is \{task description, reference, segment summary\}
@@ -29,6 +31,15 @@ were frozen before the grid was run. \texttt{progress} is a five-level \texttt{s
 \emph{poor}, \emph{fair}, \emph{good}, \emph{excellent}, each with a one-line description), read out as the expected
 level divided by four, in $[0,1]$. \texttt{healthy} is a \texttt{noul} question (``Is the robot making genuine forward
 progress with a controlled, upright gait\ldots?'') read out as $p(\text{yes})$.
+
+\begin{table}[t]
+\centering\footnotesize
+\input{tables/prompts}
+\caption{The task text both judges read, per task. Each request also holds the window's summary (the quantities of
+\S\ref{sec:method}). The \texttt{progress} question (``\NUM{progress_instruction}'') has five task-specific levels, from
+\emph{failing} to \emph{excellent}; all are in \texttt{experiments/part1\_control/prompts/judge\_prompts.json}.}
+\label{tab:prompts}
+\end{table}
 
 \section{Method}\label{sec:method}
 
