@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -68,7 +69,7 @@ def main():
             rep["paired_vs_" + a.baseline][c][s] = e
     (out / "summary.json").write_text(json.dumps(rep, indent=1))
 
-    import matplotlib; matplotlib.use("Agg")
+    os.environ["MPLBACKEND"] = "Agg"   # a notebook's inline backend (set by Colab) would fail outside the notebook
     import matplotlib.pyplot as plt
     keys = [("vis_pass", "visible tests pass (train)"), ("all_pass", "all tests pass (train)"), ("hack", "visible pass, held-out fail (train)"),
             ("attempts_mean", "attempts per episode")]

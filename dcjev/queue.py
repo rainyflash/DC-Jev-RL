@@ -43,8 +43,17 @@ def is_trainer(pid, out):
 
 
 def job_pid(out):
-    """The process id of a running dcjev trainer whose arguments name <out> (None if there is none)."""
-    return next((int(p.name) for p in Path("/proc").iterdir() if p.name.isdigit() and is_trainer(p.name, out)), None)
+    """The process id of a running dcjev trainer whose arguments name <out> (None if there is none). A trainer's worker
+    processes (forked, so with the same arguments) also match; the one returned is the trainer itself, whose parent
+    does not match."""
+    pids = {int(p.name) for p in Path("/proc").iterdir() if p.name.isdigit() and is_trainer(p.name, out)}
+    def ppid(pid):
+        try:
+            return int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[1])
+        except (OSError, IndexError, ValueError):
+            return None
+    roots = sorted(pid for pid in pids if ppid(pid) not in pids)
+    return roots[0] if roots else None
 
 
 class Adopted:

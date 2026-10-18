@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -119,7 +120,7 @@ def main():
                                                     "ci95": [float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))]}
     (out / "summary.json").write_text(json.dumps(rep, indent=1))
 
-    import matplotlib; matplotlib.use("Agg")
+    os.environ["MPLBACKEND"] = "Agg"   # a notebook's inline backend (set by Colab) would fail outside the notebook
     import matplotlib.pyplot as plt
     keys = [("acc", "train accuracy (verifier)"), ("len_mean", "completion tokens"), ("groups_all_wrong", "groups with no correct sample"),
             ("kev_correct", "Kev P(correct)")]
