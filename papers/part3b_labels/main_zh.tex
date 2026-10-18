@@ -1,0 +1,31 @@
+\documentclass[11pt]{ctexart}
+\input{../common/preamble_zh}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{当验证器只标注部分样本时：\\GRPO 中冻结、重新校准与从头训练的评判输出头}
+\author{DC-Jev-RL 项目，第三部分 B（第 4 版）}
+\date{2026 年 10 月}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+本文第 1.0--3.0 版（“CoEvo-Jev-GRPO”）已撤回，其结果并非由任何实验产生。产生评判--策略协同演化结果、长时程曲线和反奖励投机结果的脚本里没有任何加载、训练或评估模型的代码，每个数字都是写进去的。本版用一个实际运行过的实验取代协同演化的说法：带部分验证器标签的 GRPO，其中只有评判模型很小的输出头会适应。撤回的文件保存在仓库的 \texttt{withdrawn/} 目录下，\texttt{CORRECTION.md} 列出了错误之处。
+\end{correction}
+
+\begin{abstract}
+\input{abstract_zh}
+\end{abstract}
+
+\input{intro_zh}
+\input{method_zh}
+\input{results_zh}
+\input{discussion_zh}
+
+\section*{可复现性}
+代码、提示、原始日志（每个 GRPO 步，包括补全奖励与被隐去标签的一致性，以及每次评估）都在仓库中（\texttt{experiments/part3b\_labels/}）。表格和正文中的每个数字都由 \texttt{dcjev/analysis/part2.py} 和 \texttt{dcjev/analysis/paper\_numbers.py} 从中生成。
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}

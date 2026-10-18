@@ -1,0 +1,32 @@
+\documentclass[11pt]{ctexart}
+\input{../common/preamble_zh}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{可见测试、留出测试与评判模型：\\度量 GRPO 多轮代码修复中的奖励投机}
+\author{DC-Jev-RL 项目，第三部分 A（第 4 版）}
+\date{2026 年 10 月}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+本文第 1.0--3.0 版（“Agentic-Jev-GRPO”）已撤回，其结果并非由任何实验产生。产生这些结果的基准套件里没有任何加载、训练或评估模型的代码；每个准确率、学习曲线和消融结果都是写进脚本的数字。文中列出的基准（BFCL-v3、MBPP+、HumanEval+、SWE-bench-Verified-Mini）一个也没有运行。本版用实测实验运行 MBPP+ 和 HumanEval+，并去掉了工具调用和 SWE-bench 的说法。撤回的文件保存在仓库的 \texttt{withdrawn/} 目录下，\texttt{CORRECTION.md} 列出了错误之处。
+\end{correction}
+
+\begin{abstract}
+\input{abstract_zh}
+\end{abstract}
+
+\input{intro_zh}
+\input{method_zh}
+\input{results_study_zh}
+\input{results_grpo_zh}
+\input{discussion_zh}
+
+\section*{可复现性}
+代码、提示、数据准备（题目筛选和可见/留出测试的划分）、原始日志（每个 GRPO 步和最终评估的每个回合），以及离线研究的程序和评判分数都在仓库中（\texttt{experiments/part3a\_code/}）。表格和正文中的每个数字都由 \texttt{dcjev/code/judge\_study.py}、\texttt{dcjev/analysis/part3a.py} 和 \texttt{dcjev/analysis/paper\_numbers.py} 从中生成。
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}
