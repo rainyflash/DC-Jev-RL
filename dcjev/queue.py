@@ -4,8 +4,9 @@
 
 Each non-comment line of the jobs file is `<out_dir> <free_gb> <command ...>`. A job is finished when <out_dir>/final.json
 exists, and is then skipped, so the queue can be started again after an interruption (GRPO jobs resume from their
-checkpoints). A job is launched when fewer than --workers jobs of this queue are running, the GPU has at least <free_gb>
-GB free, and the previous launch was at least --settle seconds ago, so that its memory has grown before the next check.
+checkpoints). The first job in file order whose <free_gb> GB are free on the GPU is launched when fewer than --workers jobs of this queue
+are running and the previous launch was at least --settle seconds ago (so that its memory has grown before the next
+check); a job that needs more memory does not hold up the smaller ones behind it.
 A job that exits without final.json is logged to <log_dir>/<name>.failures.jsonl and not retried.
 """
 from __future__ import annotations
@@ -40,8 +41,12 @@ def main():
     logs = Path(a.log_dir); logs.mkdir(parents=True, exist_ok=True)
     running, last = [], 0.0
     while todo or running:
-        if todo and len(running) < a.workers and time.time() - last >= a.settle and free_gb() >= todo[0][1]:
-            out, gb, cmd = todo.pop(0)
+        fit = None
+        if todo and len(running) < a.workers and time.time() - last >= a.settle:
+            free = free_gb()
+            fit = next((k for k, j in enumerate(todo) if free >= j[1]), None)
+        if fit is not None:
+            out, gb, cmd = todo.pop(fit)
             out.mkdir(parents=True, exist_ok=True)
             tag = "_".join(out.parts[-2:])
             f = open(logs / f"{a.name}.{tag}.log", "a")
