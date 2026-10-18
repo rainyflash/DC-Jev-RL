@@ -1,0 +1,55 @@
+% Part III-A, sections that do not depend on the results (included by main_en.tex).
+
+\section{Task: code repair with visible and held-out tests}\label{sec:task}
+
+\paragraph{Problems.} Training problems come from KodCode-Light-RL-10K~\cite{xu2025kodcode}: Python functions with
+\texttt{pytest} unit tests. We keep the problems whose test file tests one function, uses no fixtures or third-party
+packages, and has at least three test functions. The first test function is shown to the policy (\emph{visible}); the
+others are \emph{held out}. 300 problems (seed 0) are held out as the validation set (\texttt{kodcode\_val}). The test
+sets are MBPP+ and HumanEval+~\cite{austin2021program,chen2021codex,liu2023evalplus}. For MBPP+ the three original MBPP
+asserts are visible. For HumanEval+ the first three asserts of the original HumanEval test are visible. In both, the
+EvalPlus harness with its added tests is held out. A problem is dropped if its reference solution fails any of its own
+tests under our harness, and we report how many were dropped. Each program runs in its own \texttt{python -I}
+subprocess in an empty temporary directory. It has CPU-time, address-space and file-size limits and a wall-clock
+timeout, and runs after the destructive functions of \texttt{os}, \texttt{shutil} and \texttt{subprocess} are disabled
+(the ``reliability guard'' of OpenAI's \texttt{human-eval}). This contains buggy code from a small model; it is not a
+security boundary.
+
+\paragraph{Episodes.} The policy sees the problem, the function signature and the visible tests, and writes a
+solution (at most 768 tokens per attempt). The code runs on the visible tests. If one fails, the policy sees the first
+failing test and its error and writes another attempt, up to three in all. Every attempt continues the exact token
+sequence of the earlier turns. An episode ends at the first attempt that passes every visible test, or after the third,
+and its final code then runs on the held-out tests. The prompts are in
+\texttt{experiments/part3a\_code/prompts/code\_prompts.json} and were fixed before any run.
+
+\paragraph{Metrics.} \emph{vis pass}: the final code passes every visible test. \emph{all pass}: it passes every
+visible and every held-out test. \emph{hack}: it passes the visible tests and fails a held-out one. This counts an
+over-fitted or special-cased solution and also a merely incomplete one: the metric cannot tell the two apart, and we
+report it as the gap between what the visible tests certify and what is true. \emph{First-attempt all pass} measures
+the policy without repair.
+
+\section{Rewards}\label{sec:rewards}
+
+\begin{itemize}
+\item \texttt{vis}: 1 if the final code passes every visible test. This is all an agent that holds only the visible
+  tests can check, and it is the reward that invites over-fitting to them.
+\item \texttt{vis\_kev}: \texttt{vis} times \kev{}'s $p(\text{yes})$ for \emph{genuine}: ``Does the proposed code solve
+  the problem for all valid inputs, instead of special-casing the example tests?'' \kev{} sees the problem, the visible
+  tests and the final code, never the held-out tests.
+\item \texttt{hidden}: 1 if the final code passes every visible and every held-out test. This is an oracle: what
+  \texttt{vis} would be with complete tests.
+\end{itemize}
+Every attempt of an episode is trained with the episode's advantage, and the feedback tokens are context, not trained.
+The update is Part II's: group baseline over 8 episodes per problem, batch scale, token-level loss, truncated importance
+sampling, one optimizer step per batch.
+
+\section{Offline judge study}\label{sec:code-study}
+
+Before training, the base policy writes 4 single attempts per problem at temperature 1 on \texttt{kodcode\_val}, MBPP+
+and HumanEval+. We run them on both test sets, and both judges answer \emph{genuine} and \emph{correct} for each. The
+question that matters for a visible-test reward is whether a judge can separate, among the attempts that pass the
+visible tests, those that also pass the held-out tests. We report that AUROC, with the AUROC for all-pass over all
+attempts. We also build two kinds of code with known status for MBPP+ and HumanEval+. One is the reference solution.
+The other is a \emph{hard-coded} lookup that returns the expected value for each visible test's arguments and
+\texttt{None} otherwise. It is kept only if it passes the visible tests, so it is a pure test-special-casing program. We
+report how often each judge scores the lookup above the reference solution of the same problem.

@@ -1,0 +1,54 @@
+% Part II, introduction and related work (included by main_en.tex).
+
+\section{Introduction}\label{sec:intro}
+
+Reinforcement learning with verifiable rewards (RLVR) trains language models on problems whose answers can be checked.
+GRPO~\cite{shao2024deepseekmath,deepseek2025r1} and its variants~\cite{liu2025understanding,liu2026tricks} are the most
+common form. The verifier is exact but coarse. It says whether the final answer is right, not whether the reasoning was
+sound, and it gives no signal in groups where every sample is right or every sample is wrong. A judge model can grade
+the reasoning itself. Process supervision~\cite{lightman2024verify,wang2024mathshepherd} and generative
+verifiers~\cite{zhang2024genverifier} are two forms of this idea. A judge brings a cost, in memory and time, and a risk:
+a learned reward can be exploited~\cite{gao2023scaling,skalse2022defining}.
+
+\kev{}~\cite{kev4b} is a judge that is unusually cheap to add to RLVR on a Qwen3.5-4B policy. It is a LoRA adapter and
+a pointer head on the same base model, Qwen3.5-4B-Base, so the policy and the judge can share one copy of the backbone.
+Policy LoRA and judge LoRA sit side by side, and the judge reads its answer in one forward pass instead of generating
+text. This paper measures what that design saves and what the judge adds to GRPO. We ask three questions:
+\begin{enumerate}
+\item How much GPU memory does the shared backbone save over loading the judge as a second model, measured in the
+  same process with the same training step (\S\ref{sec:res-shared})?
+\item How well does \kev{} tell correct from incorrect solutions of the policy, compared with an AR judge of the
+  same size and family, and with that judge reasoning before it answers? How easily is each judge moved by edits that
+  should not move it (\S\ref{sec:res-study})?
+\item Does adding \kev{}'s judgment to the verifier's reward improve GRPO on MATH, and can \kev{} replace the
+  verifier (\S\ref{sec:res-grpo})?
+\end{enumerate}
+
+\paragraph{Correction.} Versions 1--3 of this paper reported a leaderboard, learning curves and memory figures that were
+not produced by experiments. The leaderboard values were constants in a script. The memory of ``two separate models''
+was set to 2.04 times the measured single-backbone memory, and the memory of ``two adapters'' to that measurement plus
+0.12\,GB (see the notice above and \texttt{CORRECTION.md}). This version measures all of them. The training runs use
+fewer problems, steps and benchmarks than v1--v3 claimed, which is what we could run and check. Every number is
+computed from the logs in the repository.
+
+\section{Related work}\label{sec:related}
+
+\paragraph{RLVR and GRPO.} GRPO~\cite{shao2024deepseekmath} replaces PPO's value function with a group baseline over
+several samples of the same prompt. DeepSeek-R1~\cite{deepseek2025r1} made it the standard recipe for reasoning. Later
+analyses showed that details matter: length normalisation and the per-group standard
+deviation~\cite{liu2025understanding}, and the choice of advantage scale~\cite{liu2026tricks}. We use the group mean with
+the batch-level scale that \citet{liu2026tricks} recommend, a token-level loss, and no KL term. Modern RL stacks sample
+with an inference engine and train with another framework. The two compute slightly different probabilities for the
+same weights, and truncated importance sampling corrects for that~\cite{yao2025offpolicy}.
+
+\paragraph{Judges and reward models for reasoning.} Outcome and process reward models score solutions or
+steps~\cite{lightman2024verify,wang2024mathshepherd}. Generative verifiers~\cite{zhang2024genverifier} read the
+probability of ``yes'' from a language model asked whether a solution is correct, optionally after it reasons. LLM
+judges are known to be sensitive to length, style and assertions of correctness~\cite{zheng2023judging}. Reward-model
+over-optimisation grows with how hard the policy is pushed~\cite{gao2023scaling}, and RL policies have learned to
+exploit their reward signals in many settings~\cite{skalse2022defining,denison2024sycophancy,baker2025monitoring}.
+
+\paragraph{Sharing weights between policy and reward.} Multi-LoRA serving~\cite{hu2022lora,kwon2023vllm} lets several
+adapters share one base model at inference time. Here the same mechanism is used inside the trainer, for a policy
+adapter that is being trained and a judge adapter that is frozen. The condition that makes this exact is that training
+never changes the base weights the judge was trained on.

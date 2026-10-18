@@ -1,0 +1,48 @@
+% Part III-C, sections that do not depend on the results (included by main_en.tex).
+
+\section{Judging unfinished solutions}\label{sec:prefix}
+
+Tree rollouts~\cite{hou2025treerl} sample several prefixes of a solution, continue some of them and share each prefix
+among the continuations. A judge that can tell early which prefixes lead to correct answers could decide which ones to
+continue. This saves the cost of continuing dead ends and concentrates samples where the policy can succeed. We first
+measure offline whether a 4B judge can make that call, then train with it.
+
+\paragraph{Prefix study.} We use GRPO's validation problems (500 MATH training problems held out from training,
+\S2 of Part II). The base policy samples 4 solutions per problem as in GRPO (temperature 1, the training prompt). Every
+solution is cut at 128, 256 and 512 tokens if it runs that long. Each prefix gets 4 continuations to the training
+length (1024 tokens in all), and the verifier checks them. The fraction of a prefix's continuations that end correct is
+its Monte-Carlo value. The signals are:
+\begin{itemize}
+\item \kev{}'s $p(\text{yes})$ for \emph{on track} (``Is this unfinished solution on track to reach the correct final
+  answer\ldots?'');
+\item \kev{}'s $p(\text{yes})$ for Part II's \emph{correct} question, with the prefix as the proposed solution;
+\item the AR judge's $p(\text{yes})$ for \emph{on track};
+\item the policy's own mean token log-probability of the prefix, which costs nothing.
+\end{itemize}
+For each cut length we report each signal's AUROC for a continuation ending correct. It is reported pooled and within
+problems, the comparison that matters when choosing among one problem's prefixes. We also report each signal's
+Spearman correlation with the Monte-Carlo value.
+
+\paragraph{Pruning experiment.} On the problems whose 4 solutions all run past the cut, a signal keeps the 2 prefixes
+it ranks highest. We compare the mean value of the kept prefixes with the mean of all 4, which is what a random choice
+keeps in expectation. We also compare it with an oracle that ranks by half of the continuations and is scored on the
+other half. There are 95\% bootstrap intervals over problems. We also evaluate the rule of the withdrawn v3 paper:
+prune a prefix when the judge's $p(\text{yes})<0.3$. For it we report how much it prunes, how many pruned prefixes were
+dead (value 0), and how many correct continuations it throws away.
+
+\section{Tree GRPO}\label{sec:tree}
+
+Each prompt's group of 8 leaves grows from $R=4$ sampled roots of 128 tokens. $K=2$ of them are continued, with 4
+samples each, from the exact token prefix. \texttt{tree\_kev} keeps the two roots with the highest \kev{}
+\emph{on-track} score; \texttt{tree\_random} keeps two at random. In distribution, \texttt{tree\_random} equals sampling
+two roots only. A root that has already ended is a complete solution, and if kept its 4 leaves are copies of it. Leaves
+are trained like Part II's flat completions: the full root and continuation tokens, the verifier's reward, and the
+group baseline over the prompt's 8 leaves. Everything else is Part II's \texttt{rlvr} setup. Every tenth step, the roots
+that were not kept are continued too, for the log only. This measures what the selection gained on that step against
+keeping all roots, and against the best two in hindsight.
+
+Two effects pull in opposite directions. Selecting roots by a judge raises the share of correct leaves when the judge
+is right, which gives GRPO more groups with a learning signal. But it also makes the kept roots no longer samples of the
+policy, so the gradient is no longer an unbiased estimate of the policy gradient. Comparing \texttt{tree\_kev} with
+\texttt{tree\_random} (same tree shape, unbiased selection) isolates the selection, and comparing \texttt{tree\_random}
+with Part II's \texttt{rlvr} isolates the tree shape.

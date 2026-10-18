@@ -1,0 +1,56 @@
+% Part I, introduction and related work (included by main_en.tex).
+
+\section{Introduction}\label{sec:intro}
+
+Reinforcement learning needs a reward, and for most tasks someone has to write it. The MuJoCo locomotion benchmarks
+come with engineered rewards: forward velocity plus a survival bonus minus a control cost, with weights that were tuned
+by hand. A language model that judges behaviour from a description of the task would remove that step. This idea has
+been pursued in several forms. Language models have written reward code~\cite{yu2023language,ma2024eureka}, and they have
+served directly as reward functions in text environments~\cite{kwon2023reward}. Vision--language models have scored
+images of a robot's pose~\cite{rocamonde2024vlm}. And a language model's preferences over event captions have been
+distilled into an intrinsic reward~\cite{klissarov2024motif}.
+
+This paper asks a narrow version of the question, with the controls needed to answer it. Suppose a 4-billion-parameter
+judge reads a short text summary of what the robot did in a window of 32 steps. Can its score replace the engineered
+reward of a standard benchmark when PPO is trained on it, and what does that cost? We compare two judges of the same
+size and family. One is \kev{}~\cite{kev4b}, a decision model that answers questions about a JSON state in a single
+forward pass, with a pointer head and a calibration temperature. The other is an autoregressive (AR) judge,
+Qwen3.5-4B, whose next-token distribution over the answer options is read out the same way. Both judges see identical
+text. A control with the true reward at the judges' temporal resolution (\texttt{env\_window}) separates the effect of
+window-level feedback from the effect of the judge.
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item A controlled comparison of seven reward sources for PPO on five MuJoCo tasks: the engineered reward, its
+  window-averaged version, \kev{}'s score with and without a ``healthy'' gate, a distilled reward model labelled by
+  \kev{} on 10\% of the windows, and the AR judge with expected and with sampled readout. It uses 1M steps and 5 seeds
+  per task (3 for the sampled AR judge), and statistics after \citet{agarwal2021deep} (\S\ref{sec:results}).
+\item An offline agreement study that relates each judge signal to the environment's reward on the same windows
+  (\S\ref{sec:agreement}).
+\item Measured costs: judged windows, judge time and wall-clock per run (\S\ref{sec:cost}).
+\item A correction. Earlier versions of this paper (v1--v3) reported results that were not produced by these
+  experiments. During training the ``judge'' was a hand-written function of the simulator state, and the leaderboards
+  were constants (see the notice above and \texttt{CORRECTION.md}). Every number in this version is computed from the
+  logs in the repository by the scripts there.
+\end{itemize}
+
+\section{Related work}\label{sec:related}
+
+\paragraph{Language models as reward designers and reward functions.} Eureka~\cite{ma2024eureka} and Language to
+Rewards~\cite{yu2023language} use a language model to write or parameterise reward code. This keeps the policy's reward
+cheap but moves the design effort into the model's coding ability and into an outer search loop. Using the model as the
+reward itself, as \citet{kwon2023reward} do for negotiation and other text games, needs no code, but the model is then
+called during training. VLM-RM~\cite{rocamonde2024vlm} scores rendered frames with CLIP for humanoid poses. Motif~\cite{klissarov2024motif}
+distils a language model's preferences between NetHack captions into a reward network, which our \texttt{kev\_distill}
+condition resembles. Our judges read text summaries of telemetry instead of pixels. This isolates the judgment from
+perception, at the price of a summary that a person had to design.
+
+\paragraph{LLM judges.} Using language models to grade outputs~\cite{zheng2023judging,liu2023geval} has become standard
+in evaluation. As reward models they are known to be exploitable~\cite{gao2023scaling,skalse2022defining}. Generative
+verifiers~\cite{zhang2024genverifier} read a judge's yes/no probability, as our AR judge does. \kev{} differs in that its
+answers are distributions from a dedicated head, calibrated with a temperature, and computed in one pass for several
+questions.
+
+\paragraph{Evaluation of deep RL.} With few seeds per task, point estimates of mean return are unreliable. We follow
+\citet{agarwal2021deep}: interquartile means over all runs with stratified-bootstrap confidence intervals, and the
+probability of improvement. We report per-task returns as well.

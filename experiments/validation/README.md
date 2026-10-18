@@ -17,3 +17,16 @@ the GPU had no other job.
 Note on `shared_check.json`: its Kev throughput on the shared backbone (8.0 requests/s) was measured right after a policy
 training step in the same process and is lower than a later measurement without that step (about 32 requests/s, on a
 GPU shared with the Part I judge server). The systems comparison is repeated on an idle GPU before the paper reports it.
+
+## Added during the experiments
+
+| file | what it checks |
+|---|---|
+| `rollout_server_vs_old_reference.json` | the continuous-batching rollout server (session 2) against `rollout_ref.json` taken from the first server (one request at a time, session 1): same prompts, seeds and requests. The `sampled_lora` request is not comparable: the random test adapter is re-drawn on each machine (PEFT initialises `lora_A` before the seed is set). |
+| `rollout_server_self_check.json` | the same server against a reference it produced itself one request at a time, with the requests sent again one at a time and then all at once. Every reply carries the right prompts. Samples are identical where batching allows: 100% for seeded sampling without an adapter, sent alone. With the adapter they diverge after a few tokens, with a mean log-probability difference of about 0.02 nats before divergence. A different adapter gives about 0.6 nats (vs-old-reference file), so a reply never gets the wrong adapter. |
+
+The three Colab sessions (one GPU each, RTX PRO 6000 Blackwell Server Edition) use identical package versions (`uv pip
+freeze` of both environments compared against session 1) and identical data files. The exception was the KodCode training
+set: its filter (the reference solution must pass its own tests) depends on timing for a handful of problems, and
+three builds kept 8170, 8169 and 8170 of 8204 problems. Session 1's build (sha256 `edd7d4a4b0d6316e8d152f504be23ea62174a173760548104062cc31bf49271b`)
+was copied to the other sessions and is the one every Part III-A run uses.

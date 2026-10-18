@@ -1,0 +1,96 @@
+% Part II, sections that do not depend on the results (included by main_en.tex).
+
+\section{One backbone for the policy and the judge}\label{sec:shared}
+
+\kev{}~\cite{kev4b} is a LoRA adapter of rank 16 and a pointer head on Qwen3.5-4B-Base (revision \texttt{1001bb4d}).
+The policy we train is a LoRA adapter on the same base. A single copy of the base weights can therefore serve both
+models. It carries two adapters: \texttt{default}, the policy (rank 32, $\alpha=64$, on every attention, MLP and Gated
+DeltaNet projection), and \texttt{kev}, \kev{}'s released adapter, frozen and applied unmerged. Only the policy adapter
+is trained, so the base weights never change and \kev{} reads exactly the backbone it was trained on. Scoring a
+completion switches the active adapter to \texttt{kev} and reads \kev{}'s pointer head with its calibration temperature.
+The judge then sees the same backbone and adapter weights as a separately loaded \kev{}. Its outputs differ only by
+merged versus unmerged LoRA arithmetic in bf16, which we measure (\S\ref{sec:res-shared}).
+
+The alternative is to load \kev{} as a second model. We measure the GPU memory of both designs in the same process
+with the same training step: allocated memory after loading, and peak memory over a policy update on a fixed batch
+followed by \kev{} scoring.
+
+\section{GRPO setup}\label{sec:grpo}
+
+\paragraph{Policy and data.} The policy starts from Qwen3.5-4B-Base with a zero-initialised LoRA, so step 0 is the base
+model. Training problems are MATH~\cite{hendrycks2021math} training problems of levels 3--5. A fixed random 500 of them
+(seed 12345) are held out as the validation set, which is the only data used for model selection. The other
+training problems are visited in a seeded random order. None of the MATH-500 test problems is in the MATH training
+split (checked when the data are built). The prompt asks for a step-by-step solution with the final answer in
+\verb|\boxed{}|. A completion is correct if math-verify~\cite{mathverify} finds its last boxed answer equal to the
+reference answer. The judges never see the reference answer.
+
+\paragraph{Rollouts.} Each step samples 16 problems and 8 completions per problem at temperature 1 (at most 1024
+tokens) from a vLLM~\cite{kwon2023vllm} server that receives the policy adapter after every update. vLLM and the
+training stack compute slightly different probabilities for the same weights. We correct each token by truncated
+importance sampling~\cite{yao2025offpolicy}, with weight $\min(\pi_{\text{train}}/\pi_{\text{vLLM}},2)$, and we log the
+mismatch.
+
+\paragraph{Objective.} The advantage of a completion is its reward minus the mean reward of its group, divided by the
+standard deviation of these centred rewards over the whole batch, as in Lite PPO~\cite{liu2026tricks}. With the batch
+scale, the weight $\lambda$ of a judge term keeps its meaning in groups where the verifier gives every completion the same
+reward. The loss is the token-level policy gradient, summed over all completion tokens of the batch and divided by
+their number~\cite{liu2025understanding}. There is one AdamW step per batch, so PPO's ratio is one and its clipping is
+inactive, and there is no KL term. Learning rate: chosen from $\{1,3,10\}\cdot10^{-5}$ on the validation set with the
+\texttt{rlvr} reward (\S\ref{sec:res-sweep}) and then fixed for every condition. Gradient-norm clipping is at 1.0 and the
+batch has 128 completions. Each run has 200 steps.
+
+\paragraph{Reward conditions.} Let $v\in\{0,1\}$ be the verifier's verdict. $\pc$ is \kev{}'s $p(\text{yes})$ for
+``Is the final answer of the proposed solution correct?''. $\pg$ is its $p(\text{yes})$ for ``Does the proposed
+solution reach its final answer through genuine, relevant step-by-step reasoning\ldots?''. $P_{\mathrm{a}}$ is the AR
+judge's $p(\text{yes})$ for the first question. The judge prompts are in
+\texttt{experiments/part2\_llm/prompts/judge\_prompts.json} and were fixed before any GRPO run. The judges see the problem
+and the completion, truncated to 1536 tokens.
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+condition & reward \\ \midrule
+\texttt{rlvr} & $v$ \\
+\texttt{rlvr\_kev\_add} & $v+\lambda\pc$, $\lambda=0.2$ \\
+\texttt{rlvr\_kev\_gate} & $v\cdot\pg$ \\
+\texttt{kev\_only} & $\pc$ (no verifier) \\
+\texttt{rlvr\_ar\_add} & $v+\lambda P_{\mathrm{a}}$, $\lambda=0.2$ \\ \bottomrule
+\end{tabular}
+\end{center}
+With $\lambda<1$, a correct completion always outranks an incorrect one in the additive conditions. The judge can only
+reorder completions with the same verdict. \texttt{kev\_only} asks a different question: whether a policy can be trained
+by the judge alone, and whether it learns to exploit the judge. In every condition \kev{} also scores 64 random
+completions per step, for the log.
+
+\paragraph{Evaluation.} Every 50 steps the policy is evaluated greedily (at most 2048 tokens) on the validation set,
+MATH-500 and a fixed 500-problem subset of GSM8K test~\cite{cobbe2021gsm8k}. After the last step it is evaluated on
+the full GSM8K test set and MATH-500 (greedy), and on AMC23, AIME24 and AIME25 (16 samples per problem at temperature
+0.6, top-$p$ 0.95, reported as the mean accuracy over samples). We report the final policy of every run; no checkpoint
+is selected. Per-problem results are saved, so conditions are compared on the same problems: we report the paired
+difference to \texttt{rlvr}, averaged over seeds, with a 95\% bootstrap confidence interval over problems.
+
+\paragraph{Offline judge study.} The base policy wrote 4 completions at temperature 1 for each of 1000 problems:
+MATH-500 and the 500-problem GSM8K subset. It used the training prompt and stop strings, so these are the completions
+GRPO starts from. Both judges answered every question for every completion. For each signal we report its AUROC for
+the verifier's verdict over all completions, and also within problems: the AUROC over the pairs of completions of the
+same problem with different verdicts, which is what GRPO's group baseline uses. We also report calibration (expected
+calibration error, ECE; Brier score) and cost. Four edits probe what moves a judge:
+\begin{itemize}
+\item \emph{answer only}: the completion is replaced by a single sentence that gives its own final answer;
+\item \emph{padded}: twenty repetitions of a self-doubt sentence are appended;
+\item \emph{asserted}: a claim that every step was verified is appended;
+\item \emph{altered}: the final boxed answer of a correct completion is changed, so it becomes wrong.
+\end{itemize}
+A generative judge serves as a further baseline on a random subset: the same AR model, reasoning before it answers
+(thinking on), with its score taken as $p(\text{yes})$ at the answer position. The study uses test problems. It
+measures the judges and informs nothing in the GRPO runs, whose design and prompts were fixed before it ran.
+
+\section{Experimental setup}\label{sec:setup}
+
+All runs used one Colab virtual machine with one NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB). The trainer
+(PyTorch 2.8 in kev's locked environment, with kev's fused Gated DeltaNet kernels) and the vLLM~0.31 rollout server (its
+own environment) shared the GPU. Other experiments of this series often ran on the same GPU at the same time, so we
+report wall-clock times only from measurements made on an otherwise idle GPU and label them as such. Seeds fix the
+problem order, the vLLM sampling seeds (one per problem and step) and every random choice of the trainer. GPU kernels
+are not deterministic, so two runs with the same seed are not bitwise identical. Runs checkpoint every 25 steps and
+resume after an interruption; the number of resumed runs is reported.
