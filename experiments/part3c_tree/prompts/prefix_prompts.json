@@ -1,0 +1,9 @@
+{
+  "_about": "Judge prompt for Part III-C (unfinished solutions), fixed before the prefix study and the tree-GRPO runs (git history records when). The judge sees the problem and the first tokens of the policy's solution only, never the reference answer.",
+  "version": 1,
+  "state_fields": {"problem": "the problem statement", "partial_solution": "the first tokens of the policy's solution, cut mid-solution"},
+  "questions": {
+    "on_track": {"type": "noul", "instructions": "Is this unfinished solution on track to reach the correct final answer (the steps so far are correct and the approach can solve the problem)?"}
+  },
+  "ar_template": "{state}\n\nQuestion: {question}\n\nAnswer with yes or no only."
+}

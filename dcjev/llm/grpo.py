@@ -24,6 +24,9 @@ random); the others are
   sub_probe      rewarded by a head of the same shape trained from scratch on the same labels and Kev features
 The verifier's label of every unlabelled completion is still computed, for logging only (how good the fill-in reward was).
 
+Tree conditions (Part III-C; dcjev.llm.tree): reward v, but each group's leaves grow from --roots sampled prefixes of
+--prefix_tokens tokens, --keep of which are continued, chosen by Kev's 'on_track' answer (tree_kev) or at random (tree_random).
+
 Advantage: the reward minus its group's mean, divided by the standard deviation of these centred rewards over the batch
 (group baseline, batch scale: Liu et al. 2025 "Lite PPO"; TRL's scale_rewards="batch"), so lam keeps its meaning in groups
 where the verifier gives every completion the same reward. Loss: token-level policy gradient (summed over the completion
@@ -46,15 +49,18 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from dcjev.llm.data import PROMPT, STOP, load
+from dcjev.llm.data import PROMPT, STOP, load, train_val
 from dcjev.llm.lora_io import to_vllm
 from dcjev.llm.prompts import QUESTIONS, ar_messages, clip_solution, kev_request, kev_scalars
 from dcjev.llm.rollout_server import AUTHKEY
+from dcjev.llm.tree import tree_log, tree_rollout
 from dcjev.llm.verify import Verifier
 from dcjev.metrics import auroc, brier, ece, within_group_auroc
 
-CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add", "rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"]
+CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add", "rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe",
+         "tree_kev", "tree_random"]
 SUB = {"rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"}
+TREE = {"tree_kev", "tree_random"}
 KEV_REWARD = {"rlvr_kev_add", "rlvr_kev_gate", "kev_only", "sub_kev", "sub_kev_recal", "sub_probe"}   # Kev scores every completion
 
 
@@ -117,7 +123,8 @@ class Rollouts:
                     raise
                 time.sleep(5)
 
-    def __call__(self, prompts, **kw):
+    def __call__(self, prompts=None, **kw):
+        """prompts: strings, or prompt_ids=[[int]] (token ids continued as given) instead."""
         self.conn.send({"op": "generate", "prompts": prompts, **kw})
         r = self.conn.recv()
         if "error" in r:
@@ -148,7 +155,7 @@ class Sampler:
 
 
 def reward(cond, v, ks, pa, lam):
-    if cond == "rlvr": return float(v)
+    if cond == "rlvr" or cond in TREE: return float(v)
     if cond == "rlvr_kev_add": return v + lam * ks["correct"]
     if cond == "rlvr_kev_gate": return v * ks["genuine"]
     if cond == "kev_only": return ks["correct"]
@@ -166,6 +173,32 @@ def pack(idx, lengths, budget):
         cur.append(k)
     if cur: out.append(cur)
     return out
+
+
+def policy_update(sb, opt, params, seqs, adv, n_tok, a):
+    """One optimizer step on seqs [(prompt ids, completion ids, vLLM log-probabilities of the completion)] with one
+    advantage per sequence: the token-level policy-gradient loss summed over the completion tokens and divided by n_tok,
+    each token weighted by min(pi_train / pi_vllm, tis_cap). Sequences with zero advantage contribute no gradient and
+    are skipped."""
+    sb.model.train()
+    lengths = [len(p) + len(c) for p, c, _ in seqs]
+    trained = [k for k in range(len(seqs)) if adv[k] != 0 and len(seqs[k][1]) > 0]
+    loss_sum, w_sum, w_clip, d_sum, d_n = 0.0, 0.0, 0, 0.0, 0
+    for mb in pack(trained, lengths, a.micro_tokens):
+        lps = sb.token_logprobs([(seqs[k][0], seqs[k][1]) for k in mb])
+        loss = 0.0
+        for k, lp in zip(mb, lps):
+            lv = torch.tensor(seqs[k][2], device=lp.device, dtype=torch.float32)
+            d = lp.detach() - lv
+            w = torch.exp(d).clamp(max=a.tis_cap)
+            loss = loss - (w * float(adv[k]) * lp).sum()
+            w_sum += float(w.sum()); w_clip += int((torch.exp(d) > a.tis_cap).sum()); d_sum += float(d.abs().sum()); d_n += len(lv)
+        (loss / n_tok).backward()
+        loss_sum += float(loss.detach()) / n_tok
+    gn = float(torch.nn.utils.clip_grad_norm_(params, a.grad_clip))
+    opt.step(); opt.zero_grad(set_to_none=True)
+    return {"trained_seqs": len(trained), "loss": loss_sum, "grad_norm": gn, "tis_w_mean": w_sum / max(d_n, 1),
+            "tis_clip_frac": w_clip / max(d_n, 1), "lp_absdiff_mean": d_sum / max(d_n, 1)}
 
 
 def publish(sb, out, step, tag):
@@ -282,7 +315,13 @@ def main():
     ap.add_argument("--recal_anchor", type=float, default=1e-3)
     ap.add_argument("--recal_steps", type=int, default=50)
     ap.add_argument("--recal_buffer", type=int, default=8192)
+    ap.add_argument("--roots", type=int, default=4, help="tree conditions: prefixes sampled per prompt")
+    ap.add_argument("--keep", type=int, default=2, help="tree conditions: prefixes continued per prompt (--group / --keep samples each)")
+    ap.add_argument("--prefix_tokens", type=int, default=128)
+    ap.add_argument("--audit_every", type=int, default=10, help="tree conditions: steps on which the roots not kept are continued too (logged only)")
     a = ap.parse_args()
+    if a.cond in TREE and (a.group % a.keep or a.keep > a.roots):
+        ap.error("--group must be a multiple of --keep, and --keep at most --roots")
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     if (out / "final.json").exists():
         print("already finished:", out); return
@@ -301,11 +340,7 @@ def main():
                           buffer=a.recal_buffer, steps=a.recal_steps, seed=a.seed)
     params = sb.policy_parameters()
     opt = torch.optim.AdamW(params, lr=a.lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0)
-    levels = {f"Level {x}" for x in a.math_levels.split(",") if x}
-    train = [r for name in a.train_sets.split(",") for r in load(f"{a.data}/{name}.jsonl")
-             if not (levels and r["source"] == "math" and r["level"] not in levels)]
-    held = set(np.random.default_rng(12345).choice(len(train), a.holdout, replace=False).tolist()) if a.holdout else set()
-    val, train = [r for i, r in enumerate(train) if i in held], [r for i, r in enumerate(train) if i not in held]
+    train, val = train_val(a.data, a.train_sets, a.math_levels, a.holdout)
     sampler = Sampler(train, a.seed)
     gsm = load(f"{a.data}/gsm8k_test.jsonl")
     gsm_sub = [gsm[i] for i in sorted(np.random.default_rng(0).choice(len(gsm), a.eval_gsm8k, replace=False))]
@@ -353,11 +388,15 @@ def main():
         tm = {}
         batch = sampler.next(a.prompts)
         t = time.time()
-        g = ro([PROMPT.format(problem=r["problem"]) for r in batch], n=a.group, temperature=a.temperature, top_p=1.0,
-               max_tokens=a.max_tokens, stop=STOP, lora=lora,
-               seeds=[(a.seed * 1_000_003 + step * 10_007 + i * a.group) % 2**31 for i in range(len(batch))])
+        tree = None
+        if a.cond in TREE:
+            items, tree = tree_rollout(ro, sb, batch, a, step, lora, audit=step % a.audit_every == 0)
+        else:
+            g = ro([PROMPT.format(problem=r["problem"]) for r in batch], n=a.group, temperature=a.temperature, top_p=1.0,
+                   max_tokens=a.max_tokens, stop=STOP, lora=lora,
+                   seeds=[(a.seed * 1_000_003 + step * 10_007 + i * a.group) % 2**31 for i in range(len(batch))])
+            items = [(i, g["prompt_token_ids"][i], c) for i in range(len(batch)) for c in g["outputs"][i]]
         tm["gen"] = time.time() - t
-        items = [(i, g["prompt_token_ids"][i], c) for i in range(len(batch)) for c in g["outputs"][i]]
         t = time.time()
         v = np.array(verifier([c["text"] for _, _, c in items], [batch[i]["answer"] for i, _, _ in items]))
         tm["verify"] = time.time() - t
@@ -410,24 +449,9 @@ def main():
 
         # policy update (one step on the whole batch)
         t = time.time()
-        sb.model.train()
-        lengths = [len(p) + len(c["token_ids"]) for _, p, c in items]
         n_tok = sum(len(c["token_ids"]) for k, (_, _, c) in enumerate(items) if use[k])   # tokens of the completions in the update
-        trained = [k for k in range(len(items)) if A[k] != 0 and len(items[k][2]["token_ids"]) > 0]
-        loss_sum, w_sum, w_clip, d_sum, d_n = 0.0, 0.0, 0, 0.0, 0
-        for mb in pack(trained, lengths, a.micro_tokens):
-            lps = sb.token_logprobs([(items[k][1], items[k][2]["token_ids"]) for k in mb])
-            loss = 0.0
-            for k, lp in zip(mb, lps):
-                lv = torch.tensor(items[k][2]["logprobs"], device=lp.device, dtype=torch.float32)
-                d = lp.detach() - lv
-                w = torch.exp(d).clamp(max=a.tis_cap)
-                loss = loss - (w * float(A[k]) * lp).sum()
-                w_sum += float(w.sum()); w_clip += int((torch.exp(d) > a.tis_cap).sum()); d_sum += float(d.abs().sum()); d_n += len(lv)
-            (loss / n_tok).backward()
-            loss_sum += float(loss.detach()) / n_tok
-        gn = float(torch.nn.utils.clip_grad_norm_(params, a.grad_clip))
-        opt.step(); opt.zero_grad(set_to_none=True)
+        upd = policy_update(sb, opt, params, [(p, c["token_ids"], c["logprobs"]) for _, p, c in items], A, n_tok, a)
+        gn = upd["grad_norm"]
         tm["train"] = time.time() - t
 
         Vg = v.reshape(P, G)
@@ -443,9 +467,11 @@ def main():
                "adv_scale": float(Cn[use].std()), **sub_log,
                "len_mean": float(Ls.mean()), "len_max": int(Ls.max()),
                "truncated": float(np.mean([c["finish_reason"] == "length" for _, _, c in items])),
-               "trained_seqs": len(trained), "tokens": int(n_tok), "loss": loss_sum, "grad_norm": gn,
-               "tis_w_mean": w_sum / max(d_n, 1), "tis_clip_frac": w_clip / max(d_n, 1), "lp_absdiff_mean": d_sum / max(d_n, 1),
+               "tokens": int(n_tok), **upd,
                "mem_peak_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2), "seconds": {k: round(x, 2) for k, x in tm.items()}}
+        rec["gen_tokens"] = int(Ls.sum())
+        if tree is not None:
+            rec.update(tree_log(tree, items, v, verifier, batch))
         if pa is not None:
             rec["ar_correct_mean"], rec["ar_correct_auroc"] = float(np.mean(pa)), auroc(pa, v)
             rec["ar_correct_auroc_within_group"] = within_group_auroc(pa, v, grp)[0]
@@ -455,7 +481,7 @@ def main():
                 roll.write(json.dumps({"step": step, "id": batch[i]["id"], "k": k % G, "text": c["text"], "n_tok": len(c["token_ids"]),
                                        "finish": c["finish_reason"], "v": int(v[k]), "kev": ks[k], "ar": pa[k] if pa else None,
                                        "r": float(R[k]), "adv": float(A[k]), "used": bool(use[k]),
-                                       "labelled": bool(lab[k]) if a.cond in SUB else True}) + "\n")
+                                       "labelled": bool(lab[k]) if a.cond in SUB else True, "root": c.get("root")}) + "\n")
             roll.flush()
         print(f"step {step} acc {v.mean():.3f} R {R.mean():.3f} Pc {pc.mean():.3f} auroc {rec['kev_correct_auroc']} "
               f"len {Ls.mean():.0f} gn {gn:.3f} t {rec['seconds']}", flush=True)

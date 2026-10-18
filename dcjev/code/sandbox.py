@@ -20,12 +20,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 GUARD = r'''
 import builtins, faulthandler, os, platform, resource, shutil, subprocess, sys
-resource.setrlimit(resource.RLIMIT_AS, (MEM, MEM))
-resource.setrlimit(resource.RLIMIT_DATA, (MEM, MEM))
+resource.setrlimit(resource.RLIMIT_AS, (__MEM__, __MEM__))
+resource.setrlimit(resource.RLIMIT_DATA, (__MEM__, __MEM__))
 resource.setrlimit(resource.RLIMIT_FSIZE, (1 << 20, 1 << 20))
-resource.setrlimit(resource.RLIMIT_CPU, (CPU, CPU))
+resource.setrlimit(resource.RLIMIT_CPU, (__CPU__, __CPU__))
 faulthandler.disable()
 os.environ["OMP_NUM_THREADS"] = "1"
+try:
+    import numpy   # imported before the guard: the EvalPlus harnesses use it and its import calls functions disabled below
+except ImportError:
+    pass
 for name in ("kill", "system", "putenv", "remove", "removedirs", "rmdir", "fchdir", "setuid", "fork", "forkpty", "killpg",
              "rename", "renames", "truncate", "replace", "unlink", "fchmod", "fchown", "chmod", "chown", "chroot", "lchown",
              "getcwd", "chdir"):
@@ -66,7 +70,7 @@ print(json.dumps({"results": out}))
 def run_tests(code, tests, per_test_s=3, total_s=20, mem_mb=1024):
     """-> {"load_error": str} if the code itself fails to run, else {"results": [[status, message], ...]}; plus "timeout"
     if the whole program exceeded total_s."""
-    prog = GUARD.replace("MEM", str(mem_mb << 20)).replace("CPU", str(total_s)) + RUNNER
+    prog = GUARD.replace("__MEM__", str(mem_mb << 20)).replace("__CPU__", str(total_s)) + RUNNER
     with tempfile.TemporaryDirectory() as d:
         try:
             p = subprocess.run([sys.executable, "-I", "-c", prog], input=json.dumps({"code": code, "tests": tests, "per_test_s": per_test_s}),

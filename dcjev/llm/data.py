@@ -83,6 +83,16 @@ def load(path):
         return [json.loads(l) for l in f]
 
 
+def train_val(data, train_sets="math_train", math_levels="3,4,5", holdout=500):
+    """GRPO's training problems and the fixed validation holdout (chosen with seed 12345) used for model selection."""
+    import numpy as np
+    levels = {f"Level {x}" for x in math_levels.split(",") if x}
+    train = [r for name in train_sets.split(",") for r in load(f"{data}/{name}.jsonl")
+             if not (levels and r["source"] == "math" and r["level"] not in levels)]
+    held = set(np.random.default_rng(12345).choice(len(train), holdout, replace=False).tolist()) if holdout else set()
+    return [r for i, r in enumerate(train) if i not in held], [r for i, r in enumerate(train) if i in held]
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--out", required=True)
     build(Path(ap.parse_args().out))
