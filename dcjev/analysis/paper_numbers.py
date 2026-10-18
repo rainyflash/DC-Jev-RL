@@ -131,14 +131,68 @@ def part1(o, exp):
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
 
 
+PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
+                  ("ar_on_track", "artrack", "AR \\emph{on track}"), ("policy_logprob", "logprob", "policy log-prob.")]
+
+
+def pct(x, nd=0):
+    return "--" if x is None else f"{100 * x:.{nd}f}\\%"
+
+
+def part3c(o, exp):
+    p = json.loads((exp / "part3c_tree" / "prefix_study" / "prefix_study.json").read_text())
+    g = p["generation"]
+    o.num("ps_problems", str(g["problems"])); o.num("ps_prefixes", f"{g['prefixes']:,}".replace(",", "{,}"))
+    o.num("ps_continuations", f"{g['continuations']:,}".replace(",", "{,}")); o.num("ps_contacc", pct(g["continuation_accuracy"], 1))
+    cuts = [c for c in g["cuts"] if f"cut_{c}" in p]
+    for c in cuts:
+        e = p[f"cut_{c}"]
+        o.num(f"ps_prefixes_{c}", str(e["prefixes"])); o.num(f"ps_value_{c}", f(e["value_mean"])); o.num(f"ps_dead_{c}", pct(e["value_zero_frac"]))
+        sel = e["selection"]
+        o.num(f"ps_selproblems_{c}", str(sel["problems"])); o.num(f"ps_valueall_{c}", f(sel["value_all"]))
+        orc = sel["oracle_split_half_gain"]
+        o.num(f"gain_{c}_oracle", f(orc["mean"], 3, sign=True)); o.num(f"gainlo_{c}_oracle", f(orc["ci95"][0], 3)); o.num(f"gainhi_{c}_oracle", f(orc["ci95"][1], 3))
+        for name, k, _ in PREFIX_SIGNALS:
+            s = e[name]
+            o.num(f"auc_{c}_{k}", f(s["auroc"])); o.num(f"aucw_{c}_{k}", f(s["auroc_within_problem"])); o.num(f"rho_{c}_{k}", f(s["spearman_value"]))
+            gs = s["selection_gain"]
+            o.num(f"gain_{c}_{k}", f(gs["mean"], 3, sign=True)); o.num(f"gainlo_{c}_{k}", f(gs["ci95"][0], 3)); o.num(f"gainhi_{c}_{k}", f(gs["ci95"][1], 3))
+            t = s.get("threshold_0.3")
+            if t:
+                o.num(f"thrpruned_{c}_{k}", pct(t["pruned_frac"], 1)); o.num(f"thrdead_{c}_{k}", pct(t["dead_among_pruned"]))
+                o.num(f"thrcaught_{c}_{k}", pct(t["dead_caught"])); o.num(f"thrlost_{c}_{k}", pct(t["correct_continuations_lost"], 1))
+    head = " & ".join(f"\\multicolumn{{3}}{{c}}{{{c} tokens}}" for c in cuts)
+    rule = "".join(f"\\cmidrule(lr){{{2 + 3 * i}-{4 + 3 * i}}}" for i in range(len(cuts)))
+    rows = [f"{label} & " + " & ".join(f"{f(p[f'cut_{c}'][n]['auroc'])} & {f(p[f'cut_{c}'][n]['auroc_within_problem'])} & {f(p[f'cut_{c}'][n]['spearman_value'])}"
+                                       for c in cuts) + " \\\\" for n, _, label in PREFIX_SIGNALS]
+    o.table("prefix_auc", "\\begin{tabular}{@{}l" + "ccc" * len(cuts) + "@{}}\n\\toprule\n & " + head + " \\\\ " + rule + "\nsignal & "
+            + " & ".join(["AUROC & within & $\\rho$"] * len(cuts)) + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    cell = lambda d: f"{f(d['mean'], 3, sign=True)} \\ci{{{f(d['ci95'][0], 3)}}}{{{f(d['ci95'][1], 3)}}}"
+    rows = [f"{label} & " + " & ".join(cell(p[f"cut_{c}"][n]["selection_gain"]) for c in cuts) + " \\\\" for n, _, label in PREFIX_SIGNALS]
+    rows.append("oracle (split half) & " + " & ".join(cell(p[f"cut_{c}"]["selection"]["oracle_split_half_gain"]) for c in cuts) + " \\\\")
+    o.table("prefix_selection", "\\begin{tabular}{@{}l" + "c" * len(cuts) + "@{}}\n\\toprule\nkeep 2 of 4 by & " + " & ".join(f"{c} tokens" for c in cuts)
+            + " \\\\ \\midrule\nproblems & " + " & ".join(str(p[f"cut_{c}"]["selection"]["problems"]) for c in cuts) + " \\\\\nvalue of all 4 & "
+            + " & ".join(f(p[f"cut_{c}"]["selection"]["value_all"], 3) for c in cuts) + " \\\\ \\midrule\n" + "\n".join(rows)
+            + "\n\\bottomrule\n\\end{tabular}\n")
+    rows = []
+    for n, k, label in PREFIX_SIGNALS[:3]:
+        cells = []
+        for c in cuts:
+            t = p[f"cut_{c}"][n]["threshold_0.3"]
+            cells.append(f"{pct(t['pruned_frac'], 1)} & {pct(t['dead_among_pruned'])} & {pct(t['correct_continuations_lost'], 1)}")
+        rows.append(f"{label} & " + " & ".join(cells) + " \\\\")
+    o.table("prefix_threshold", "\\begin{tabular}{@{}l" + "ccc" * len(cuts) + "@{}}\n\\toprule\n & " + head + " \\\\ " + rule + "\nsignal & "
+            + " & ".join(["pruned & dead & lost"] * len(cuts)) + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("part", choices=["part1"])
+    ap.add_argument("part", choices=["part1", "part3c"])
     ap.add_argument("--exp", default="experiments")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     o = Out(a.out)
-    {"part1": part1}[a.part](o, Path(a.exp))
+    {"part1": part1, "part3c": part3c}[a.part](o, Path(a.exp))
     o.write()
 
 

@@ -23,6 +23,7 @@ import argparse
 import gzip
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -146,7 +147,7 @@ def main():
     log = open(out.with_suffix(".genjudge_server.log"), "w")
     srv = subprocess.Popen([a.vllm_python, "-m", "dcjev.llm.rollout_server", "--port", str(a.genjudge_port), "--model", "Qwen/Qwen3.5-4B",
                             "--revision", AR_REV, "--no_lora", "--gpu_memory_utilization", "0.25", "--max_model_len", "8192"],
-                           stdout=log, stderr=subprocess.STDOUT, env=env)
+                           stdout=log, stderr=subprocess.STDOUT, env=env, start_new_session=True)
     try:
         while "rollout server ready" not in out.with_suffix(".genjudge_server.log").read_text(errors="replace"):
             if srv.poll() is not None: raise RuntimeError("genjudge server exited")
@@ -154,7 +155,7 @@ def main():
         before = gpu_state()
         rep["genjudge"] = {**part_genjudge(solutions(a.genjudge_n), a.genjudge_port, a.genjudge_n), "gpu_before": before, "gpu_after": gpu_state()}
     finally:
-        srv.terminate(); srv.wait(60)
+        os.killpg(srv.pid, signal.SIGTERM); srv.wait(60)   # the whole group: vLLM's engine core is a child process
     json.dump(rep, open(out, "w"), indent=1)
     print("genjudge", json.dumps(rep["genjudge"])[:400], flush=True)
 

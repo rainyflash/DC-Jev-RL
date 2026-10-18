@@ -87,9 +87,10 @@ measures the judges and informs nothing in the GRPO runs, whose design and promp
 
 \section{Experimental setup}\label{sec:setup}
 
-All runs used one Colab virtual machine with one NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB). The trainer
-(PyTorch 2.8 in kev's locked environment, with kev's fused Gated DeltaNet kernels) and the vLLM~0.31 rollout server (its
-own environment) shared the GPU. Other experiments of this series often ran on the same GPU at the same time, so we
+Each run used one Colab virtual machine with one NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB). The trainer
+(PyTorch 2.8 in kev's locked environment; the Hugging Face implementation of Qwen3.5, whose Gated DeltaNet layers run on
+the flash-linear-attention kernels) and the vLLM~0.31 rollout server (its own environment) shared the GPU, and up to
+three trainers shared one rollout server. Other experiments of this series often ran on the same GPU at the same time, so we
 report wall-clock times only from measurements made on an otherwise idle GPU and label them as such. Seeds fix the
 problem order, the vLLM sampling seeds (one per problem and step) and every random choice of the trainer. GPU kernels
 are not deterministic, so two runs with the same seed are not bitwise identical. Runs checkpoint every 25 steps and

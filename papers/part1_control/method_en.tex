@@ -11,7 +11,9 @@ hidden states at a decision position and at the positions of the answer options.
 in the checkpoint ($T=2.406$) turns these into a distribution over the options. All questions of one request are
 answered in one forward pass of the shared state and their short branches. We use kev's code for the schema, the
 rendering, the encoder and the head unchanged (revision \texttt{6cfce5c}). Our wrapper only changes how rows are
-batched. On 300 questions its bf16 probabilities differ from kev's reference serving path by at most NUM{parity_bf16_max} (argmax agreement NUM{parity_bf16_argmax}), and by at most NUM{parity_fp32_max} in fp32 (	exttt{experiments/validation/kev_parity.json}).
+batched. On \NUM{parity_questions} questions its bf16 probabilities differ from kev's reference serving path by at most
+\NUM{parity_bf16_max} (argmax agreement \NUM{parity_bf16_argmax}), and by at most \NUM{parity_fp32_max} in fp32
+(\texttt{experiments/validation/kev\_parity.json}).
 
 \paragraph{Autoregressive (AR) judge.} The baseline judge is Qwen3.5-4B~\cite{qwen35} (revision \texttt{851bf6e}), the
 instruction-tuned model of the same family and size, with thinking disabled. It gets the same rendered state and the
@@ -98,7 +100,7 @@ The tasks are Hopper, Walker2d, HalfCheetah, Swimmer and Reacher, all MuJoCo v5 
 \texttt{ar\_sampled}). Seed $s$ fixes the policy initialisation, the environment's seed and the run's own random choices, the
 windows sampled for logging and for distillation included. Runs that query a judge are still not bitwise reproducible.
 The judge's floating-point results depend slightly on how the server batched the request with those of other runs, and
-the level drawn for 	exttt{ar_sampled} comes from the server's random generator, which all runs share. All runs used one Colab virtual machine with one
+the level drawn for \texttt{ar\_sampled} comes from the server's random generator, which all runs share. All runs used one Colab virtual machine with one
 NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB) and 48 vCPUs. PPO runs on the CPU, one process per run. The
 judges run in one GPU server process that holds both \kev{} (bf16, LoRA merged) and the AR judge. The server merges
 concurrent requests from all runs into batches (at most 4096 windows, 15\,ms gathering). Up to 24 runs trained at the

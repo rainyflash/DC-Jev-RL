@@ -30,3 +30,17 @@ freeze` of both environments compared against session 1) and identical data file
 set: its filter (the reference solution must pass its own tests) depends on timing for a handful of problems, and
 three builds kept 8170, 8169 and 8170 of 8204 problems. Session 1's build (sha256 `edd7d4a4b0d6316e8d152f504be23ea62174a173760548104062cc31bf49271b`)
 was copied to the other sessions and is the one every Part III-A run uses.
+
+## Costs measured on an idle GPU (session 3, before its GRPO runs)
+
+Session 3's GPU ran nothing else: its rollout server was loaded but received no requests, and `gpu_before` /
+`gpu_after` in each record show 0% utilisation.
+
+| file | what it measures |
+|---|---|
+| `judge_bench.json` | `dcjev.judges.bench`: seconds per judgment for every judge arrangement on the same 1000 Part II requests (base-policy solutions from `../part2_llm/judge_study/`). Kev-4B as Part I's server runs it (bf16 merged, fused kernels, one row per question), as the Part II judge study ran it (shared prefix, unfused), and on the GRPO trainers' shared backbone (8192- and 32768-token batches); the AR judge with fused kernels; the reasoning judge in vLLM (300 judgments, at most 2048 thinking tokens, 25% of the GPU) |
+| `shared_check_idle.mem_shared.json`, `shared_check_idle.mem_separate.json` | the memory and Kev-throughput parts of `dcjev.llm.check_shared`, repeated: 36.2 and 39.6 requests/s, against 8.0 and 39.2 in `shared_check.json`. The 8.0 was contention, not the shared backbone. During `mem_shared` an idle vLLM engine left over from the benchmark held 25 GB of GPU memory without computing; the memory figures are the process's own allocations and do not depend on it |
+
+The seconds in `../part2_llm/judge_study/score_cost.json`, `genjudge_cost.json`, `../part3a_code/judge_study/score_cost.json`
+and `../part3c_tree/prefix_study/score_cost.json` were measured while other jobs used the same GPU; the papers use
+`judge_bench.json`.
