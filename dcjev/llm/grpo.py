@@ -55,6 +55,7 @@ from dcjev.metrics import auroc, brier, ece, within_group_auroc
 
 CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add", "rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"]
 SUB = {"rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"}
+KEV_REWARD = {"rlvr_kev_add", "rlvr_kev_gate", "kev_only", "sub_kev", "sub_kev_recal", "sub_probe"}   # Kev scores every completion
 
 
 class HeadRecal:
@@ -96,7 +97,7 @@ class HeadRecal:
             loss = F.binary_cross_entropy_with_logits(self.logits(Hd[i], Ho[i]), Y[i])
             if self.anchor:
                 loss = loss + self.anchor * sum(((p - p0) ** 2).sum() for p, p0 in zip(self.head.parameters(), self.theta0))
-            self.opt.zero_grad(); loss.backward(); self.opt.step(); tot += float(loss)
+            self.opt.zero_grad(); loss.backward(); self.opt.step(); tot += loss.item()
         return tot / self.steps
 
     @torch.no_grad()
@@ -267,6 +268,7 @@ def main():
     ap.add_argument("--grad_clip", type=float, default=1.0)
     ap.add_argument("--eval_every", type=int, default=25)
     ap.add_argument("--eval_gsm8k", type=int, default=500, help="size of the fixed GSM8K-test subset for periodic evaluation")
+    ap.add_argument("--periodic", default="val,math500,gsm8k500", help="sets evaluated every --eval_every steps")
     ap.add_argument("--eval_limit", type=int, default=0, help="debugging: evaluate on the first N problems of each set only")
     ap.add_argument("--ckpt_every", type=int, default=25)
     ap.add_argument("--rollout_port", type=int, default=6200)
@@ -274,6 +276,7 @@ def main():
     ap.add_argument("--ar_model", default="Qwen/Qwen3.5-4B")
     ap.add_argument("--ar_revision", default="851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a")
     ap.add_argument("--save_rollouts", type=int, default=1)
+    ap.add_argument("--kev_log_n", type=int, default=64, help="conditions whose reward does not use Kev: completions per step scored by Kev for the log")
     ap.add_argument("--label_frac", type=float, default=0.25, help="label-budget conditions: fraction of each group labelled")
     ap.add_argument("--recal_lr", type=float, default=1e-4)
     ap.add_argument("--recal_anchor", type=float, default=1e-3)
@@ -308,6 +311,8 @@ def main():
     gsm_sub = [gsm[i] for i in sorted(np.random.default_rng(0).choice(len(gsm), a.eval_gsm8k, replace=False))]
     periodic = {"math500": (load(f"{a.data}/math500.jsonl"), 1, 0.0, 1.0), "gsm8k500": (gsm_sub, 1, 0.0, 1.0)}
     if val: periodic["val"] = (val, 1, 0.0, 1.0)
+    math500 = periodic["math500"]
+    periodic = {k: v for k, v in periodic.items() if k in a.periodic.split(",")}
     if a.eval_limit: periodic = {k: (v[0][:a.eval_limit],) + v[1:] for k, v in periodic.items()}
     verifier = Verifier()
     ro = Rollouts(a.rollout_port)
@@ -357,12 +362,15 @@ def main():
         v = np.array(verifier([c["text"] for _, _, c in items], [batch[i]["answer"] for i, _, _ in items]))
         tm["verify"] = time.time() - t
         t = time.time()
-        reqs = [kev_request(batch[i]["problem"], clip_solution(sb.tok, c["text"])) for i, _, c in items]
+        needs_kev = a.cond in KEV_REWARD
+        scored = np.arange(len(items)) if needs_kev else np.sort(np.random.default_rng(step).choice(len(items), min(a.kev_log_n, len(items)), replace=False))
+        reqs = [kev_request(batch[items[k][0]]["problem"], clip_solution(sb.tok, items[k][2]["text"])) for k in scored]
         if recal is not None:
             probs, metas, feats = sb.kev_probs_features(reqs, question=QUESTIONS.index("correct"))
         else:
             probs, metas = sb.kev_probs(reqs)
-        ks = [kev_scalars(p, m) for p, m in zip(probs, metas)]
+        ks = [None] * len(items)
+        for k, p, m in zip(scored, probs, metas): ks[k] = kev_scalars(p, m)
         tm["kev"] = time.time() - t
         pa = None
         if ar is not None:
@@ -423,12 +431,13 @@ def main():
         tm["train"] = time.time() - t
 
         Vg = v.reshape(P, G)
-        pc = np.array([k["correct"] for k in ks]); grp = np.repeat(np.arange(P), G)
-        wg, n_mixed = within_group_auroc(pc, v, grp)
+        grp = np.repeat(np.arange(P), G)
+        pc, vs, gs = np.array([ks[k]["correct"] for k in scored]), v[scored], grp[scored]
+        wg, n_mixed = within_group_auroc(pc, vs, gs)
         Ls = np.array([len(c["token_ids"]) for _, _, c in items])
         rec = {"kind": "step", "step": step, "epoch": sampler.epoch, "reward_mean": float(R.mean()), "acc": float(v.mean()),
-               "kev": {q: float(np.mean([k[q] for k in ks])) for q in QUESTIONS},
-               "kev_correct_auroc": auroc(pc, v), "kev_correct_auroc_within_group": wg, "groups_mixed": n_mixed,
+               "kev": {q: float(np.mean([ks[k][q] for k in scored])) for q in QUESTIONS}, "kev_scored": len(scored),
+               "kev_correct_auroc": auroc(pc, vs), "kev_correct_auroc_within_group": wg, "groups_mixed": n_mixed,
                "groups_all_wrong": float((Vg.max(1) == 0).mean()), "groups_all_right": float((Vg.min(1) == 1).mean()),
                "groups_zero_reward_var": float((np.nan_to_num(np.nanstd(np.where(use, R, np.nan).reshape(P, G), 1)) == 0).mean()),
                "adv_scale": float(Cn[use].std()), **sub_log,
@@ -455,7 +464,7 @@ def main():
 
     final = {"config": vars(a)}
     if a.final_eval:
-        sets = {"gsm8k_test": (gsm, 1, 0.0, 1.0), "math500": periodic["math500"],
+        sets = {"gsm8k_test": (gsm, 1, 0.0, 1.0), "math500": math500,
                 "amc23": (load(f"{a.data}/amc23.jsonl"), 16, 0.6, 0.95), "aime24": (load(f"{a.data}/aime24.jsonl"), 16, 0.6, 0.95)}
         if Path(f"{a.data}/aime25.jsonl").exists():
             sets["aime25"] = (load(f"{a.data}/aime25.jsonl"), 16, 0.6, 0.95)

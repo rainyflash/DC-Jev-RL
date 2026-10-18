@@ -17,6 +17,8 @@ from pathlib import Path
 
 import numpy as np
 
+from dcjev.analysis import read_log
+
 CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add"]
 SETS = ["gsm8k_test", "math500", "amc23", "aime24", "aime25"]
 
@@ -39,7 +41,7 @@ def main():
     runs = defaultdict(dict)
     for f in sorted(root.glob("*/s*/final.json")):
         cond, seed = f.parent.parent.name, int(f.parent.name[1:])
-        log = [json.loads(l) for l in open(f.parent / "log.jsonl")]
+        log = read_log(f.parent)
         runs[cond][seed] = {"final": json.loads(f.read_text()).get("eval", {}), "log": log, "pp": per_problem(f.parent)}
     rep = {"conditions": {}, "paired_vs_" + a.baseline: {}}
     for c, seeds in runs.items():

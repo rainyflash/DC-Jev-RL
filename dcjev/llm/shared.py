@@ -12,6 +12,7 @@ from __future__ import annotations
 import torch
 from torch.utils.checkpoint import checkpoint
 from peft import LoraConfig, get_peft_model, load_peft_weights, set_peft_model_state_dict
+from peft.helpers import disable_input_dtype_casting
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from kev.checkpoint import Checkpoint
@@ -42,7 +43,7 @@ def _lp_chunk(h, targets, W):
 
 
 class SharedBackbone:
-    def __init__(self, lora_r=32, lora_alpha=64, device="cuda", kev_run=KEV_RUN, grad_ckpt=True, lp_chunk=1024):
+    def __init__(self, lora_r=32, lora_alpha=64, device="cuda", kev_run=KEV_RUN, grad_ckpt=True, lp_chunk=1024, kev_token_budget=8192):
         self.device, self.lp_chunk = device, lp_chunk
         self.tok = AutoTokenizer.from_pretrained(BASE, revision=BASE_REV)
         lm = AutoModelForCausalLM.from_pretrained(BASE, revision=BASE_REV, dtype=torch.bfloat16).to(device)
@@ -72,7 +73,8 @@ class SharedBackbone:
         self.head = PointerHead(self.backbone.config.hidden_size, dp=ck.meta.head_dim).to(device)
         self.head.load_state_dict(ck.meta.head); self.head.eval(); self.head.temperature = ck.meta.temperature
         for p in self.head.parameters(): p.requires_grad_(False)
-        self.kev = KevJudge.from_parts(self.tok, KevView(self.backbone, self.head, pad_id(self.tok), device), device, shared_prefix=True)
+        self.kev = KevJudge.from_parts(self.tok, KevView(self.backbone, self.head, pad_id(self.tok), device), device,
+                                     token_budget=kev_token_budget, shared_prefix=True)
         if grad_ckpt:
             self.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
         self.use("default")
@@ -106,8 +108,13 @@ class SharedBackbone:
     # --- policy log-probabilities ----------------------------------------------------------------------------------
     def token_logprobs(self, seqs):
         """seqs: list of (prompt_ids, completion_ids). -> list of 1-D tensors, the policy's log-probability of each
-        completion token (with grad when grad is enabled). Sequences are right-padded into one batch."""
+        completion token (with grad when grad is enabled). Sequences are right-padded into one batch. The LoRA matmuls run
+        in bf16 under autocast (the base is bf16 already; the fp32 adapter weights stay the optimizer's master copy)."""
         self.use("default")
+        with torch.autocast("cuda", dtype=torch.bfloat16), disable_input_dtype_casting(self.model):
+            return self._token_logprobs(seqs)
+
+    def _token_logprobs(self, seqs):
         L = max(len(p) + len(c) for p, c in seqs)
         ids = torch.full((len(seqs), L), self.tok.pad_token_id or 0, device=self.device)
         att = torch.zeros((len(seqs), L), dtype=torch.long, device=self.device)

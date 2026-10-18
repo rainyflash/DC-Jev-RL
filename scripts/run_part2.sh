@@ -10,7 +10,7 @@ R=/content/work/runs/part2
 VPY=/content/work/vllm-env/bin/python
 export PATH=/content/work/vllm-env/bin:$PATH   # vLLM compiles kernels with ninja from its environment
 case "$1" in
-  rollout) $VPY -m dcjev.llm.rollout_server --port ${2:-6200} --gpu_memory_utilization ${3:-0.30} ;;
+  rollout) $VPY -m dcjev.llm.rollout_server --port ${2:-6200} --gpu_memory_utilization ${3:-0.22} ;;
   genjudge_server) $VPY -m dcjev.llm.rollout_server --port ${2:-6201} --model Qwen/Qwen3.5-4B --revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a \
                      --no_lora --gpu_memory_utilization ${3:-0.25} --max_model_len 8192 ;;
   study) $PY -m dcjev.llm.judge_study gen --dir $R/judge_study --port 6200 && $PY -m dcjev.llm.judge_study score --dir $R/judge_study ;;

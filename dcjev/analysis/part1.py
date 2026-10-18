@@ -16,6 +16,8 @@ from pathlib import Path
 
 import numpy as np
 
+from dcjev.analysis import read_log
+
 CONDS = ["env", "env_window", "kev_score", "kev_gated", "kev_distill", "ar_gated", "ar_sampled"]
 ENVS = ["Hopper-v5", "Walker2d-v5", "HalfCheetah-v5", "Swimmer-v5", "Reacher-v5"]
 
@@ -60,7 +62,7 @@ def load_runs(root):
     runs = []
     for f in sorted(Path(root).glob("*/*/s*/final.json")):
         j = json.loads(f.read_text())
-        log = [json.loads(l) for l in open(f.parent / "log.jsonl")]
+        log = read_log(f.parent)
         j["curve"] = [(r["step"], r["return_mean"]) for r in log if r["type"] == "eval"]
         j["corr"] = [r.get("corr_window_score_env") for r in log if r["type"] == "update"]
         runs.append(j)

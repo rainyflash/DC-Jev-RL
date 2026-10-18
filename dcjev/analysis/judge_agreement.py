@@ -17,6 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
+from dcjev.analysis import read_log
 from dcjev.analysis.part1 import ENVS
 from dcjev.judges.client import JudgeClient
 from dcjev.metrics import auroc, ranks
@@ -40,8 +41,8 @@ def main():
     rep = {}
     for e in ENVS:
         wins = []
-        for f in sorted(Path(a.root).glob(f"{e}/env/s*/log.jsonl")):
-            wins += [json.loads(l) for l in open(f) if '"type": "window"' in l]
+        for d in sorted(Path(a.root).glob(f"{e}/env/s*")):
+            wins += [r for r in read_log(d) if r["type"] == "window"]
         if not wins: continue
         if len(wins) > a.max_per_env: wins = [wins[i] for i in sorted(rng.choice(len(wins), a.max_per_env, replace=False))]
         S = [w["summary"] for w in wins]
