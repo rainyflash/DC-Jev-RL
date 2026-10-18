@@ -1,0 +1,32 @@
+% Part II, results of the GRPO runs (included by main_en.tex).
+
+\section{Does the judge add anything to the verifier?}\label{sec:res-grpo}
+
+\subsection{Learning rate}\label{sec:res-sweep}
+
+The learning rate was chosen once, on the validation set, with the \texttt{rlvr} reward and seed 1. Each sweep run had
+60 steps of 16 problems with 8 completions each, at $10^{-5}$, $3\cdot10^{-5}$ or $10^{-4}$ (Table~\ref{tab:sweep}).
+The rule takes the highest mean validation accuracy over steps 30 and 60, or the smaller learning rate when the best two
+are within 0.5 points (\file{experiments/part2_llm/LR_SELECTION.md}). It was written down while the $10^{-5}$ and
+$10^{-4}$ runs were starting. By then the $3\cdot10^{-5}$ run had logged its accuracies at steps 0 and 30, and we had seen
+them. $10^{-5}$ (\NUM{sweep_1em5_score}) and $3\cdot10^{-5}$ (\NUM{sweep_3em5_score}) are within 0.5 points, so the rule
+chose $10^{-5}$ for every run of Parts II and III. At $10^{-4}$ the validation accuracy rose to \NUM{sweep_1em4_30} by
+step 30 and fell to \NUM{sweep_1em4_60} by step 60, below the base model. All three runs start from the same base model,
+yet their step-0 accuracies differ (\NUM{sweep_1em5_0}, \NUM{sweep_3em5_0}, \NUM{sweep_1em4_0}). Greedy decoding on vLLM
+is not bitwise reproducible across server states, and this spread is the size of the evaluation noise.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+learning rate & step 0 & step 30 & step 60 & score (mean of 30 and 60) \\ \midrule
+$10^{-5}$ & \NUM{sweep_1em5_0} & \NUM{sweep_1em5_30} & \NUM{sweep_1em5_60} & \NUM{sweep_1em5_score} \\
+$3\cdot10^{-5}$ & \NUM{sweep_3em5_0} & \NUM{sweep_3em5_30} & \NUM{sweep_3em5_60} & \NUM{sweep_3em5_score} \\
+$10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NUM{sweep_1em4_score} \\
+\bottomrule
+\end{tabular}
+\caption{Learning-rate sweep: validation accuracy (500 held-out MATH training problems, greedy) of \texttt{rlvr}, seed 1.}
+\label{tab:sweep}
+\end{table}
+
+% The GRPO comparison of the reward conditions follows when all runs have finished.

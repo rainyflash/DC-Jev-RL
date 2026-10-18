@@ -1,0 +1,23 @@
+% 第二部分：GRPO 训练结果（由 main_zh.tex 引入）。
+
+\section{评判模型能为验证器带来增益吗？}\label{sec:res-grpo}
+
+\subsection{学习率}\label{sec:res-sweep}
+
+学习率只在验证集上选一次，使用 \texttt{rlvr} 奖励和种子 1。每个扫描 run 训练 60 步，每步 16 道题、每题 8 个回答，学习率分别为 $10^{-5}$、$3\cdot10^{-5}$ 和 $10^{-4}$（表~\ref{tab:sweep}）。选择规则是：取第 30 步和第 60 步验证准确率均值最高的学习率；若最好的两个相差不超过 0.5 个百分点，则取较小的那个（\file{experiments/part2_llm/LR_SELECTION.md}）。这条规则是在 $10^{-5}$ 和 $10^{-4}$ 两个 run 刚开始时写下的；当时 $3\cdot10^{-5}$ 的 run 已经记录了第 0 步和第 30 步的准确率，我们也看过。$10^{-5}$（\NUM{sweep_1em5_score}）与 $3\cdot10^{-5}$（\NUM{sweep_3em5_score}）相差不超过 0.5 个百分点，因此规则为第二、三部分的所有 run 选定了 $10^{-5}$。在 $10^{-4}$ 下，验证准确率到第 30 步升至 \NUM{sweep_1em4_30}，到第 60 步又跌到 \NUM{sweep_1em4_60}，低于基座模型。三个 run 都从同一个基座模型出发，第 0 步的准确率却不同（\NUM{sweep_1em5_0}、\NUM{sweep_3em5_0}、\NUM{sweep_1em4_0}）：vLLM 上的贪心解码在不同服务器状态下并非逐位可复现，这一差异就是评估噪声的大小。
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+学习率 & 第 0 步 & 第 30 步 & 第 60 步 & 得分（第 30 与 60 步均值） \\ \midrule
+$10^{-5}$ & \NUM{sweep_1em5_0} & \NUM{sweep_1em5_30} & \NUM{sweep_1em5_60} & \NUM{sweep_1em5_score} \\
+$3\cdot10^{-5}$ & \NUM{sweep_3em5_0} & \NUM{sweep_3em5_30} & \NUM{sweep_3em5_60} & \NUM{sweep_3em5_score} \\
+$10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NUM{sweep_1em4_score} \\
+\bottomrule
+\end{tabular}
+\caption{学习率扫描：\texttt{rlvr}、种子 1 的验证准确率（500 道留出的 MATH 训练题，贪心解码）。}
+\label{tab:sweep}
+\end{table}
+
+% 各奖励条件的 GRPO 比较在全部 run 完成后补上。
