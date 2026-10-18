@@ -92,7 +92,7 @@ def agreement(o, res):
     if ja.exists():
         j = json.loads(ja.read_text())
         sig = ["kev_progress", "kev_healthy", "kev_gated", "ar_progress", "ar_progress_sampled", "ar_healthy", "ar_gated"]
-        rows = []
+        rows, sf_rows = [], []
         for e, k, label in TASKS:
             if e not in j: continue
             d = j[e]
@@ -118,6 +118,14 @@ def agreement(o, res):
                     o.num(f"rhophysdlo_{k}_{pk}", f(lo)); o.num(f"rhophysdhi_{k}_{pk}", f(hi))
             for x in sig: o.num(f"rhophys_{k}_{x}", f(d[x]["spearman_physical"]))
             rows.append(f"{label} & {d['windows']} & " + " & ".join(cells) + " \\\\")
+            sf = d.get("slow_vs_fast")   # what a judge pays for standing relative to running
+            if sf:
+                o.num("sf_slowmax", f"{sf['slow_max_m_per_s']:g}"); o.num("sf_fastmin", f"{sf['fast_min_m_per_s']:g}")
+                o.num(f"sfslow_{k}", str(sf["slow_windows"])); o.num(f"sffast_{k}", str(sf["fast_windows"]))
+                for x in SF_SIGNALS:
+                    xk = x.replace("_", "")
+                    o.num(f"sfratio_{k}_{xk}", f(sf[x]["ratio"])); o.num(f"sfs_{k}_{xk}", f(sf[x]["slow"])); o.num(f"sff_{k}_{xk}", f(sf[x]["fast"]))
+                sf_rows.append(f"{label} & {sf['slow_windows']} / {sf['fast_windows']} & " + " & ".join(f(sf[x]["ratio"]) for x in SF_SIGNALS) + " \\\\")
         for x in sig:
             v = [j[e][x]["spearman_env_reward"] for e, _, _ in TASKS if e in j and j[e][x]["spearman_env_reward"] is not None]
             o.num(f"rho_mean_{x}", f(np.mean(v)) if v else "--")
@@ -129,6 +137,51 @@ def agreement(o, res):
         o.table("agreement", "\\begin{tabular}{@{}lc" + "c" * len(sig) + "@{}}\n\\toprule\n & & \\multicolumn{3}{c}{\\kev{}} & "
                 "\\multicolumn{4}{c}{AR judge} \\\\ \\cmidrule(lr){3-5}\\cmidrule(l){6-9}\ntask & windows & progress & healthy & gated & "
                 "progress & sampled & healthy & gated \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+        if sf_rows:
+            o.table("slowfast", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & & & \\multicolumn{2}{c}{\\kev{}} & \\multicolumn{2}{c}{AR judge} \\\\ "
+                    "\\cmidrule(lr){4-5}\\cmidrule(l){6-7}\ntask & windows (slow / fast) & env.\\ reward & progress & gated & progress & gated \\\\ \\midrule\n"
+                    + "\n".join(sf_rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+SF_SIGNALS = ("per_step", "kev_progress", "kev_gated", "ar_progress", "ar_gated")
+# pairs of conditions whose probability of improvement is reported per task and averaged over tasks
+P1_PAIRS = [("kev_gated", "env"), ("kev_distill", "env"), ("kev_score", "env"), ("env_window", "env"), ("kev_gated", "ar_gated"),
+            ("kev_score", "ar_gated"), ("kev_distill", "kev_gated"), ("kev_gated", "kev_score"), ("ar_gated", "ar_sampled"),
+            ("kev_gated", "env_window")]
+
+
+def behaviour(o, res):
+    """What the final policies do (experiments/part1_control/results/behaviour.json, from dcjev/analysis/behaviour.py)."""
+    p = res / "behaviour.json"
+    if not p.exists(): return
+    b = json.loads(p.read_text())
+    o.num("beh_runs", str(b["runs"])); o.num("beh_maxdiff", f"{b['max_abs_return_diff']:.2g}")
+    conds = [c for c in P1_CONDS if c in b["per_task"]["Hopper-v5"]] + ["random"]
+    rows = []
+    for c in conds:
+        for e, k, _ in TASKS:
+            d = b["per_task"][e].get(c)
+            if not d: continue
+            o.num(f"still_{k}_{c}", pct(d["still_frac"])); o.num(f"effort_{k}_{c}", f(d["effort_mean"]))
+            if "flipped_frac" in d: o.num(f"flip_{k}_{c}", pct(d["flipped_frac"]))
+            if "runs_flipped" in d: o.num(f"flipruns_{k}_{c}", str(d["runs_flipped"]))
+            if "dist_mean" in d: o.num(f"dist_{k}_{c}", f(d["dist_mean"], 3))
+        g = lambda e, key: b["per_task"][e][c].get(key)
+        flips = f"{g('HalfCheetah-v5', 'runs_flipped')} of {g('HalfCheetah-v5', 'runs')}" if c != "random" else "--"
+        rows.append(f"{tt(c) if c != 'random' else 'random policy'} & {pct(g('Hopper-v5', 'still_frac'))} & {pct(g('Walker2d-v5', 'still_frac'))} & "
+                    f"{pct(g('Swimmer-v5', 'still_frac'))} & {flips} & {f(g('Reacher-v5', 'effort_mean'))} & {f(g('Reacher-v5', 'dist_mean'), 3)} \\\\"
+                    + (" \\midrule" if c == conds[-2] else ""))
+    # HalfCheetah: the returns of the runs that ended on their back against those that did not (references), and how
+    # many judge-reward runs flipped
+    hc = [r for r in b["per_run"] if r["env_id"] == "HalfCheetah-v5"]
+    ref = [r for r in hc if r["reward"] in ("env", "env_window")]
+    fl, up = [r["return_mean"] for r in ref if r["flipped_frac"] > 0.5], [r["return_mean"] for r in ref if r["flipped_frac"] <= 0.5]
+    if fl and up: o.num("flip_maxret", f(max(fl), 0)); o.num("upright_minret", f(min(up), 0))
+    jr = [r for r in hc if r["reward"] not in ("env", "env_window")]
+    o.num("judge_runs_cheetah", str(len(jr))); o.num("judge_flipped_cheetah", str(sum(r["flipped_frac"] > 0.5 for r in jr)))
+    o.table("behaviour", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & Hopper & Walker2d & Swimmer & HalfCheetah & \\multicolumn{2}{c}{Reacher} \\\\ "
+            "\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\\cmidrule(l){6-7}\n"
+            "condition & still & still & still & runs flipped & effort & distance (m) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 def part1(o, exp):
@@ -148,6 +201,7 @@ def part1(o, exp):
             d = s["per_task"].get(e, {}).get(c)
             if d is None: cells.append("--"); continue
             o.num(f"ret_{k}_{c}", f(d["mean"], 0 if e != "Reacher-v5" else 1))
+            o.num(f"vx_{k}_{c}", f(d["vx_mean"], 2 if e != "Swimmer-v5" else 3))
             cells.append(f"{f(d['mean'], 0 if e != 'Reacher-v5' else 1)} $\\pm$ {f(d['std'], 0 if e != 'Reacher-v5' else 1)}")
         rows.append(f"{label} & " + " & ".join(cells) + " \\\\")
     o.table("returns", "\\begin{tabular}{@{}l" + "c" * len(conds) + "@{}}\n\\toprule\n task & " + " & ".join(tt(c) for c in conds)
@@ -182,6 +236,20 @@ def part1(o, exp):
             "corr.\\ (score, env reward) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
+    for e, k, _ in TASKS:
+        r = s["random_policy_return"][e]; o.num(f"rand_{k}", f(r, 0 if abs(r) >= 10 else 2))
+    # probability of improvement P(X > Y) between conditions, per task and averaged over tasks; invariant to the
+    # per-task normalisation, so computed on the returns (ties count one half)
+    for a, b in P1_PAIRS:
+        if a not in conds or b not in conds: continue
+        ps = {}
+        for e, k, _ in TASKS:
+            x, y = np.array(s["per_task"][e][a]["returns"])[:, None], np.array(s["per_task"][e][b]["returns"])[None, :]
+            ps[k] = float(((x > y) + 0.5 * (x == y)).mean())
+        ab = f"{a.replace('_', '')}_{b.replace('_', '')}"
+        for k, v in ps.items(): o.num(f"pimp_{k}_{ab}", f(v))
+        o.num(f"pimp_all_{ab}", f(np.mean(list(ps.values()))))
+    behaviour(o, res)
     # runs resumed from a checkpoint after a runtime reset
     rs = s["resumed_runs"]
     o.num("runs_total", str(s["runs"])); o.num("resumed_runs", str(len(rs)))

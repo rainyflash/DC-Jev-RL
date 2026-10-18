@@ -9,7 +9,9 @@ they cover failing, mediocre and good behaviour of the reference learner. Judges
 server (dcjev.judges.server), with the prompts of the training runs. Reported per task: Spearman correlation of each
 judge signal with the per-step environment reward of the window and with the physical quantity the task is about (the
 mean forward velocity; for Reacher the reduction of the fingertip-target distance over the window), and for the tasks
-with falls the AUROC of p(healthy) for windows that did not end in a fall. 95% intervals for the correlations and for
+with falls the AUROC of p(healthy) for windows that did not end in a fall. For the tasks with fast windows, each
+signal's mean over the windows without a fall slower than 0.5 m/s is compared with its mean over those faster than
+3 m/s (slow_vs_fast): what the judge pays for standing relative to running. 95% intervals for the correlations and for
 the differences between judges come from a two-stage bootstrap: resample the runs (seeds), then the windows of each
 resampled run, so that windows of one run are not treated as independent. Every window's scores are saved next to the
 output (<out>_scores.jsonl.gz). Each task's result is written as soon as it is done, and a task already in the output
@@ -76,6 +78,23 @@ def cluster_bootstrap(rows, n=2000, seed=0):
     return out
 
 
+SLOW, FAST = 0.5, 3.0   # m/s
+
+
+def slow_vs_fast(rows):
+    """What a judge pays for standing or shuffling relative to running: the mean of each signal (and of the per-step
+    environment reward) over the windows without a fall slower than SLOW, over those faster than FAST, and the ratio.
+    Only for the tasks that have both kinds of window (Hopper, Walker2d, HalfCheetah); None otherwise."""
+    ok = [r for r in rows if r["fell"] != "yes"]
+    slow, fast = [r for r in ok if r["phys"] < SLOW], [r for r in ok if r["phys"] > FAST]
+    if len(slow) < 10 or len(fast) < 10: return None
+    out = {"slow_max_m_per_s": SLOW, "fast_min_m_per_s": FAST, "slow_windows": len(slow), "fast_windows": len(fast)}
+    for name in ("per_step",) + SIGNALS:
+        s, f = float(np.mean([r[name] for r in slow])), float(np.mean([r[name] for r in fast]))
+        out[name] = {"slow": s, "fast": f, "ratio": s / f if f else None}
+    return out
+
+
 def stats(rows):
     per_step, phys = np.array([r["per_step"] for r in rows]), np.array([r["phys"] for r in rows])
     out = {"windows": len(rows), "env_reward_per_step": {"mean": float(per_step.mean()), "std": float(per_step.std())}}
@@ -89,6 +108,8 @@ def stats(rows):
         ok = np.array([x == "no" for x in fell])
         out["healthy_auroc_no_fall"] = {"kev": auroc([r["kev_healthy"] for r in rows], ok), "ar": auroc([r["ar_healthy"] for r in rows], ok),
                                         "fall_rate": float(1 - ok.mean())}
+    sf = slow_vs_fast(rows)
+    if sf: out["slow_vs_fast"] = sf
     out["bootstrap"] = cluster_bootstrap(rows)
     return out
 

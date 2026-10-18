@@ -1,0 +1,14 @@
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & Hopper & Walker2d & Swimmer & HalfCheetah & \multicolumn{2}{c}{Reacher} \\ \cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(l){6-7}
+condition & still & still & still & runs flipped & effort & distance (m) \\ \midrule
+\texttt{env} & 0\% & 1\% & 62\% & 1 of 5 & 0.01 & 0.101 \\
+\texttt{env\_window} & 0\% & 0\% & 14\% & 3 of 5 & 0.19 & 0.180 \\
+\texttt{kev\_score} & 0\% & 4\% & 11\% & 0 of 5 & 0.36 & 0.256 \\
+\texttt{kev\_gated} & 1\% & 10\% & 15\% & 0 of 5 & 0.63 & 0.263 \\
+\texttt{kev\_distill} & 1\% & 1\% & 11\% & 0 of 5 & 0.76 & 0.250 \\
+\texttt{ar\_gated} & 49\% & 40\% & 18\% & 0 of 5 & 0.63 & 0.253 \\
+\texttt{ar\_sampled} & 26\% & 17\% & 50\% & 0 of 3 & 0.56 & 0.252 \\ \midrule
+random policy & 31\% & 4\% & 26\% & -- & 0.33 & 0.180 \\
+\bottomrule
+\end{tabular}

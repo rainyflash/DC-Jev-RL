@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -122,9 +123,13 @@ def main():
                                    "p_improvement_vs_env_window": prob_improvement(g, groups["env_window"]) if "env_window" in groups else None}
     (out / "summary.json").write_text(json.dumps(summary, indent=1))
 
-    import matplotlib; matplotlib.use("Agg")
+    os.environ["MPLBACKEND"] = "Agg"   # a notebook's inline backend (set by Colab) would fail outside the notebook
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, len(ENVS), figsize=(4 * len(ENVS), 3.2))
+    # the references in black and grey, Kev's rewards in blue and green, the AR judge's in red and orange
+    style = {"env": ("k", "-"), "env_window": ("0.55", "--"), "kev_score": ("tab:cyan", "-"), "kev_gated": ("tab:blue", "-"),
+             "kev_distill": ("tab:green", "-"), "ar_gated": ("tab:red", "-"), "ar_sampled": ("tab:orange", "-")}
+    plt.rcParams.update({"font.size": 12})
+    fig, axes = plt.subplots(2, 3, figsize=(12, 6.6)); axes = axes.ravel()
     for ax, e in zip(axes, ENVS):
         for c in conds:
             cs = [r["curve"] for r in by[(e, c)] if r["curve"]]
@@ -132,10 +137,12 @@ def main():
             n = min(len(x) for x in cs)
             steps = np.array([s for s, _ in cs[0][:n]]); Y = np.array([[v for _, v in x[:n]] for x in cs])
             m, se = Y.mean(0), Y.std(0, ddof=1) / np.sqrt(len(Y)) if len(Y) > 1 else np.zeros(n)
-            ax.plot(steps / 1e6, m, label=c); ax.fill_between(steps / 1e6, m - se, m + se, alpha=0.15)
+            col, ls = style.get(c, (None, "-"))
+            ax.plot(steps / 1e6, m, color=col, ls=ls, label=c); ax.fill_between(steps / 1e6, m - se, m + se, color=col, alpha=0.12)
         ax.set_title(e); ax.set_xlabel("environment steps (M)")
-    axes[0].set_ylabel("evaluation return (mean ± s.e. over seeds)"); axes[-1].legend(fontsize=7)
-    fig.tight_layout(); fig.savefig(out / "learning_curves.png", dpi=150)
+    axes[0].set_ylabel("evaluation return"); axes[3].set_ylabel("evaluation return")
+    axes[-1].axis("off"); axes[-1].legend(*axes[0].get_legend_handles_labels(), loc="center", frameon=False)
+    fig.tight_layout(); fig.savefig(out / "learning_curves.png", dpi=150); fig.savefig(out / "learning_curves.pdf")
     print(json.dumps(summary["aggregate"], indent=1))
 
 

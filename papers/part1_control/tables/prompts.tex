@@ -1,0 +1,10 @@
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+task & task description & reference & \texttt{healthy} question \\ \midrule
+Hopper & A one-legged hopping robot (MuJoCo Hopper) must hop forward along the x-axis as fast as possible without falling over. & When the robot stands upright its torso is about 1.25 m above the ground. A strong policy for this robot hops forward at about 3 m/s. & Is the robot making genuine forward progress with a controlled, upright gait (not fallen, not falling, not standing still)? \\
+Walker2d & A two-legged walking robot (MuJoCo Walker2d) must walk or run forward along the x-axis as fast as possible without falling over. & When the robot stands upright its torso is about 1.25 m above the ground. A strong policy for this robot runs forward at about 4 m/s. & Is the robot making genuine forward progress with a controlled, upright gait (not fallen, not falling, not standing still)? \\
+HalfCheetah & A planar cheetah-like robot with two legs (MuJoCo HalfCheetah) must run forward along the x-axis as fast as possible. & The robot cannot fall, but it can flip onto its back, which is undesirable. A strong policy for this robot runs forward at about 10 m/s. & Is the robot running forward with an upright, coordinated gait (not flipped onto its back, not stuck in place)? \\
+Swimmer & A three-segment swimming robot in a viscous fluid (MuJoCo Swimmer) must swim forward along the x-axis as fast as possible. & Motion in the fluid is slow: a strong policy for this robot swims forward at about 0.3 m/s. & Is the robot swimming forward with a coordinated undulating motion (not drifting backward, not stuck)? \\
+Reacher & A two-joint robot arm (MuJoCo Reacher) must move its fingertip to a target point and keep it there, using as little control effort as possible. & The arm is about 0.21 m long. A fingertip within about 0.01 m of the target is on target; control effort ranges from 0 (none) to 1 (maximum). & Is the arm bringing its fingertip to the target or holding it there (not moving away, not flailing)? \\
+\bottomrule
+\end{tabularx}
