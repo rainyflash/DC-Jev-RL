@@ -3,7 +3,7 @@ differences against a baseline condition with bootstrap intervals, training curv
 
     python -m dcjev.analysis.part2 --root /content/work/runs/part2 --out experiments/part2_llm/results
     python -m dcjev.analysis.part2 --root .../part3b --root .../part2 --conds rlvr,rlvr_sub,sub_kev,sub_kev_recal,sub_probe \
-        --baseline rlvr_sub --out experiments/part3b_recal/results
+        --baseline rlvr_sub --out experiments/part3b_labels/results
     python -m dcjev.analysis.part2 --root .../part3c --root .../part2 --conds rlvr,tree_random,tree_kev --step 100 \
         --out experiments/part3c_tree/results
 
@@ -28,6 +28,10 @@ from dcjev.analysis import read_log
 
 CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add"]
 SETS = ["gsm8k_test", "math500", "amc23", "aime24", "aime25", "val", "gsm8k500"]
+EXTRA = ("kev_correct_auroc", "kev_correct_auroc_within_group", "ar_correct_auroc", "ar_correct_auroc_within_group",
+         "fill_auroc_unlabelled", "fill_ece_unlabelled", "fill_mean_unlabelled", "acc_unlabelled", "frozen_kev_auroc_unlabelled",
+         "roots_finished", "on_track_auroc_leaves", "on_track_auroc_leaves_within_prompt", "audit_value_all_roots",
+         "audit_selection_gain", "audit_best_possible_gain")
 
 
 def per_problem(path):
@@ -89,6 +93,13 @@ def main():
             e["train_last20"] = {k: float(np.mean([np.mean([r[k] for r in st]) for st in last])) for k in keys if all(k in st[0] for st in last)}
             e["train_last20"]["kev_correct"] = float(np.mean([np.mean([r["kev"]["correct"] for r in st]) for st in last]))
             e["seconds_per_step"] = float(np.mean([np.mean([sum(r["seconds"].values()) for r in st]) for st in steps if st]))
+            ex = {}   # per-step judge statistics of the label (III-B) and tree (III-C) conditions: seed mean over steps
+            for k in EXTRA:
+                xs = [[r[k] for r in st if r.get(k) is not None] for st in steps]
+                xs = [x for x in xs if x]
+                if xs: ex[k] = {w: float(np.mean([np.mean(sl(x)) for x in xs])) for w, sl in
+                                (("all", lambda x: x), ("first20", lambda x: x[:20]), ("last20", lambda x: x[-20:]))}
+            if ex: e["train_judge"] = ex
         rep["conditions"][c] = e
     base = runs.get(a.baseline, {})
     rng = np.random.default_rng(0)

@@ -253,6 +253,84 @@ def judge_study(o, exp):
             + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
+COND_KEY = {"rlvr": "rlvr", "rlvr_kev_add": "kevadd", "rlvr_kev_gate": "kevgate", "kev_only": "kevonly", "rlvr_ar_add": "aradd",
+            "rlvr_sub": "sub", "sub_kev": "subkev", "sub_kev_recal": "subrecal", "sub_probe": "subprobe",
+            "tree_kev": "treekev", "tree_random": "treerand", "vis": "vis", "vis_kev": "viskev", "hidden": "hidden"}
+TEST_SETS = [("math500", "math", "MATH-500"), ("gsm8k_test", "gsm", "GSM8K"), ("amc23", "amc", "AMC23"), ("aime24", "aime24", "AIME24"),
+             ("aime25", "aime25", "AIME25")]
+JUDGE_KEY = {"kev_correct_auroc": "kevauctr", "kev_correct_auroc_within_group": "kevaucwtr", "ar_correct_auroc": "arauctr",
+             "ar_correct_auroc_within_group": "araucwtr", "fill_auroc_unlabelled": "fillauc", "fill_ece_unlabelled": "fillece",
+             "fill_mean_unlabelled": "fillmean", "acc_unlabelled": "unlacc", "frozen_kev_auroc_unlabelled": "frozenauc",
+             "roots_finished": "rootsdone", "on_track_auroc_leaves": "otauc", "on_track_auroc_leaves_within_prompt": "otaucw",
+             "audit_value_all_roots": "auditval", "audit_selection_gain": "auditgain", "audit_best_possible_gain": "auditbest"}
+
+
+def pts(x, sign=False):
+    """An accuracy (fraction) in percentage points, one decimal."""
+    return f(None if x is None else 100 * x, 1, sign)
+
+
+def base_eval(exp):
+    """The base model (step 0 of every GRPO run) on the test sets: accuracy per evaluation repeat."""
+    reps = [json.loads(q.read_text()) for q in sorted((exp / "part2_llm" / "base_eval").glob("eval*.json"))]
+    return {k: [r[k]["acc"] for r in reps if k in r] for k in reps[0]} if reps else {}
+
+
+def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
+    """Numbers and tables of a dcjev/analysis/part2.py summary: accuracy per condition (seed mean and standard deviation),
+    paired per-problem differences to the baseline (percentage points, 95% bootstrap over problems), training statistics."""
+    bl = next(k for k in s if k.startswith("paired_vs_"))
+    pv, conds = s[bl], list(s["conditions"])
+    head = " & ".join(lab for _, _, lab in sets)
+    rows = []
+    if base:
+        for x, sk, _ in sets:
+            if x in base:
+                o.num(f"{tag}acc_base_{sk}", pts(np.mean(base[x])))
+                o.num(f"{tag}accsd_base_{sk}", pts(np.std(base[x], ddof=1)) if len(base[x]) > 1 else "--")
+        rows.append("base model & -- & " + " & ".join(pts(np.mean(base[x])) if x in base else "--" for x, _, _ in sets) + " \\\\ \\midrule")
+    for c in conds:
+        e, ck = s["conditions"][c], COND_KEY[c]
+        o.num(f"{tag}seeds_{ck}", str(len(e["seeds"])))
+        cells = []
+        for x, sk, _ in sets:
+            if x not in e: cells.append("--"); continue
+            o.num(f"{tag}acc_{ck}_{sk}", pts(e[x]["mean"])); o.num(f"{tag}accsd_{ck}_{sk}", pts(e[x]["std"]))
+            cells.append(pts(e[x]["mean"]) + (f" $\\pm$ {pts(e[x]['std'])}" if e[x]["std"] is not None else ""))
+        rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")
+    o.table(f"{tag}grpo_acc", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seeds & " + head
+            + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    rows = []
+    for c, d in pv.items():
+        ck, cells = COND_KEY[c], []
+        for x, sk, _ in sets:
+            if x not in d: cells.append("--"); continue
+            v = d[x]
+            o.num(f"{tag}d_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"{tag}dlo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"{tag}dhi_{ck}_{sk}", pts(v["ci95"][1]))
+            cells.append(f"{pts(v['diff'], sign=True)} \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}")
+        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\")
+    o.table(f"{tag}grpo_paired", "\\begin{tabular}{@{}l" + "c" * len(sets) + "@{}}\n\\toprule\nminus " + tt(bl[len("paired_vs_"):]) + " & " + head
+            + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    rows = []
+    for c in conds:
+        e, ck = s["conditions"][c], COND_KEY[c]
+        t = e.get("train_last20", {})
+        for k, nk, fm in (("acc", "trainacc", pts), ("reward_mean", "trainrew", f), ("len_mean", "len", lambda x: f(x, 0)),
+                          ("groups_all_wrong", "allwrong", pct), ("groups_all_right", "allright", pct), ("kev_correct", "kevc", f),
+                          ("truncated", "trunc", pct), ("lp_absdiff_mean", "lpdiff", lambda x: f(x, 3)), ("tis_clip_frac", "tisclip", lambda x: pct(x, 1))):
+            if k in t: o.num(f"{tag}{nk}_{ck}", fm(t[k]))
+        if "seconds_per_step" in e: o.num(f"{tag}sps_{ck}", f(e["seconds_per_step"], 0))
+        if "math500_kev_correct_auroc" in e:
+            o.num(f"{tag}kevauc_{ck}", f(e["math500_kev_correct_auroc"])); o.num(f"{tag}kevm_{ck}", f(e["math500_kev_correct_mean"]))
+        for k, v in e.get("train_judge", {}).items():
+            for w in ("all", "first20", "last20"): o.num(f"{tag}{JUDGE_KEY[k]}_{w}_{ck}", f(v[w]))
+        rows.append(f"{tt(c)} & {pts(t.get('acc'))} & {f(t.get('kev_correct'))} & {f(t.get('len_mean'), 0)} & {pct(t.get('groups_all_wrong'))} & "
+                    f"{pct(t.get('groups_all_right'))} & {f(e.get('math500_kev_correct_mean'))} & {f(e.get('math500_kev_correct_auroc'))} \\\\")
+    o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "
+            "\\cmidrule(lr){2-6}\\cmidrule(l){7-8}\ncondition & accuracy & \\kev{} $\\pc$ & tokens & all wrong & all right & \\kev{} $\\pc$ & \\kev{} AUROC \\\\ \\midrule\n"
+            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part2(o, exp):
     validation(o, exp)
     judge_cost(o, exp)
@@ -265,6 +343,11 @@ def part2(o, exp):
             k = lr.replace("-", "m").replace(".", "")
             for step, acc in r["val_acc"].items(): o.num(f"sweep_{k}_{step}", f(acc, 3))
             o.num(f"sweep_{k}_score", f(r["score"], 3))
+    be = base_eval(exp)
+    for x, v in be.items():
+        o.num(f"base_{x.replace('_', '')}", pts(np.mean(v))); o.num(f"basesd_{x.replace('_', '')}", pts(np.std(v, ddof=1)) if len(v) > 1 else "--")
+    sm = exp / "part2_llm" / "results" / "summary.json"
+    if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=be)
 
 
 PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
@@ -372,18 +455,73 @@ def code_study(o, exp):
             "signal & AUROC & reference & lookup & above reference \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
+CODE_METRICS = [("vis_pass", "vis"), ("all_pass", "all"), ("hack", "hack"), ("hack_among_vis_pass", "hackv"),
+                ("first_attempt_all_pass", "first"), ("attempts_mean", "att")]
+
+
+def code_grpo(o, s):
+    """Part III-A training runs (experiments/part3a_code/results/summary.json from dcjev/analysis/part3a.py)."""
+    sets = CODE_SETS[:3]
+    rows = []
+    for c, e in s["conditions"].items():
+        ck, cells = COND_KEY[c], []
+        o.num(f"cgseeds_{ck}", str(len(e["seeds"])))
+        for x, sk, _ in sets:
+            for m, mk in CODE_METRICS:
+                v = e.get(x, {}).get(m)
+                if v is None: continue
+                o.num(f"cg{mk}_{ck}_{sk}", f(v["mean"], 2) if m == "attempts_mean" else pts(v["mean"]))
+                if v["std"] is not None: o.num(f"cg{mk}sd_{ck}_{sk}", f(v["std"], 2) if m == "attempts_mean" else pts(v["std"]))
+            cells += [pts(e.get(x, {}).get(m, {}).get("mean")) for m in ("vis_pass", "all_pass", "hack")]
+        for k, v in e.get("train_last20", {}).items(): o.num(f"cgtrain{k.replace('_', '')}_{ck}", f(v, 2) if k == "attempts_mean" else pts(v))
+        rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")
+    head = " & ".join(f"\\multicolumn{{3}}{{c}}{{{lab}}}" for _, _, lab in sets)
+    rule = "".join(f"\\cmidrule(lr){{{3 + 3 * i}-{5 + 3 * i}}}" for i in range(len(sets)))
+    o.table("code_grpo", "\\begin{tabular}{@{}lc" + "ccc" * len(sets) + "@{}}\n\\toprule\n & & " + head + " \\\\ " + rule + "\ncondition & seeds & "
+            + " & ".join(["vis & all & hack"] * len(sets)) + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    bl = next(k for k in s if k.startswith("paired_vs_"))
+    rows = []
+    for c, d in s[bl].items():
+        ck, cells = COND_KEY[c], []
+        for m in ("all_pass", "hack"):
+            for x, sk, _ in sets:
+                v = d.get(x, {}).get(m)
+                if v is None: cells.append("--"); continue
+                mk = "all" if m == "all_pass" else "hack"
+                o.num(f"cgd{mk}_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"cgd{mk}lo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"cgd{mk}hi_{ck}_{sk}", pts(v["ci95"][1]))
+                cells.append(f"{pts(v['diff'], sign=True)} \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}")
+        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\")
+    lab = " & ".join(l for _, _, l in sets)
+    o.table("code_grpo_paired", "\\begin{tabular}{@{}l" + "c" * (2 * len(sets)) + "@{}}\n\\toprule\n & \\multicolumn{3}{c}{all pass} & \\multicolumn{3}{c}{hack} \\\\ "
+            "\\cmidrule(lr){2-4}\\cmidrule(l){5-7}\nminus " + tt(bl[len("paired_vs_"):]) + " & " + lab + " & " + lab + " \\\\ \\midrule\n" + "\n".join(rows)
+            + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part3a(o, exp):
     code_study(o, exp)
+    sm = exp / "part3a_code" / "results" / "summary.json"
+    if sm.exists(): code_grpo(o, json.loads(sm.read_text()))
+
+
+def part3b(o, exp):
+    sm = exp / "part3b_labels" / "results" / "summary.json"
+    if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=base_eval(exp))
+
+
+def part3c_grpo(o, exp):
+    for name, tag in (("summary.json", ""), ("summary_step100.json", "st100")):
+        sm = exp / "part3c_tree" / "results" / name
+        if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), tag=tag, base=base_eval(exp) if not tag else None)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("part", choices=["part1", "part2", "part3a", "part3c"])
+    ap.add_argument("part", choices=["part1", "part2", "part3a", "part3b", "part3c"])
     ap.add_argument("--exp", default="experiments")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     o = Out(a.out)
-    {"part1": part1, "part2": part2, "part3a": part3a, "part3c": part3c}[a.part](o, Path(a.exp))
+    {"part1": part1, "part2": part2, "part3a": part3a, "part3b": part3b, "part3c": lambda o, e: (part3c(o, e), part3c_grpo(o, e))}[a.part](o, Path(a.exp))
     o.write()
 
 
