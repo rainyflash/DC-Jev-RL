@@ -100,38 +100,59 @@ def stage_gen(a):
     print("generated", len(recs), "accuracy", np.mean(v), "seconds", round(secs), flush=True)
 
 
+def cached(path, compute):
+    """compute()'s JSON result, saved to path (gzipped) once computed and read back when the stage runs again, so a
+    crash in a later judge does not lose an earlier one's scores."""
+    if path.exists():
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            return json.load(f)
+    x = compute()
+    with gzip.open(path, "wt", encoding="utf-8") as f:
+        json.dump(x, f)
+    return x
+
+
 def stage_score(a):
     import torch
+    from transformers import AutoTokenizer
     from dcjev.judges.ar_judge import ARJudge
     from dcjev.judges.kev_judge import KevJudge
-    from dcjev.llm.prompts import QUESTIONS, ar_messages, clip_solution, kev_request, kev_scalars
-    from dcjev.llm.shared import KEV_RUN
+    from dcjev.llm.prompts import ar_messages, clip_solution, kev_request, kev_scalars
+    from dcjev.llm.shared import BASE, BASE_REV, KEV_RUN
     d = Path(a.dir)
     comps = jl_read(d / "completions.jsonl.gz")
     rng = random.Random(0)
     items = [("orig", i, c["text"]) for i, c in enumerate(comps)]
     for probe in PROBES:
         items += [(probe, i, t) for i, c in enumerate(comps) if (t := edited(c, probe, rng)) is not None]
-    cost = {}
-    kev = KevJudge(KEV_RUN, dtype="bf16", merge=True, fused=False, shared_prefix=True)
-    tok = kev.tok
-    reqs = [kev_request(comps[i]["problem"], clip_solution(tok, t)) for _, i, t in items]
-    kev.probs(reqs[:64]); torch.cuda.synchronize(); t0 = time.time()
-    probs, metas = kev.probs(reqs); torch.cuda.synchronize()
-    cost["kev_seconds_per_1k_requests"] = (time.time() - t0) / len(reqs) * 1e3
-    ks = [kev_scalars(p, m) for p, m in zip(probs, metas)]
-    del kev; torch.cuda.empty_cache()
-    ar = ARJudge("Qwen/Qwen3.5-4B", revision=a.ar_revision, fused=True)
-    res = {}
-    for q, kind in (("correct", "noul"), ("quality", "score")):
-        msgs = [ar_messages(comps[i]["problem"], clip_solution(tok, t), q) for _, i, t in items]
+    tok = AutoTokenizer.from_pretrained(BASE, revision=BASE_REV)   # the policy's tokenizer, as in GRPO's clip_solution
+    clipped = [clip_solution(tok, t) for _, _, t in items]
+
+    def kev_part():
+        kev = KevJudge(KEV_RUN, dtype="bf16", merge=True, fused=False, shared_prefix=True)
+        reqs = [kev_request(comps[i]["problem"], c) for (_, i, _), c in zip(items, clipped)]
+        kev.probs(reqs[:64]); torch.cuda.synchronize(); t0 = time.time()
+        probs, metas = kev.probs(reqs); torch.cuda.synchronize()
+        out = {"seconds_per_1k": (time.time() - t0) / len(reqs) * 1e3, "scalars": [kev_scalars(p, m) for p, m in zip(probs, metas)]}
+        del kev; torch.cuda.empty_cache()
+        return out
+
+    def ar_part(q, kind):
+        ar = ARJudge("Qwen/Qwen3.5-4B", revision=a.ar_revision, fused=True, token_budget=a.ar_token_budget)
+        msgs = [ar_messages(comps[i]["problem"], c, q) for (_, i, _), c in zip(items, clipped)]
         ar.score(msgs[:64], kind, levels=4); torch.cuda.synchronize(); t0 = time.time()
-        res[q] = ar.score(msgs, kind, levels=4); torch.cuda.synchronize()
-        cost[f"ar_{q}_seconds_per_1k_prompts"] = (time.time() - t0) / len(msgs) * 1e3
+        res = ar.score(msgs, kind, levels=4); torch.cuda.synchronize()
+        out = {"seconds_per_1k": (time.time() - t0) / len(msgs) * 1e3, "res": res}
+        del ar; torch.cuda.empty_cache()
+        return out
+
+    kp = cached(d / "scores_kev.json.gz", kev_part)
+    arp = {q: cached(d / f"scores_ar_{q}.json.gz", lambda q=q, kind=kind: ar_part(q, kind)) for q, kind in (("correct", "noul"), ("quality", "score"))}
+    cost = {"kev_seconds_per_1k_requests": kp["seconds_per_1k"], **{f"ar_{q}_seconds_per_1k_prompts": x["seconds_per_1k"] for q, x in arp.items()}}
     out = []
     for n, (probe, i, t) in enumerate(items):
-        rc, rq = res["correct"][n], res["quality"][n]
-        out.append({"probe": probe, "i": i, "kev": ks[n], "ar": {"correct": rc["p_yes"], "correct_valid_mass": rc["valid_mass"],
+        rc, rq = arp["correct"]["res"][n], arp["quality"]["res"][n]
+        out.append({"probe": probe, "i": i, "kev": kp["scalars"][n], "ar": {"correct": rc["p_yes"], "correct_valid_mass": rc["valid_mass"],
                     "quality": rq["expected"], "quality_valid_mass": rq["valid_mass"]}})
     jl_write(d / "scores.jsonl.gz", out)
     json.dump(cost, open(d / "score_cost.json", "w"), indent=1)
@@ -228,6 +249,7 @@ def main():
     ap.add_argument("--genjudge_n", type=int, default=1000)
     ap.add_argument("--think_tokens", type=int, default=2048)
     ap.add_argument("--ar_revision", default="851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a")
+    ap.add_argument("--ar_token_budget", type=int, default=8192, help="tokens per AR forward pass (memory)")
     a = ap.parse_args()
     Path(a.dir).mkdir(parents=True, exist_ok=True)
     {"gen": stage_gen, "score": stage_score, "genjudge": stage_genjudge, "report": stage_report}[a.stage](a)

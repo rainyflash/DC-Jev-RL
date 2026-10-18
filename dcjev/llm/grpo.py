@@ -381,7 +381,9 @@ def main():
     for step in range(start, a.steps + 1):
         lora = publish(sb, out, step, tag)
         if step % a.eval_every == 0 or step == a.steps:
-            emit({"kind": "eval", "step": step, **evaluate(ro, lora, periodic, verifier, a.eval_max_tokens)})
+            (out / "evals").mkdir(exist_ok=True)
+            with gzip.open(out / "evals" / f"step{step}.jsonl.gz", "wt") as dump:   # per-problem results, for paired comparisons
+                emit({"kind": "eval", "step": step, **evaluate(ro, lora, periodic, verifier, a.eval_max_tokens, dump=dump)})
         if step == a.steps:
             break
         torch.cuda.reset_peak_memory_stats()

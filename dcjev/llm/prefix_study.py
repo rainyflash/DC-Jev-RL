@@ -98,25 +98,36 @@ def stage_score(a):
     import torch
     from dcjev.judges.ar_judge import ARJudge
     from dcjev.judges.kev_judge import KevJudge
+    from dcjev.llm.judge_study import cached
     from dcjev.llm.prompts import ar_prefix_messages, kev_prefix_request, kev_request, kev_scalars
     from dcjev.llm.shared import KEV_RUN
     d = Path(a.dir)
     recs = jl_read(d / "prefixes.jsonl.gz")
-    cost, out = {}, [{} for _ in recs]
-    kev = KevJudge(KEV_RUN, dtype="bf16", merge=True, fused=False, shared_prefix=True)
-    for name, q, reqs in (("kev_on_track", "on_track", [kev_prefix_request(r["problem"], r["prefix"]) for r in recs]),
-                          ("kev_correct", "correct", [kev_request(r["problem"], r["prefix"], questions=("correct",)) for r in recs])):
-        kev.probs(reqs[:64]); torch.cuda.synchronize(); t0 = time.time()
-        probs, metas = kev.probs(reqs); torch.cuda.synchronize()
-        cost[f"{name}_seconds_per_1k"] = (time.time() - t0) / len(reqs) * 1e3
-        for o, p, m in zip(out, probs, metas): o[name] = kev_scalars(p, m)[q]
-    del kev; torch.cuda.empty_cache()
-    ar = ARJudge("Qwen/Qwen3.5-4B", revision=a.ar_revision, fused=True)
-    msgs = [ar_prefix_messages(r["problem"], r["prefix"]) for r in recs]
-    ar.score(msgs[:64], "noul"); torch.cuda.synchronize(); t0 = time.time()
-    res = ar.score(msgs, "noul"); torch.cuda.synchronize()
-    cost["ar_on_track_seconds_per_1k"] = (time.time() - t0) / len(msgs) * 1e3
-    for o, x in zip(out, res): o["ar_on_track"], o["ar_on_track_valid_mass"] = x["p_yes"], x["valid_mass"]
+
+    def kev_part():
+        kev, res = KevJudge(KEV_RUN, dtype="bf16", merge=True, fused=False, shared_prefix=True), {}
+        for name, q, reqs in (("kev_on_track", "on_track", [kev_prefix_request(r["problem"], r["prefix"]) for r in recs]),
+                              ("kev_correct", "correct", [kev_request(r["problem"], r["prefix"], questions=("correct",)) for r in recs])):
+            kev.probs(reqs[:64]); torch.cuda.synchronize(); t0 = time.time()
+            probs, metas = kev.probs(reqs); torch.cuda.synchronize()
+            res[name] = {"seconds_per_1k": (time.time() - t0) / len(reqs) * 1e3, "p": [kev_scalars(p, m)[q] for p, m in zip(probs, metas)]}
+        del kev; torch.cuda.empty_cache()
+        return res
+
+    def ar_part():
+        ar = ARJudge("Qwen/Qwen3.5-4B", revision=a.ar_revision, fused=True, token_budget=a.ar_token_budget)
+        msgs = [ar_prefix_messages(r["problem"], r["prefix"]) for r in recs]
+        ar.score(msgs[:64], "noul"); torch.cuda.synchronize(); t0 = time.time()
+        res = ar.score(msgs, "noul"); torch.cuda.synchronize()
+        out = {"seconds_per_1k": (time.time() - t0) / len(msgs) * 1e3, "p": [x["p_yes"] for x in res], "mass": [x["valid_mass"] for x in res]}
+        del ar; torch.cuda.empty_cache()
+        return out
+
+    kp = cached(d / "scores_kev.json.gz", kev_part)
+    ap_ = cached(d / "scores_ar.json.gz", ar_part)
+    out = [{"kev_on_track": kp["kev_on_track"]["p"][n], "kev_correct": kp["kev_correct"]["p"][n],
+            "ar_on_track": ap_["p"][n], "ar_on_track_valid_mass": ap_["mass"][n]} for n in range(len(recs))]
+    cost = {f"{k}_seconds_per_1k": v["seconds_per_1k"] for k, v in kp.items()} | {"ar_on_track_seconds_per_1k": ap_["seconds_per_1k"]}
     jl_write(d / "scores.jsonl.gz", out)
     json.dump(cost, open(d / "score_cost.json", "w"), indent=1)
     print("scored", len(out), cost, flush=True)
@@ -199,6 +210,7 @@ def main():
     ap.add_argument("--keep", type=int, default=2)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--ar_revision", default="851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a")
+    ap.add_argument("--ar_token_budget", type=int, default=8192, help="tokens per AR forward pass (memory)")
     a = ap.parse_args()
     Path(a.dir).mkdir(parents=True, exist_ok=True)
     {"gen": stage_gen, "score": stage_score, "report": stage_report}[a.stage](a)
