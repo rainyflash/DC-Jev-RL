@@ -1,0 +1,63 @@
+% Part I, results: offline agreement of the judges with the environment's reward (included by main_en.tex).
+
+\section{Do the judges' scores track the reward?}\label{sec:agreement}
+
+Both judges scored the windows logged by the \texttt{env} runs: \NUM{windows_hopper} for Hopper, \NUM{windows_walker}
+for Walker2d, \NUM{windows_cheetah} for HalfCheetah, \NUM{windows_swimmer} for Swimmer and \NUM{windows_reacher} for
+Reacher, from all five runs and all of training. Table~\ref{tab:agreement} gives each signal's Spearman correlation with
+the window's per-step environment reward. Intervals are 95\% intervals from a two-stage bootstrap that resamples the
+runs and then the windows of each run, so the windows of one run are not counted as independent.
+
+\begin{table}[t]
+\centering\small
+\input{tables/agreement}
+\caption{Spearman correlation of each judge signal with the per-step environment reward of the window, on windows
+logged by the \texttt{env} runs (all seeds, all of training). \emph{progress}: the expected level divided by four;
+\emph{healthy}: $p(\text{yes})$; \emph{gated}: their product; \emph{sampled}: a level drawn from the AR judge's
+distribution, as an AR judge answering in text at temperature one would give it.}
+\label{tab:agreement}
+\end{table}
+
+\paragraph{\kev{} tracks the reward more closely than the AR judge.} On every task, \kev{}'s \texttt{progress}
+correlates more strongly with the environment's reward than the AR judge's expected \texttt{progress}. The difference
+is smallest on Walker2d (\NUM{rhod_walker_kevprogress_arprogress}
+\ci{\NUM{rhodlo_walker_kevprogress_arprogress}}{\NUM{rhodhi_walker_kevprogress_arprogress}}) and largest on
+HalfCheetah (\NUM{rhod_cheetah_kevprogress_arprogress}
+\ci{\NUM{rhodlo_cheetah_kevprogress_arprogress}}{\NUM{rhodhi_cheetah_kevprogress_arprogress}}) and Reacher
+(\NUM{rhod_reacher_kevprogress_arprogress}
+\ci{\NUM{rhodlo_reacher_kevprogress_arprogress}}{\NUM{rhodhi_reacher_kevprogress_arprogress}}). No interval includes
+zero. The gated signals keep the order on every task (\NUM{rhod_walker_kevgated_argated} on Walker2d to
+\NUM{rhod_reacher_kevgated_argated} on Reacher).
+
+\paragraph{Reacher is the exception that qualifies this.} Reacher's per-step reward is mostly the distance between the
+fingertip and the target, a state. The \texttt{progress} levels describe approaching the target and holding it. Against
+the reduction of the distance over the window, the quantity the question is mostly about, the two judges are close, with
+the AR judge slightly ahead (\kev{} \NUM{rhophys_reacher_kev_progress}, AR \NUM{rhophys_reacher_ar_progress}; difference
+\NUM{rhophysd_reacher_kevprogress_arprogress}
+\ci{\NUM{rhophysdlo_reacher_kevprogress_arprogress}}{\NUM{rhophysdhi_reacher_kevprogress_arprogress}}). \kev{}'s
+higher correlation with Reacher's reward is therefore not a better reading of the approach the question asks about.
+On the four locomotion tasks the reward and the forward velocity rank the windows almost identically, and the two
+correlations nearly coincide.
+
+\paragraph{Sampling the AR judge's answer discards most of the signal.} A level drawn from the AR judge's distribution
+correlates only \NUM{rho_cheetah_ar_progress_sampled} (HalfCheetah) to \NUM{rho_swimmer_ar_progress_sampled} (Swimmer)
+with the reward, against \NUM{rho_reacher_ar_progress} to \NUM{rho_walker_ar_progress} for the expected level of the
+same distribution. At the scale of one window, the information is in the distribution, and a single draw from it is
+mostly noise.
+
+\paragraph{Falls are seen; the gate is mixed.} $p(\text{healthy})$ separates the windows without a fall from those with
+one almost perfectly: AUROC \NUM{healthyauc_hopper_kev} and \NUM{healthyauc_walker_kev} for \kev{} on Hopper and
+Walker2d, \NUM{healthyauc_hopper_ar} and \NUM{healthyauc_walker_ar} for the AR judge. The summary states whether the
+robot fell, so this checks reading rather than judgment. Multiplying \kev{}'s \texttt{progress} by its
+$p(\text{healthy})$ lowers the agreement with the reward on four tasks and raises it only on Swimmer
+(\NUM{rho_swimmer_kev_gated} against \NUM{rho_swimmer_kev_progress}). For the AR judge the gate also helps on
+HalfCheetah (\NUM{rho_cheetah_ar_gated} against \NUM{rho_cheetah_ar_progress}).
+
+\paragraph{The AR judge puts mass outside the answer options.} Before renormalisation, the AR judge's next-token
+distribution puts only \NUM{validmass_min_progress} to \NUM{validmass_max_progress} of its mass on the five
+\texttt{progress} options, depending on the task, and at least \NUM{validmass_min_healthy} on yes or no. \kev{} has no
+such loss, since its head scores only the options.
+
+\paragraph{What this shows and what it does not.} The windows come from policies that optimise the true reward. They
+show how well each judge ranks the behaviour such policies produce. They do not show how a judge ranks the behaviour of
+a policy that optimises the judge itself; the training runs measure that (\S\ref{sec:results}).

@@ -1,0 +1,822 @@
+{
+ "Hopper-v5": {
+  "windows": 3233,
+  "env_reward_per_step": {
+   "mean": 3.469034510985112,
+   "std": 0.8860729289764154
+  },
+  "ar_valid_mass": {
+   "progress": 0.8304424411565907,
+   "healthy": 0.9988126546980458
+  },
+  "kev_progress": {
+   "mean": 0.7939789076285316,
+   "std": 0.1406477787507416,
+   "spearman_env_reward": 0.7344267040785902,
+   "spearman_physical": 0.7247821564304084
+  },
+  "kev_healthy": {
+   "mean": 0.8845368721169508,
+   "std": 0.18246061138043504,
+   "spearman_env_reward": 0.5564039334376113,
+   "spearman_physical": 0.5473619143171616
+  },
+  "kev_gated": {
+   "mean": 0.7226366514142589,
+   "std": 0.2076544534453319,
+   "spearman_env_reward": 0.7032015527960317,
+   "spearman_physical": 0.6933781510557142
+  },
+  "ar_progress": {
+   "mean": 0.94102515059192,
+   "std": 0.07328552505499146,
+   "spearman_env_reward": 0.6618561410008326,
+   "spearman_physical": 0.6522101637952696
+  },
+  "ar_progress_sampled": {
+   "mean": 0.9387565728425611,
+   "std": 0.1813904789481084,
+   "spearman_env_reward": 0.22401173904105962,
+   "spearman_physical": 0.2203732363455551
+  },
+  "ar_healthy": {
+   "mean": 0.9572035750222695,
+   "std": 0.10541909505371078,
+   "spearman_env_reward": 0.49782426183029777,
+   "spearman_physical": 0.4888337605431024
+  },
+  "ar_gated": {
+   "mean": 0.9067373471682837,
+   "std": 0.13124337154390844,
+   "spearman_env_reward": 0.6502382390959448,
+   "spearman_physical": 0.6406946996599021
+  },
+  "healthy_auroc_no_fall": {
+   "kev": 0.9996476150255856,
+   "ar": 0.999973948192553,
+   "fall_rate": 0.07547169811320753
+  },
+  "bootstrap": {
+   "runs": 5,
+   "resamples": 2000,
+   "ci95_env_reward": {
+    "kev_progress": [
+     0.6849212333802229,
+     0.7773105827973177
+    ],
+    "kev_healthy": [
+     0.5005512149786413,
+     0.6028515159532838
+    ],
+    "kev_gated": [
+     0.6475947338902049,
+     0.7501146108989465
+    ],
+    "ar_progress": [
+     0.6041589756173991,
+     0.7069480983819602
+    ],
+    "ar_progress_sampled": [
+     0.17620691056477072,
+     0.274578660546953
+    ],
+    "ar_healthy": [
+     0.42580033739162826,
+     0.5609347141681075
+    ],
+    "ar_gated": [
+     0.5879859589194087,
+     0.6973237804540382
+    ],
+    "kev_progress-ar_progress": [
+     0.06399890489804226,
+     0.08473126995621719
+    ],
+    "kev_gated-ar_gated": [
+     0.045623838721293955,
+     0.063862208326938
+    ],
+    "kev_healthy-ar_healthy": [
+     0.034591706669121,
+     0.08369407721672213
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.3803271671643033,
+     0.4859931102129909
+    ]
+   },
+   "diff_env_reward": {
+    "kev_progress-ar_progress": 0.07257056307775767,
+    "kev_gated-ar_gated": 0.05296331370008689,
+    "kev_healthy-ar_healthy": 0.05857967160731353,
+    "ar_progress-ar_progress_sampled": 0.4378444019597729
+   },
+   "ci95_physical": {
+    "kev_progress": [
+     0.6742934884506983,
+     0.7690994031799442
+    ],
+    "kev_healthy": [
+     0.48955487762555056,
+     0.5918738168813178
+    ],
+    "kev_gated": [
+     0.63566339522393,
+     0.7414911017060793
+    ],
+    "ar_progress": [
+     0.5924695819463494,
+     0.6993097942350829
+    ],
+    "ar_progress_sampled": [
+     0.17082533327584631,
+     0.2722123733863494
+    ],
+    "ar_healthy": [
+     0.4163068048938492,
+     0.5528581322041571
+    ],
+    "ar_gated": [
+     0.5769644460734582,
+     0.6898942212664659
+    ],
+    "kev_progress-ar_progress": [
+     0.06405077251464762,
+     0.08488151798568358
+    ],
+    "kev_gated-ar_gated": [
+     0.045471446264323354,
+     0.06346896849155323
+    ],
+    "kev_healthy-ar_healthy": [
+     0.03444305835320091,
+     0.08374339360456762
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.3729469914257938,
+     0.48076683389206565
+    ]
+   },
+   "diff_physical": {
+    "kev_progress-ar_progress": 0.0725719926351388,
+    "kev_gated-ar_gated": 0.0526834513958121,
+    "kev_healthy-ar_healthy": 0.05852815377405923,
+    "ar_progress-ar_progress_sampled": 0.4318369274497145
+   }
+  },
+  "physical_quantity": "mean forward velocity (m/s)"
+ },
+ "Walker2d-v5": {
+  "windows": 3270,
+  "env_reward_per_step": {
+   "mean": 3.4075819976336175,
+   "std": 1.329760269408655
+  },
+  "ar_valid_mass": {
+   "progress": 0.8560801087277521,
+   "healthy": 0.9987528203453994
+  },
+  "kev_progress": {
+   "mean": 0.708327403766123,
+   "std": 0.16904427340057623,
+   "spearman_env_reward": 0.7305507271180194,
+   "spearman_physical": 0.7153313182094074
+  },
+  "kev_healthy": {
+   "mean": 0.8208499656870551,
+   "std": 0.2317106193307686,
+   "spearman_env_reward": 0.5771161050476408,
+   "spearman_physical": 0.562222926446688
+  },
+  "kev_gated": {
+   "mean": 0.6150320157626977,
+   "std": 0.23139701490541242,
+   "spearman_env_reward": 0.7089979334489162,
+   "spearman_physical": 0.6936794880076034
+  },
+  "ar_progress": {
+   "mean": 0.9091405182653663,
+   "std": 0.11566900441015032,
+   "spearman_env_reward": 0.6898187699016315,
+   "spearman_physical": 0.6748285763819628
+  },
+  "ar_progress_sampled": {
+   "mean": 0.907262996941896,
+   "std": 0.22847051872705543,
+   "spearman_env_reward": 0.2161211176142711,
+   "spearman_physical": 0.21241267812527304
+  },
+  "ar_healthy": {
+   "mean": 0.9409700519377596,
+   "std": 0.1291479918059215,
+   "spearman_env_reward": 0.5838998760615183,
+   "spearman_physical": 0.5691240629037918
+  },
+  "ar_gated": {
+   "mean": 0.869371603855737,
+   "std": 0.17636192343212465,
+   "spearman_env_reward": 0.6840790279725303,
+   "spearman_physical": 0.6690102698139968
+  },
+  "healthy_auroc_no_fall": {
+   "kev": 0.9892131451052997,
+   "ar": 0.9998761860680399,
+   "fall_rate": 0.08868501529051986
+  },
+  "bootstrap": {
+   "runs": 5,
+   "resamples": 2000,
+   "ci95_env_reward": {
+    "kev_progress": [
+     0.6464081553448494,
+     0.8063859648152365
+    ],
+    "kev_healthy": [
+     0.4869792729259534,
+     0.6511724494426612
+    ],
+    "kev_gated": [
+     0.6214485350548404,
+     0.7865854412254094
+    ],
+    "ar_progress": [
+     0.5889894870709327,
+     0.7755730489121304
+    ],
+    "ar_progress_sampled": [
+     0.15445887415758233,
+     0.2793572005351062
+    ],
+    "ar_healthy": [
+     0.498189785194191,
+     0.6565560253983392
+    ],
+    "ar_gated": [
+     0.5843209752054335,
+     0.7697417766524219
+    ],
+    "kev_progress-ar_progress": [
+     0.027878972975843488,
+     0.061138861920239596
+    ],
+    "kev_gated-ar_gated": [
+     0.011580451422897797,
+     0.04061871324515698
+    ],
+    "kev_healthy-ar_healthy": [
+     -0.02875006221797909,
+     0.01350941583197202
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.39043065969101604,
+     0.5402847406098417
+    ]
+   },
+   "diff_env_reward": {
+    "kev_progress-ar_progress": 0.04073195721638789,
+    "kev_gated-ar_gated": 0.024918905476385866,
+    "kev_healthy-ar_healthy": -0.006783771013877504,
+    "ar_progress-ar_progress_sampled": 0.4736976522873604
+   },
+   "ci95_physical": {
+    "kev_progress": [
+     0.6276098554636295,
+     0.7934459192306947
+    ],
+    "kev_healthy": [
+     0.47003168658090594,
+     0.6387743156550424
+    ],
+    "kev_gated": [
+     0.6030893324245785,
+     0.7750194570776807
+    ],
+    "ar_progress": [
+     0.5731065910483321,
+     0.7641156407007736
+    ],
+    "ar_progress_sampled": [
+     0.1500615346377138,
+     0.27599376574060597
+    ],
+    "ar_healthy": [
+     0.4808102044143871,
+     0.6453949462132021
+    ],
+    "ar_gated": [
+     0.5663287610993528,
+     0.758675598036086
+    ],
+    "kev_progress-ar_progress": [
+     0.027887362883593655,
+     0.06077659611577828
+    ],
+    "kev_gated-ar_gated": [
+     0.011413746214211862,
+     0.040255874980810624
+    ],
+    "kev_healthy-ar_healthy": [
+     -0.02895231394621861,
+     0.01339280029410904
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.37710150446612256,
+     0.5304916309195702
+    ]
+   },
+   "diff_physical": {
+    "kev_progress-ar_progress": 0.04050274182744462,
+    "kev_gated-ar_gated": 0.024669218193606568,
+    "kev_healthy-ar_healthy": -0.006901136457103774,
+    "ar_progress-ar_progress_sampled": 0.4624158982566898
+   }
+  },
+  "physical_quantity": "mean forward velocity (m/s)"
+ },
+ "HalfCheetah-v5": {
+  "windows": 3167,
+  "env_reward_per_step": {
+   "mean": 2.0740293895698225,
+   "std": 1.3771956534001935
+  },
+  "ar_valid_mass": {
+   "progress": 0.9271420694516447,
+   "healthy": 0.9979593586053124
+  },
+  "kev_progress": {
+   "mean": 0.46697111620701837,
+   "std": 0.1106669024625737,
+   "spearman_env_reward": 0.9284163785562524,
+   "spearman_physical": 0.9305442559473116
+  },
+  "kev_healthy": {
+   "mean": 0.5120079588153251,
+   "std": 0.24719474555894833,
+   "spearman_env_reward": 0.8469119258910279,
+   "spearman_physical": 0.8498564873796816
+  },
+  "kev_gated": {
+   "mean": 0.2653764333061829,
+   "std": 0.16325919504898542,
+   "spearman_env_reward": 0.8800286193415774,
+   "spearman_physical": 0.8827336989411153
+  },
+  "ar_progress": {
+   "mean": 0.8086592380939753,
+   "std": 0.05001616456745444,
+   "spearman_env_reward": 0.6382306424860722,
+   "spearman_physical": 0.6421795185113891
+  },
+  "ar_progress_sampled": {
+   "mean": 0.8176507736027786,
+   "std": 0.23603618192481832,
+   "spearman_env_reward": 0.020904954815909784,
+   "spearman_physical": 0.021385902805475827
+  },
+  "ar_healthy": {
+   "mean": 0.8295586062697915,
+   "std": 0.13219550090945995,
+   "spearman_env_reward": 0.759727436754036,
+   "spearman_physical": 0.7641730286470539
+  },
+  "ar_gated": {
+   "mean": 0.6749740319855004,
+   "std": 0.12963476431723595,
+   "spearman_env_reward": 0.7935848907881693,
+   "spearman_physical": 0.7981068977110962
+  },
+  "bootstrap": {
+   "runs": 5,
+   "resamples": 2000,
+   "ci95_env_reward": {
+    "kev_progress": [
+     0.7460753627119658,
+     0.9562560607627708
+    ],
+    "kev_healthy": [
+     0.6537064433568349,
+     0.863986830699502
+    ],
+    "kev_gated": [
+     0.6875677690939429,
+     0.9014842633013724
+    ],
+    "ar_progress": [
+     0.5179949328823623,
+     0.6932486902798565
+    ],
+    "ar_progress_sampled": [
+     -0.033573752821505494,
+     0.07611241125765955
+    ],
+    "ar_healthy": [
+     0.5929001401675039,
+     0.7830376986080946
+    ],
+    "ar_gated": [
+     0.6268082513722223,
+     0.8250200588199599
+    ],
+    "kev_progress-ar_progress": [
+     0.17587206183500154,
+     0.40964971021020835
+    ],
+    "kev_gated-ar_gated": [
+     0.05646166154097226,
+     0.13023190914521016
+    ],
+    "kev_healthy-ar_healthy": [
+     0.05151858026089493,
+     0.12925367864936713
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.4661063354938055,
+     0.7014815925307093
+    ]
+   },
+   "diff_env_reward": {
+    "kev_progress-ar_progress": 0.29018573607018017,
+    "kev_gated-ar_gated": 0.0864437285534081,
+    "kev_healthy-ar_healthy": 0.08718448913699195,
+    "ar_progress-ar_progress_sampled": 0.6173256876701624
+   },
+   "ci95_physical": {
+    "kev_progress": [
+     0.7509774599056769,
+     0.9574812441724335
+    ],
+    "kev_healthy": [
+     0.6598072124094758,
+     0.8667228636853761
+    ],
+    "kev_gated": [
+     0.6933962908916862,
+     0.9030746415535154
+    ],
+    "ar_progress": [
+     0.5196745399865175,
+     0.6969076771955711
+    ],
+    "ar_progress_sampled": [
+     -0.03275969196250948,
+     0.07656472178992563
+    ],
+    "ar_healthy": [
+     0.6003380714951808,
+     0.7875711041217024
+    ],
+    "ar_gated": [
+     0.6340986771469369,
+     0.8290574628981119
+    ],
+    "kev_progress-ar_progress": [
+     0.1749743832502754,
+     0.40926160009265633
+    ],
+    "kev_gated-ar_gated": [
+     0.0541246317338079,
+     0.13008959218368435
+    ],
+    "kev_healthy-ar_healthy": [
+     0.049492706398880745,
+     0.12912140571141698
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.4677959361010145,
+     0.7065121172817587
+    ]
+   },
+   "diff_physical": {
+    "kev_progress-ar_progress": 0.2883647374359225,
+    "kev_gated-ar_gated": 0.08462680123001909,
+    "kev_healthy-ar_healthy": 0.08568345873262762,
+    "ar_progress-ar_progress_sampled": 0.6207936157059133
+   }
+  },
+  "physical_quantity": "mean forward velocity (m/s)"
+ },
+ "Swimmer-v5": {
+  "windows": 3167,
+  "env_reward_per_step": {
+   "mean": 0.061895443751345,
+   "std": 0.13078657562441576
+  },
+  "ar_valid_mass": {
+   "progress": 0.9575414377041773,
+   "healthy": 0.9975482666218624
+  },
+  "kev_progress": {
+   "mean": 0.5105749488494882,
+   "std": 0.12267585958380374,
+   "spearman_env_reward": 0.7345982515776264,
+   "spearman_physical": 0.7346580155605188
+  },
+  "kev_healthy": {
+   "mean": 0.5865514696510123,
+   "std": 0.1430418116791884,
+   "spearman_env_reward": 0.8317531073857675,
+   "spearman_physical": 0.831599568834539
+  },
+  "kev_gated": {
+   "mean": 0.3117793994103857,
+   "std": 0.128695746286098,
+   "spearman_env_reward": 0.8559036009611299,
+   "spearman_physical": 0.8558961343399308
+  },
+  "ar_progress": {
+   "mean": 0.5768974013477347,
+   "std": 0.10411615170763831,
+   "spearman_env_reward": 0.6699801609175401,
+   "spearman_physical": 0.6700066957625752
+  },
+  "ar_progress_sampled": {
+   "mean": 0.5818598042311336,
+   "std": 0.3028468991377654,
+   "spearman_env_reward": 0.2551540357749745,
+   "spearman_physical": 0.2550308232169094
+  },
+  "ar_healthy": {
+   "mean": 0.8570443410071331,
+   "std": 0.09883635182376568,
+   "spearman_env_reward": 0.7770225773560755,
+   "spearman_physical": 0.7769384660313601
+  },
+  "ar_gated": {
+   "mean": 0.501176758427424,
+   "std": 0.1290138520404145,
+   "spearman_env_reward": 0.7596517000868435,
+   "spearman_physical": 0.7596408840721909
+  },
+  "bootstrap": {
+   "runs": 5,
+   "resamples": 2000,
+   "ci95_env_reward": {
+    "kev_progress": [
+     0.6633545545350055,
+     0.7619538477674718
+    ],
+    "kev_healthy": [
+     0.8041000373674619,
+     0.8876100597936182
+    ],
+    "kev_gated": [
+     0.8238077812086306,
+     0.8711808386300455
+    ],
+    "ar_progress": [
+     0.5774171959105054,
+     0.7086841011448926
+    ],
+    "ar_progress_sampled": [
+     0.19429166654677446,
+     0.2913624979613907
+    ],
+    "ar_healthy": [
+     0.7521444347968156,
+     0.8226622842310816
+    ],
+    "ar_gated": [
+     0.7017152825613538,
+     0.7852979553576458
+    ],
+    "kev_progress-ar_progress": [
+     0.04730440767026822,
+     0.08827074510003635
+    ],
+    "kev_gated-ar_gated": [
+     0.07950088554991132,
+     0.12532770860362816
+    ],
+    "kev_healthy-ar_healthy": [
+     0.03624308955005766,
+     0.07646628329094142
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.36345589709171616,
+     0.45248675512620234
+    ]
+   },
+   "diff_env_reward": {
+    "kev_progress-ar_progress": 0.06461809066008628,
+    "kev_gated-ar_gated": 0.09625190087428648,
+    "kev_healthy-ar_healthy": 0.05473053002969197,
+    "ar_progress-ar_progress_sampled": 0.4148261251425656
+   },
+   "ci95_physical": {
+    "kev_progress": [
+     0.6636002752177037,
+     0.762053837090248
+    ],
+    "kev_healthy": [
+     0.8038470441721081,
+     0.887307232985447
+    ],
+    "kev_gated": [
+     0.8239260872029828,
+     0.8711528439803177
+    ],
+    "ar_progress": [
+     0.5774611498463229,
+     0.7087351670653651
+    ],
+    "ar_progress_sampled": [
+     0.19463941495473536,
+     0.291091043253492
+    ],
+    "ar_healthy": [
+     0.7520302482910035,
+     0.8224339666708188
+    ],
+    "ar_gated": [
+     0.7019353401956551,
+     0.7853972556131108
+    ],
+    "kev_progress-ar_progress": [
+     0.047382970322487894,
+     0.08826168991894642
+    ],
+    "kev_gated-ar_gated": [
+     0.0795234680717202,
+     0.1252705383547834
+    ],
+    "kev_healthy-ar_healthy": [
+     0.036137976901866056,
+     0.07637810868966642
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.3636911497540914,
+     0.45257502902221286
+    ]
+   },
+   "diff_physical": {
+    "kev_progress-ar_progress": 0.06465131979794358,
+    "kev_gated-ar_gated": 0.09625525026773996,
+    "kev_healthy-ar_healthy": 0.05466110280317893,
+    "ar_progress-ar_progress_sampled": 0.4149758725456658
+   }
+  },
+  "physical_quantity": "mean forward velocity (m/s)"
+ },
+ "Reacher-v5": {
+  "windows": 3997,
+  "env_reward_per_step": {
+   "mean": -0.21866228416438654,
+   "std": 0.22924503761343837
+  },
+  "ar_valid_mass": {
+   "progress": 0.7498626566489996,
+   "healthy": 0.9975026986294458
+  },
+  "kev_progress": {
+   "mean": 0.356947120560952,
+   "std": 0.12970804448323,
+   "spearman_env_reward": 0.3688250821905957,
+   "spearman_physical": 0.6081537705796293
+  },
+  "kev_healthy": {
+   "mean": 0.5858640540181502,
+   "std": 0.17082680678448678,
+   "spearman_env_reward": 0.1139734474738516,
+   "spearman_physical": 0.7308581077826704
+  },
+  "kev_gated": {
+   "mean": 0.22759561372839746,
+   "std": 0.13236037947987925,
+   "spearman_env_reward": 0.2513601732779514,
+   "spearman_physical": 0.678335481458717
+  },
+  "ar_progress": {
+   "mean": 0.6845896655442862,
+   "std": 0.049615454421332424,
+   "spearman_env_reward": 0.08795559198898616,
+   "spearman_physical": 0.6379260407341346
+  },
+  "ar_progress_sampled": {
+   "mean": 0.7003377533149863,
+   "std": 0.41091318820943135,
+   "spearman_env_reward": 0.04086870046005079,
+   "spearman_physical": 0.06179498336435044
+  },
+  "ar_healthy": {
+   "mean": 0.7043936092043075,
+   "std": 0.062181641027241115,
+   "spearman_env_reward": -0.04751355926045527,
+   "spearman_physical": 0.7117605170578019
+  },
+  "ar_gated": {
+   "mean": 0.48479305011522233,
+   "std": 0.07306456268667225,
+   "spearman_env_reward": 0.024951930560910343,
+   "spearman_physical": 0.7037152886573173
+  },
+  "bootstrap": {
+   "runs": 5,
+   "resamples": 2000,
+   "ci95_env_reward": {
+    "kev_progress": [
+     0.29686213769146524,
+     0.4216405620101994
+    ],
+    "kev_healthy": [
+     0.05555225133900993,
+     0.1660239423078976
+    ],
+    "kev_gated": [
+     0.19172232089015537,
+     0.30151867541703214
+    ],
+    "ar_progress": [
+     0.01962018850287957,
+     0.14233796729624043
+    ],
+    "ar_progress_sampled": [
+     -0.003896343862949779,
+     0.08470603220363838
+    ],
+    "ar_healthy": [
+     -0.13157219229393202,
+     0.031923487377682955
+    ],
+    "ar_gated": [
+     -0.04977171890148298,
+     0.08767103493213477
+    ],
+    "kev_progress-ar_progress": [
+     0.25414406170505804,
+     0.3071472837390432
+    ],
+    "kev_gated-ar_gated": [
+     0.1971402613367514,
+     0.2559839288970647
+    ],
+    "kev_healthy-ar_healthy": [
+     0.11831999952470071,
+     0.21904861832361025
+    ],
+    "ar_progress-ar_progress_sampled": [
+     -0.03132587442274439,
+     0.10742796131722494
+    ]
+   },
+   "diff_env_reward": {
+    "kev_progress-ar_progress": 0.2808694902016095,
+    "kev_gated-ar_gated": 0.22640824271704107,
+    "kev_healthy-ar_healthy": 0.16148700673430688,
+    "ar_progress-ar_progress_sampled": 0.047086891528935367
+   },
+   "ci95_physical": {
+    "kev_progress": [
+     0.5638242660614399,
+     0.6615558460114079
+    ],
+    "kev_healthy": [
+     0.7010105724608112,
+     0.7555678684790383
+    ],
+    "kev_gated": [
+     0.6519056284286996,
+     0.7070681986025914
+    ],
+    "ar_progress": [
+     0.60694438476965,
+     0.6738789418851995
+    ],
+    "ar_progress_sampled": [
+     0.013146552705678166,
+     0.1068306248396864
+    ],
+    "ar_healthy": [
+     0.6861370973976755,
+     0.7385652340569644
+    ],
+    "ar_gated": [
+     0.6846444260336744,
+     0.7236087775629869
+    ],
+    "kev_progress-ar_progress": [
+     -0.056295794992289844,
+     -0.0004576311443392029
+    ],
+    "kev_gated-ar_gated": [
+     -0.045657387319138626,
+     -0.003760333696590875
+    ],
+    "kev_healthy-ar_healthy": [
+     -0.004418546529235204,
+     0.036606974933583995
+    ],
+    "ar_progress-ar_progress_sampled": [
+     0.5296924361798611,
+     0.628140111966005
+    ]
+   },
+   "diff_physical": {
+    "kev_progress-ar_progress": -0.029772270154505343,
+    "kev_gated-ar_gated": -0.025379807198600224,
+    "kev_healthy-ar_healthy": 0.019097590724868496,
+    "ar_progress-ar_progress_sampled": 0.5761310573697842
+   }
+  },
+  "physical_quantity": "fingertip-target distance reduction (m)"
+ }
+}
