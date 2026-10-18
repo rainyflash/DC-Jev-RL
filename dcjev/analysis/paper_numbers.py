@@ -131,6 +131,112 @@ def part1(o, exp):
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
 
 
+BENCH_KEV = [("kev_rows_fused", "kevrows", "\\kev{}, merged, fused kernels, one row per question", "Part I judge server"),
+             ("kev_shared_prefix", "kevsp", "\\kev{}, merged, shared prefix", "offline studies"),
+             ("kev_backbone_8k", "kevbb", "\\kev{} on the policy's backbone", "GRPO trainers")]
+
+
+def judge_cost(o, exp):
+    """Idle-GPU judge costs (experiments/validation/judge_bench.json) and the shared-backbone memory check."""
+    b = json.loads((exp / "validation" / "judge_bench.json").read_text())
+    ms = lambda d: 1e3 * d["seconds"] / d.get("questions", d.get("prompts", d.get("judgments")))
+    rows = []
+    for part, k, label, use in BENCH_KEV:
+        three, one = b[part]["correct+genuine+quality"], b[part]["correct"]
+        o.num(f"cost_{k}3", f(ms(three), 1)); o.num(f"cost_{k}1", f(ms(one), 1))
+        o.num(f"costreq_{k}3", f(1e3 * three["seconds"] / three["requests"], 1)); o.num(f"peak_{k}", f(three["peak_gb"], 1))
+        rows.append(f"{label} & {use} & {f(1e3 * three['seconds'] / three['requests'], 1)} & {f(ms(three), 1)} & {f(ms(one), 1)} & "
+                    f"{f(max(three['peak_gb'], one['peak_gb']), 1)} \\\\")
+    ar = b["ar_fused"]
+    o.num("cost_arcorrect", f(ms(ar["correct"]), 1)); o.num("cost_arquality", f(ms(ar["quality"]), 1)); o.num("peak_ar", f(ar["correct"]["peak_gb"], 1))
+    rows.append(f"AR judge, fused kernels & baseline & -- & -- & {f(ms(ar['correct']), 1)} & {f(ar['correct']['peak_gb'], 1)} \\\\")
+    g = b["genjudge"]
+    o.num("cost_gen", f(ms(g), 0)); o.num("gen_think", f(g["think_tokens_mean"], 0)); o.num("gen_finished", pct(g["think_finished"]))
+    o.num("gen_judgments", str(g["judgments"]))
+    o.num("ratio_gen_kevbb", f(ms(g) / ms(b["kev_backbone_8k"]["correct+genuine+quality"]), 0))
+    o.num("ratio_gen_ar", f(ms(g) / ms(ar["correct"]), 0))
+    rows.append(f"AR judge reasoning first (vLLM) & baseline & -- & -- & {f(ms(g), 0)} & -- \\\\")
+    o.num("bench_requests", str(b["n"]))
+    o.table("judge_cost", "\\begin{tabular}{@{}llcccc@{}}\n\\toprule\n & & \\multicolumn{2}{c}{3 questions} & 1 question & \\\\ "
+            "\\cmidrule(lr){3-4}\\cmidrule(lr){5-5}\njudge & used by & ms / request & ms / question & ms / question & peak GB \\\\ \\midrule\n"
+            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    sh = json.loads((exp / "validation" / "shared_check_idle.mem_shared.json").read_text())
+    se = json.loads((exp / "validation" / "shared_check_idle.mem_separate.json").read_text())
+    for k, d in (("shared", sh), ("separate", se)):
+        o.num(f"mem_{k}_load", f(d["after_load_gb"], 1)); o.num(f"mem_{k}_peak", f(d["peak_gb"], 1)); o.num(f"rps_{k}", f(d["kev_requests_per_s"], 1))
+    o.num("mem_saving_load", pct(1 - sh["after_load_gb"] / se["after_load_gb"])); o.num("mem_saving_peak", pct(1 - sh["peak_gb"] / se["peak_gb"]))
+    o.num("adapter_switch_ms", f(sh["adapter_switch_round_trip_ms"], 0))
+    old = json.loads((exp / "validation" / "shared_check.json").read_text())
+    o.num("rps_shared_contended", f(old["mem_shared"]["kev_requests_per_s"], 1))
+    par = old["parity"]
+    o.num("shared_parity_max", f(par["shared_backbone_unmerged"]["max_abs_diff"], 3)); o.num("shared_parity_mean", f(par["shared_backbone_unmerged"]["mean_max_abs_diff"], 4))
+    o.num("shared_parity_argmax", pct(par["shared_backbone_unmerged"]["argmax_agreement"], 1))
+    o.num("separate_parity_max", f(par["separate_bf16_merged_fused"]["max_abs_diff"], 3))
+    o.num("shared_parity_questions", str(par["shared_backbone_unmerged"]["questions"]))
+
+
+JS_SIGNALS = [("kev_correct", "kevc", "\\kev{} \\emph{correct}"), ("kev_genuine", "kevg", "\\kev{} \\emph{genuine}"),
+              ("kev_quality", "kevq", "\\kev{} \\emph{quality}"), ("ar_correct", "arc", "AR \\emph{correct}"), ("ar_quality", "arq", "AR \\emph{quality}")]
+PROBE_LABELS = [("answer_only", "answer only"), ("padded", "padded"), ("asserted", "asserted"), ("altered", "altered")]
+
+
+def judge_study(o, exp):
+    """Part II offline judge study (experiments/part2_llm/judge_study/judge_study.json)."""
+    j = json.loads((exp / "part2_llm" / "judge_study" / "judge_study.json").read_text())
+    g = j["generation"]
+    o.num("js_problems", str(g["problems"])); o.num("js_samples", str(g["samples"])); o.num("js_completions", f"{g['problems'] * g['samples']:,}".replace(",", "{,}"))
+    for sub, sk in (("all", "all"), ("math500", "math"), ("gsm8k500", "gsm")):
+        e = j[sub]
+        o.num(f"js_acc_{sk}", pct(e["accuracy"], 1))
+        for name, k, _ in JS_SIGNALS:
+            s = e[name]
+            for m in ("auroc", "auroc_within_problem", "ece", "brier"):
+                o.num(f"js_{m.replace('auroc_within_problem', 'aucw').replace('auroc', 'auc')}_{sk}_{k}", f(s[m]))
+            o.num(f"js_mixed_{sk}", str(s["problems_mixed"]))
+            o.num(f"js_mean1_{sk}_{k}", f(s["mean_if_correct"])); o.num(f"js_mean0_{sk}_{k}", f(s["mean_if_incorrect"]))
+    rows = []
+    for name, k, label in JS_SIGNALS:
+        a, m, gs = j["all"][name], j["math500"][name], j["gsm8k500"][name]
+        rows.append(f"{label} & {f(a['auroc'])} & {f(a['auroc_within_problem'])} & {f(m['auroc'])} & {f(gs['auroc'])} & {f(a['ece'])} & {f(a['brier'])} \\\\")
+    gj = j.get("genjudge")
+    if gj:
+        r, same = gj["ar_reasoning_correct"], gj["same_subset"]
+        o.num("gj_n", str(r["n"])); o.num("gj_auc", f(r["auroc"])); o.num("gj_aucw", f(r["auroc_within_problem"])); o.num("gj_ece", f(r["ece"]))
+        o.num("gj_mixed", str(r["problems_mixed"])); o.num("gj_finished", pct(gj["think_finished"]))
+        for name, k, _ in JS_SIGNALS:
+            o.num(f"gj_same_auc_{k}", f(same[name]["auroc"])); o.num(f"gj_same_aucw_{k}", f(same[name]["auroc_within_problem"]))
+    o.table("judge_study", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & \\multicolumn{2}{c}{all} & MATH-500 & GSM8K & & \\\\ "
+            "\\cmidrule(lr){2-3}\nsignal & AUROC & within & AUROC & AUROC & ECE & Brier \\\\ \\midrule\n" + "\n".join(rows)
+            + "\n\\bottomrule\n\\end{tabular}\n")
+    rows = []
+    for p, label in PROBE_LABELS:
+        e = j["probes"][p]
+        cell = lambda key: f(e[key]["mean"], 2, sign=True) if key in e else "--"
+        for name, k, _ in JS_SIGNALS:
+            for lab in (0, 1):
+                key = f"{name}_shift_if_v{lab}"
+                if key in e:
+                    o.num(f"probe_{p.replace('_', '')}_{k}_{lab}", f(e[key]["mean"], 2, sign=True)); o.num(f"probeup_{p.replace('_', '')}_{k}_{lab}", pct(e[key]["frac_up"]))
+        rows.append(f"{label} & " + " & ".join(cell(f"{n}_shift_if_v{lab}") for lab in (1, 0) for n in ("kev_correct", "ar_correct")) + " \\\\")
+    o.table("probes", "\\begin{tabular}{@{}lcccc@{}}\n\\toprule\n & \\multicolumn{2}{c}{correct completions} & \\multicolumn{2}{c}{incorrect completions} \\\\ "
+            "\\cmidrule(lr){2-3}\\cmidrule(l){4-5}\nedit & \\kev{} $\\Delta\\pc$ & AR $\\Delta P_{\\mathrm{a}}$ & \\kev{} $\\Delta\\pc$ & AR $\\Delta P_{\\mathrm{a}}$ \\\\ \\midrule\n"
+            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def part2(o, exp):
+    validation(o, exp)
+    judge_cost(o, exp)
+    judge_study(o, exp)
+    sw = exp / "part2_llm" / "results" / "lr_sweep.json"
+    if sw.exists():
+        s = json.loads(sw.read_text())
+        o.num("lr_chosen", s["chosen_lr"])
+        for lr, r in s["runs"].items():
+            k = lr.replace("-", "m").replace(".", "")
+            for step, acc in r["val_acc"].items(): o.num(f"sweep_{k}_{step}", f(acc, 3))
+            o.num(f"sweep_{k}_score", f(r["score"], 3))
+
+
 PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
                   ("ar_on_track", "artrack", "AR \\emph{on track}"), ("policy_logprob", "logprob", "policy log-prob.")]
 
@@ -187,12 +293,12 @@ def part3c(o, exp):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("part", choices=["part1", "part3c"])
+    ap.add_argument("part", choices=["part1", "part2", "part3c"])
     ap.add_argument("--exp", default="experiments")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     o = Out(a.out)
-    {"part1": part1, "part3c": part3c}[a.part](o, Path(a.exp))
+    {"part1": part1, "part2": part2, "part3c": part3c}[a.part](o, Path(a.exp))
     o.write()
 
 
