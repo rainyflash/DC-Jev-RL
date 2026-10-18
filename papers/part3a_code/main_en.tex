@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+\input{../common/preamble_en}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{Visible Tests, Held-Out Tests and a Judge:\\Measuring Reward Hacking in Multi-Turn Code Repair with GRPO}
+\author{DC-Jev-RL project, Part III-A (version 4)}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+Versions 1.0--3.0 of this paper (``Agentic-Jev-GRPO'') are withdrawn. Their results were not produced by any
+experiment. The benchmark suite behind them contains no code that loads, trains or evaluates a model; every accuracy,
+learning curve and ablation is a number written into the script. None of the benchmarks the paper named was run
+(BFCL-v3, MBPP+, HumanEval+, SWE-bench-Verified-Mini). This version runs MBPP+ and HumanEval+ with measured
+experiments and drops the tool-calling and SWE-bench claims. The withdrawn files are kept in the repository under
+\texttt{withdrawn/}, and \texttt{CORRECTION.md} lists what was wrong.
+\end{correction}
+
+\begin{abstract}
+\input{abstract_en}
+\end{abstract}
+
+\input{intro_en}
+\input{method_en}
+\input{results_study_en}
+\input{results_grpo_en}
+\input{discussion_en}
+
+\section*{Reproducibility}
+Code, prompts, the data preparation (problem filtering and the split into visible and held-out tests), raw logs (every
+GRPO step and episode of the final evaluations) and the offline study's programs and judge scores are in the repository
+(\texttt{experiments/part3a\_code/}). The tables and every number in the text are generated from them by
+\texttt{dcjev/code/judge\_study.py}, \texttt{dcjev/analysis/part3a.py} and \texttt{dcjev/analysis/paper\_numbers.py}.
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}

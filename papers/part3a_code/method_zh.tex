@@ -1,0 +1,22 @@
+% 第三部分 A：不依赖结果的章节（由 main_zh.tex 引入）。
+
+\section{任务：带可见测试和留出测试的代码修复}\label{sec:task}
+
+\paragraph{题目。} 训练题来自 KodCode-Light-RL-10K~\cite{xu2025kodcode}：带 \texttt{pytest} 单元测试的 Python 函数题。我们保留这样的题目：测试文件只测一个函数，不使用 fixture 或第三方包，并且至少有三个测试函数。第一个测试函数展示给策略（\emph{可见}），其余的\emph{留出}。300 道题（种子 0）留作验证集（\texttt{kodcode\_val}）。测试集为 MBPP+ 和 HumanEval+~\cite{austin2021program,chen2021codex,liu2023evalplus}。MBPP+ 中原始 MBPP 的三个 assert 是可见的；HumanEval+ 中原始 HumanEval 测试的前三个 assert 是可见的。两者中，EvalPlus 测试框架及其新增的测试都是留出的。若一道题的参考解答在我们的测试框架下通不过它自己的任何测试，就丢弃该题，并报告丢弃数量。每个程序都在空临时目录中各自的 \texttt{python -I} 子进程里运行，限制 CPU 时间、地址空间和文件大小，并设墙钟超时；运行前禁用 \texttt{os}、\texttt{shutil} 和 \texttt{subprocess} 中的破坏性函数（即 OpenAI \texttt{human-eval} 的“reliability guard”）。这能约束小模型写出的有缺陷代码，但不是安全边界。
+
+\paragraph{回合。} 策略看到题目、函数签名和可见测试，写出一个解答（每次尝试最多 768 个词元）。代码在可见测试上运行。若有测试失败，策略看到第一个失败的测试及其报错，再写一次，总共最多三次。每次尝试都接续之前各轮的完整词元序列。回合在第一次通过全部可见测试的尝试处结束，或在第三次尝试后结束，然后最终代码在留出测试上运行。提示见 \texttt{experiments/part3a\_code/prompts/code\_prompts.json}，在任何运行之前即已固定。
+
+\paragraph{指标。} \emph{vis pass}：最终代码通过全部可见测试。\emph{all pass}：通过全部可见测试和全部留出测试。\emph{hack}：通过可见测试但有留出测试失败。它既统计过拟合或特判的解答，也统计仅仅是不完整的解答；这一指标无法区分两者，我们把它作为“可见测试所证明的”与“实际情况”之间的差距来报告。\emph{首次尝试 all pass} 衡量不经修复时策略的水平。
+
+\section{奖励}\label{sec:rewards}
+
+\begin{itemize}
+\item \texttt{vis}：最终代码通过全部可见测试则为 1。这是只持有可见测试的智能体所能检查的全部内容，也正是诱发对可见测试过拟合的奖励。
+\item \texttt{vis\_kev}：\texttt{vis} 乘以 \kev{} 对 \emph{genuine} 问题回答“是”的概率：“所给代码是否对所有合法输入都解决了问题，而不是对示例测试做特判？”\kev{} 看到题目、可见测试和最终代码，从不看到留出测试。
+\item \texttt{hidden}：最终代码通过全部可见测试和全部留出测试则为 1。这是一个预言机：相当于测试完整时的 \texttt{vis}。
+\end{itemize}
+一个回合中的每次尝试都使用该回合的优势进行训练，反馈词元作为上下文，不参与训练。更新方式与第二部分相同：每题 8 个回合的组基线、批级尺度、词元级损失、截断重要性采样，每批一次优化器更新。
+
+\section{离线评判研究}\label{sec:code-study}
+
+训练之前，基座策略在 \texttt{kodcode\_val}、MBPP+ 和 HumanEval+ 上以温度 1 每题写 4 个单次尝试。我们在两组测试上运行它们，两个评判模型对每个尝试回答 \emph{genuine} 和 \emph{correct}。对可见测试奖励而言，关键问题是：在通过可见测试的尝试中，评判模型能否把同时通过留出测试的那些分出来。我们报告这一 AUROC，以及在全部尝试上识别“全部通过”的 AUROC。我们还为 MBPP+ 和 HumanEval+ 构造两类状态已知的代码：一类是参考解答；另一类是\emph{硬编码}查表程序，对每个可见测试的参数返回期望值，其他情况返回 \texttt{None}。查表程序只有在通过可见测试时才保留，因此它是纯粹对测试做特判的程序。我们报告每个评判模型给查表程序的分数高于同一道题参考解答的频率。

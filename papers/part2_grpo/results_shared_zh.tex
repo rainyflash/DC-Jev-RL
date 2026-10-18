@@ -1,0 +1,16 @@
+% 第二部分结果：共享骨干（由 main_zh.tex 引入）。
+
+\section{共享骨干节省了什么}\label{sec:res-shared}
+
+\paragraph{评判结果不变。} 在 \NUM{shared_parity_questions} 个关于数学解答的问题上（GSM8K 和 MATH 训练题的参考解答，原样的和改掉最终答案的），共享骨干上的 \kev{} 与 \kev{} 的 fp32 参考实现在概率上最多相差 \NUM{shared_parity_max}，平均相差 \NUM{shared_parity_mean}，在 \NUM{shared_parity_argmax} 的问题上选出相同的选项。单独加载、合并 LoRA 并使用融合内核的 \kev{} 最多相差 \NUM{separate_parity_max}。三者区分正确解答与被篡改解答的能力相同（AUROC 分别为 \NUM{sanity_auc_fp32reference}、\NUM{sanity_auc_sharedbackbone} 和 \NUM{sanity_auc_separatebf16}）。
+
+\paragraph{显存。} 节省的是一份骨干，\NUM{mem_backbone_copy}\,GB。加载完成后，带两个适配器和 \kev{} 输出头的共享骨干占用 \NUM{mem_shared_load}\,GB 显存，两个独立模型占用 \NUM{mem_separate_load}\,GB，少 \NUM{mem_saving_load}。在固定批次（8 条 1024 词元的序列，开启梯度检查点）上做一次策略更新，峰值为 \NUM{mem_shared_train}\,GB 对 \NUM{mem_separate_train}\,GB，少 \NUM{mem_saving_train}。两种方案各在一个新进程中用相同的训练步测量（\texttt{experiments/validation/shared\_check\_idle.*.json}）。随后 \kev{} 打分阶段的峰值主要取决于评判模型一次处理多少词元，这是一个设置而不是任何一种设计的属性，因此不作比较。
+
+\paragraph{速度。} 把活动适配器从策略切换到 \kev{} 再切回来需要 \NUM{adapter_switch_ms}\,ms。在空闲 GPU 上，共享骨干上的 \kev{} 每秒处理 \NUM{rps_shared} 个这样的请求，单独的合并模型为 \NUM{rps_separate} 个。共享骨干上的适配器以未合并方式计算，这会损失一些速度。在策略自己写的解答上（更长），GRPO 训练器中的这种配置处理一个含三个问题的请求需要 \NUM{costreq_kevbb3}\,ms（表~\ref{tab:judge-cost}）。早先一次对共享配置的测量得到每秒 \NUM{rps_shared_contended} 个请求，当时另有进程在使用 GPU，不能代表该设计本身的性能。
+
+\begin{table}[t]
+\centering\small
+\input{tables/judge_cost}
+\caption{在空闲的 RTX PRO 6000 上，对同样 \NUM{bench_requests} 个基座策略解答（MATH-500 和 GSM8K 题目）做一次评判的代价。\kev{} 在一个请求中回答关于一个解答的三个第二部分问题；AR 评判每个问题需要一次前向传播；推理型评判先生成最多 2048 个词元的思考再作答。峰值：进程分配的 GPU 显存，含模型本身。}
+\label{tab:judge-cost}
+\end{table}
