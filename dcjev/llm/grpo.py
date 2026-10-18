@@ -308,6 +308,7 @@ def main():
     ap.add_argument("--final_eval", type=int, default=1)
     ap.add_argument("--ar_model", default="Qwen/Qwen3.5-4B")
     ap.add_argument("--ar_revision", default="851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a")
+    ap.add_argument("--ar_token_budget", type=int, default=8192, help="tokens per AR judge forward pass (memory only)")
     ap.add_argument("--save_rollouts", type=int, default=1)
     ap.add_argument("--kev_log_n", type=int, default=64, help="conditions whose reward does not use Kev: completions per step scored by Kev for the log")
     ap.add_argument("--label_frac", type=float, default=0.25, help="label-budget conditions: fraction of each group labelled")
@@ -333,7 +334,7 @@ def main():
     ar = None
     if a.cond == "rlvr_ar_add":
         from dcjev.judges.ar_judge import ARJudge
-        ar = ARJudge(a.ar_model, revision=a.ar_revision, fused=True)
+        ar = ARJudge(a.ar_model, revision=a.ar_revision, fused=True, token_budget=a.ar_token_budget)
     recal = None
     if a.cond in ("sub_kev_recal", "sub_probe"):
         recal = HeadRecal(sb.head, sb.head.temperature, scratch=a.cond == "sub_probe", lr=a.recal_lr, anchor=a.recal_anchor,
