@@ -7,8 +7,12 @@
 # W defaults to /content/work; if Google Drive is mounted, runs/ is linked to Drive so results survive a runtime reset.
 set -euxo pipefail
 W=${W:-/content/work}
+HERE=$(cd "$(dirname "$0")" && pwd)
 KEV_COMMIT=${KEV_COMMIT:-1f04cfa28e6a708485b28a9585010b9e436b776e}
 mkdir -p $W/logs $W/hf $W/code $W/tmp
+# Exact package versions of the experiments (uv pip freeze of both environments on session 1, scripts/env/). Without
+# them uv resolves the newest compatible releases: a rebuild a day later already got a newer filelock.
+grep -v '^-e \| @ ' $HERE/env/kev_freeze.txt > $W/tmp/kev_constraints.txt
 export HF_HOME=$W/hf HF_HUB_DISABLE_PROGRESS_BARS=1 TRITON_CACHE_DIR=$W/hf/triton-cache UV_LINK_MODE=copy
 command -v uv || pip install -q uv
 if [ -d /content/drive/MyDrive ] && [ ! -e $W/runs ]; then
@@ -20,11 +24,11 @@ cd $W
 cd kev && git checkout -q $KEV_COMMIT && echo "KEV_COMMIT=$(git rev-parse HEAD)"
 uv sync --extra serve --python 3.13
 PY=$W/kev/.venv/bin/python
-uv pip install --python $PY "flash-linear-attention==0.5.2" "triton>=3.7.1"
+uv pip install --python $PY -c $W/tmp/kev_constraints.txt "flash-linear-attention==0.5.2" "triton>=3.7.1"
 uv pip install --python $PY --no-deps "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.7.0/causal_conv1d-1.7.0%2Bcu12torch2.8cxx11abiTRUE-cp313-cp313-linux_x86_64.whl"
-uv pip install --python $PY "mujoco==3.16.0" "gymnasium[mujoco]==1.3.0" "matplotlib>=3.9" "pandas>=2.2" "scipy>=1.14" "pytest" "math-verify" "datasets>=3"
+uv pip install --python $PY -c $W/tmp/kev_constraints.txt "mujoco==3.16.0" "gymnasium[mujoco]==1.3.0" "matplotlib>=3.9" "pandas>=2.2" "scipy>=1.14" "pytest" "math-verify" "datasets>=3"
 [ -x $W/vllm-env/bin/python ] || uv venv $W/vllm-env --python 3.13
-uv pip install --python $W/vllm-env/bin/python "vllm==0.31.0" "math-verify" ninja
+uv pip install --python $W/vllm-env/bin/python -c $HERE/env/vllm_freeze.txt "vllm==0.31.0" "math-verify" ninja
 $PY - <<'PYEOF'
 import torch, transformers, peft, fla, triton, mujoco, gymnasium
 print("torch", torch.__version__, "cuda", torch.version.cuda, "cap", torch.cuda.get_device_capability())
