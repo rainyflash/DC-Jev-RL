@@ -15,6 +15,15 @@ experiments/part2_llm/prompts/judge_prompts.json; Pa = the autoregressive judge'
   rlvr_ar_add    v + lam * Pa
 With lam < 1 a correct completion always outranks an incorrect one in the additive conditions.
 
+Label-budget conditions (Part III-B): only --label_frac of each group's completions get the verifier's label (chosen at
+random); the others are
+  rlvr_sub       left out of the update (advantages from the labelled completions only)
+  sub_kev        rewarded with Kev's P(correct), frozen as released
+  sub_kev_recal  rewarded with Kev's P(correct) after its pointer head is refitted online on all labelled completions so
+                 far (cross-entropy to the verifier's label, anchored to the released head; dcjev.llm.grpo.HeadRecal)
+  sub_probe      rewarded by a head of the same shape trained from scratch on the same labels and Kev features
+The verifier's label of every unlabelled completion is still computed, for logging only (how good the fill-in reward was).
+
 Advantage: the reward minus its group's mean, divided by the standard deviation of these centred rewards over the batch
 (group baseline, batch scale: Liu et al. 2025 "Lite PPO"; TRL's scale_rewards="batch"), so lam keeps its meaning in groups
 where the verifier gives every completion the same reward. Loss: token-level policy gradient (summed over the completion
@@ -44,7 +53,56 @@ from dcjev.llm.rollout_server import AUTHKEY
 from dcjev.llm.verify import Verifier
 from dcjev.metrics import auroc, brier, ece, within_group_auroc
 
-CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add"]
+CONDS = ["rlvr", "rlvr_kev_add", "rlvr_kev_gate", "kev_only", "rlvr_ar_add", "rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"]
+SUB = {"rlvr_sub", "sub_kev", "sub_kev_recal", "sub_probe"}
+
+
+class HeadRecal:
+    """A copy of Kev's pointer head refitted online on (Kev features, verifier label) pairs for the 'correct' question.
+
+    The released head on the backbone is left untouched; this copy scores the unlabelled completions. Loss: binary
+    cross-entropy of P(yes) = softmax(z / T)[yes] against the label, plus anchor * ||theta - theta_released||^2 (none for
+    the from-scratch probe, which also starts from a fresh initialisation and T = 1)."""
+    def __init__(self, head, temperature, scratch, lr=1e-4, anchor=1e-3, buffer=8192, steps=50, batch=256, seed=0):
+        import copy
+        self.head = copy.deepcopy(head).float().train()
+        for p in self.head.parameters(): p.requires_grad_(True)
+        if scratch:
+            torch.manual_seed(seed)
+            for m in (self.head.q, self.head.k): m.reset_parameters()
+        self.T = 1.0 if scratch else float(temperature)
+        self.anchor = 0.0 if scratch else anchor
+        self.theta0 = [p.detach().clone() for p in self.head.parameters()]
+        self.opt = torch.optim.Adam(self.head.parameters(), lr=lr)
+        self.buffer, self.steps, self.batch = buffer, steps, batch
+        self.hd, self.ho, self.y = [], [], []
+        self.gen = torch.Generator(device="cpu").manual_seed(seed)
+
+    def logits(self, hd, ho):   # [B, d], [B, 2, d] -> yes-minus-no logit [B]
+        z = (self.head.k(ho) * self.head.q(hd)[:, None, :]).sum(-1) * self.head.scale / self.T
+        return z[:, 1] - z[:, 0]
+
+    def add(self, feats, labels):
+        for (hd, ho), y in zip(feats, labels):
+            self.hd.append(hd); self.ho.append(ho); self.y.append(float(y))
+        self.hd, self.ho, self.y = self.hd[-self.buffer:], self.ho[-self.buffer:], self.y[-self.buffer:]
+
+    def fit(self):
+        import torch.nn.functional as F
+        Hd, Ho, Y = torch.stack(self.hd), torch.stack(self.ho), torch.tensor(self.y, device=self.hd[0].device)
+        tot = 0.0
+        for _ in range(self.steps):
+            i = torch.randint(len(Y), (min(self.batch, len(Y)),), generator=self.gen).to(Y.device)
+            loss = F.binary_cross_entropy_with_logits(self.logits(Hd[i], Ho[i]), Y[i])
+            if self.anchor:
+                loss = loss + self.anchor * sum(((p - p0) ** 2).sum() for p, p0 in zip(self.head.parameters(), self.theta0))
+            self.opt.zero_grad(); loss.backward(); self.opt.step(); tot += float(loss)
+        return tot / self.steps
+
+    @torch.no_grad()
+    def p_yes(self, feats):
+        if not feats: return np.zeros(0)
+        return torch.sigmoid(self.logits(torch.stack([f[0] for f in feats]), torch.stack([f[1] for f in feats]))).cpu().numpy()
 
 
 class Rollouts:
@@ -154,17 +212,20 @@ def evaluate(ro, lora, sets, verifier, max_tokens, sb=None, judge_sets=(), dump=
     return res
 
 
-def save_ckpt(out, sb, opt, sampler, step):
+def save_ckpt(out, sb, opt, sampler, step, recal=None):
     tmp, dst = out / "ckpt_tmp", out / "ckpt"
     if tmp.exists(): shutil.rmtree(tmp)
     sb.save_policy(tmp / "policy")
     torch.save({"opt": opt.state_dict(), "sampler": sampler.state(), "step": step, "torch_rng": torch.get_rng_state(),
                 "cuda_rng": torch.cuda.get_rng_state()}, tmp / "state.pt")
+    if recal is not None:
+        torch.save({"head": recal.head.state_dict(), "opt": recal.opt.state_dict(), "y": recal.y, "gen": recal.gen.get_state(),
+                    "hd": torch.stack(recal.hd).cpu() if recal.hd else None, "ho": torch.stack(recal.ho).cpu() if recal.ho else None}, tmp / "recal.pt")
     if dst.exists(): shutil.rmtree(dst)
     tmp.rename(dst)
 
 
-def load_ckpt(out, sb, opt, sampler):
+def load_ckpt(out, sb, opt, sampler, recal=None):
     from peft import set_peft_model_state_dict
     from safetensors.torch import load_file
     ck = out / "ckpt"
@@ -174,6 +235,12 @@ def load_ckpt(out, sb, opt, sampler):
     st = torch.load(ck / "state.pt", weights_only=False)
     opt.load_state_dict(st["opt"]); sampler.load(st["sampler"])
     torch.set_rng_state(st["torch_rng"]); torch.cuda.set_rng_state(st["cuda_rng"])
+    if recal is not None:
+        r = torch.load(ck / "recal.pt", weights_only=False)
+        recal.head.load_state_dict(r["head"]); recal.opt.load_state_dict(r["opt"]); recal.gen.set_state(r["gen"]); recal.y = r["y"]
+        dev = next(recal.head.parameters()).device
+        recal.hd = list(r["hd"].to(dev)) if r["hd"] is not None else []
+        recal.ho = list(r["ho"].to(dev)) if r["ho"] is not None else []
     return st["step"]
 
 
@@ -185,6 +252,7 @@ def main():
     ap.add_argument("--data", default="/content/work/data")
     ap.add_argument("--train_sets", default="math_train")
     ap.add_argument("--math_levels", default="3,4,5", help="MATH train levels used (other sources unaffected); '' = all")
+    ap.add_argument("--holdout", type=int, default=500, help="training problems held out (fixed) as the validation set used for model selection")
     ap.add_argument("--steps", type=int, default=200)
     ap.add_argument("--prompts", type=int, default=32)
     ap.add_argument("--group", type=int, default=8)
@@ -199,12 +267,18 @@ def main():
     ap.add_argument("--grad_clip", type=float, default=1.0)
     ap.add_argument("--eval_every", type=int, default=25)
     ap.add_argument("--eval_gsm8k", type=int, default=500, help="size of the fixed GSM8K-test subset for periodic evaluation")
+    ap.add_argument("--eval_limit", type=int, default=0, help="debugging: evaluate on the first N problems of each set only")
     ap.add_argument("--ckpt_every", type=int, default=25)
     ap.add_argument("--rollout_port", type=int, default=6200)
     ap.add_argument("--final_eval", type=int, default=1)
     ap.add_argument("--ar_model", default="Qwen/Qwen3.5-4B")
     ap.add_argument("--ar_revision", default="851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a")
     ap.add_argument("--save_rollouts", type=int, default=1)
+    ap.add_argument("--label_frac", type=float, default=0.25, help="label-budget conditions: fraction of each group labelled")
+    ap.add_argument("--recal_lr", type=float, default=1e-4)
+    ap.add_argument("--recal_anchor", type=float, default=1e-3)
+    ap.add_argument("--recal_steps", type=int, default=50)
+    ap.add_argument("--recal_buffer", type=int, default=8192)
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     if (out / "final.json").exists():
@@ -218,15 +292,23 @@ def main():
     if a.cond == "rlvr_ar_add":
         from dcjev.judges.ar_judge import ARJudge
         ar = ARJudge(a.ar_model, revision=a.ar_revision, fused=True)
+    recal = None
+    if a.cond in ("sub_kev_recal", "sub_probe"):
+        recal = HeadRecal(sb.head, sb.head.temperature, scratch=a.cond == "sub_probe", lr=a.recal_lr, anchor=a.recal_anchor,
+                          buffer=a.recal_buffer, steps=a.recal_steps, seed=a.seed)
     params = sb.policy_parameters()
     opt = torch.optim.AdamW(params, lr=a.lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0)
     levels = {f"Level {x}" for x in a.math_levels.split(",") if x}
     train = [r for name in a.train_sets.split(",") for r in load(f"{a.data}/{name}.jsonl")
              if not (levels and r["source"] == "math" and r["level"] not in levels)]
+    held = set(np.random.default_rng(12345).choice(len(train), a.holdout, replace=False).tolist()) if a.holdout else set()
+    val, train = [r for i, r in enumerate(train) if i in held], [r for i, r in enumerate(train) if i not in held]
     sampler = Sampler(train, a.seed)
     gsm = load(f"{a.data}/gsm8k_test.jsonl")
     gsm_sub = [gsm[i] for i in sorted(np.random.default_rng(0).choice(len(gsm), a.eval_gsm8k, replace=False))]
     periodic = {"math500": (load(f"{a.data}/math500.jsonl"), 1, 0.0, 1.0), "gsm8k500": (gsm_sub, 1, 0.0, 1.0)}
+    if val: periodic["val"] = (val, 1, 0.0, 1.0)
+    if a.eval_limit: periodic = {k: (v[0][:a.eval_limit],) + v[1:] for k, v in periodic.items()}
     verifier = Verifier()
     ro = Rollouts(a.rollout_port)
     tag = f"{a.cond}-s{a.seed}-{zlib.crc32(str(out.resolve()).encode()) & 0xffffff:06x}"
@@ -234,15 +316,24 @@ def main():
 
     start = 0
     if (out / "ckpt" / "state.pt").exists():
-        start = load_ckpt(out, sb, opt, sampler)
+        start = load_ckpt(out, sb, opt, sampler, recal)
         keep = [l for l in open(out / "log.jsonl") if json.loads(l).get("step", -1) < start or json.loads(l)["kind"] == "config"]
         open(out / "log.jsonl", "w").writelines(keep)
+        if (out / "rollouts.jsonl.gz").exists():   # drop rollouts logged after the checkpoint (and a member cut by the crash)
+            kept = []
+            try:
+                with gzip.open(out / "rollouts.jsonl.gz", "rt") as f:
+                    for l in f:
+                        if json.loads(l)["step"] < start: kept.append(l)
+            except (EOFError, gzip.BadGzipFile, json.JSONDecodeError):
+                pass
+            with gzip.open(out / "rollouts.jsonl.gz", "wt") as f: f.writelines(kept)
         print(f"resumed at step {start}", flush=True)
     log = open(out / "log.jsonl", "a")
     def emit(rec):
         log.write(json.dumps(rec) + "\n"); log.flush()
     if start == 0:
-        emit({"kind": "config", **vars(a), "train_size": len(train), "kev_tensors": sb.kev_tensors,
+        emit({"kind": "config", **vars(a), "train_size": len(train), "val_size": len(val), "kev_tensors": sb.kev_tensors,
               "policy_params": sum(p.numel() for p in params), "load_seconds": round(load_s, 1),
               "mem_after_load_gb": round(torch.cuda.memory_allocated() / 1e9, 2)})
     roll = gzip.open(out / "rollouts.jsonl.gz", "at") if a.save_rollouts else None
@@ -266,7 +357,11 @@ def main():
         v = np.array(verifier([c["text"] for _, _, c in items], [batch[i]["answer"] for i, _, _ in items]))
         tm["verify"] = time.time() - t
         t = time.time()
-        probs, metas = sb.kev_probs([kev_request(batch[i]["problem"], clip_solution(sb.tok, c["text"])) for i, _, c in items])
+        reqs = [kev_request(batch[i]["problem"], clip_solution(sb.tok, c["text"])) for i, _, c in items]
+        if recal is not None:
+            probs, metas, feats = sb.kev_probs_features(reqs, question=QUESTIONS.index("correct"))
+        else:
+            probs, metas = sb.kev_probs(reqs)
         ks = [kev_scalars(p, m) for p, m in zip(probs, metas)]
         tm["kev"] = time.time() - t
         pa = None
@@ -274,16 +369,42 @@ def main():
             t = time.time()
             pa = [d["p_yes"] for d in ar.score([ar_messages(batch[i]["problem"], clip_solution(sb.tok, c["text"])) for i, _, c in items], "noul")]
             tm["ar"] = time.time() - t
-        R = np.array([reward(a.cond, v[k], ks[k], pa[k] if pa else None, a.lam) for k in range(len(items))])
         P, G = len(batch), a.group
-        Cn = (R.reshape(P, G) - R.reshape(P, G).mean(1, keepdims=True)).reshape(-1)
-        A = Cn / (Cn.std() + 1e-4)
+        use = np.ones(len(items), dtype=bool)
+        sub_log = {}
+        if a.cond in SUB:
+            lab = np.zeros(len(items), dtype=bool)
+            rs = np.random.default_rng(a.seed * 7919 + step)
+            for i in range(P): lab[i * G + rs.choice(G, max(1, round(a.label_frac * G)), replace=False)] = True
+            R = v.astype(float).copy()   # labelled: the verifier; unlabelled: the fill-in reward below
+            unl = np.flatnonzero(~lab)
+            if a.cond == "rlvr_sub":
+                use = lab
+            elif a.cond == "sub_kev":
+                R[unl] = [ks[k]["correct"] for k in unl]
+            else:
+                t = time.time()
+                recal.add([feats[k] for k in np.flatnonzero(lab)], v[lab])
+                sub_log["recal_loss"] = recal.fit()
+                R[unl] = recal.p_yes([feats[k] for k in unl])
+                tm["recal"] = time.time() - t
+            if a.cond != "rlvr_sub":
+                fill, truth = R[unl], v[unl]
+                sub_log.update({"fill_auroc_unlabelled": auroc(fill, truth), "fill_ece_unlabelled": ece(fill, truth),
+                                "fill_mean_unlabelled": float(fill.mean()), "acc_unlabelled": float(truth.mean()),
+                                "frozen_kev_auroc_unlabelled": auroc([ks[k]["correct"] for k in unl], truth)})
+        else:
+            R = np.array([reward(a.cond, v[k], ks[k], pa[k] if pa else None, a.lam) for k in range(len(items))])
+        Rm = np.where(use, R, np.nan).reshape(P, G)
+        with np.errstate(invalid="ignore"):
+            Cn = np.nan_to_num((Rm - np.nanmean(Rm, 1, keepdims=True)).reshape(-1))
+        A = Cn / (Cn[use].std() + 1e-4)
 
         # policy update (one step on the whole batch)
         t = time.time()
         sb.model.train()
         lengths = [len(p) + len(c["token_ids"]) for _, p, c in items]
-        n_tok = sum(len(c["token_ids"]) for _, _, c in items)
+        n_tok = sum(len(c["token_ids"]) for k, (_, _, c) in enumerate(items) if use[k])   # tokens of the completions in the update
         trained = [k for k in range(len(items)) if A[k] != 0 and len(items[k][2]["token_ids"]) > 0]
         loss_sum, w_sum, w_clip, d_sum, d_n = 0.0, 0.0, 0, 0.0, 0
         for mb in pack(trained, lengths, a.micro_tokens):
@@ -301,7 +422,7 @@ def main():
         opt.step(); opt.zero_grad(set_to_none=True)
         tm["train"] = time.time() - t
 
-        Vg, Rg = v.reshape(P, G), R.reshape(P, G)
+        Vg = v.reshape(P, G)
         pc = np.array([k["correct"] for k in ks]); grp = np.repeat(np.arange(P), G)
         wg, n_mixed = within_group_auroc(pc, v, grp)
         Ls = np.array([len(c["token_ids"]) for _, _, c in items])
@@ -309,7 +430,8 @@ def main():
                "kev": {q: float(np.mean([k[q] for k in ks])) for q in QUESTIONS},
                "kev_correct_auroc": auroc(pc, v), "kev_correct_auroc_within_group": wg, "groups_mixed": n_mixed,
                "groups_all_wrong": float((Vg.max(1) == 0).mean()), "groups_all_right": float((Vg.min(1) == 1).mean()),
-               "groups_zero_reward_var": float((Rg.std(1) == 0).mean()), "adv_scale": float(Cn.std()),
+               "groups_zero_reward_var": float((np.nan_to_num(np.nanstd(np.where(use, R, np.nan).reshape(P, G), 1)) == 0).mean()),
+               "adv_scale": float(Cn[use].std()), **sub_log,
                "len_mean": float(Ls.mean()), "len_max": int(Ls.max()),
                "truncated": float(np.mean([c["finish_reason"] == "length" for _, _, c in items])),
                "trained_seqs": len(trained), "tokens": int(n_tok), "loss": loss_sum, "grad_norm": gn,
@@ -323,12 +445,13 @@ def main():
             for k, (i, _, c) in enumerate(items):
                 roll.write(json.dumps({"step": step, "id": batch[i]["id"], "k": k % G, "text": c["text"], "n_tok": len(c["token_ids"]),
                                        "finish": c["finish_reason"], "v": int(v[k]), "kev": ks[k], "ar": pa[k] if pa else None,
-                                       "r": float(R[k]), "adv": float(A[k])}) + "\n")
+                                       "r": float(R[k]), "adv": float(A[k]), "used": bool(use[k]),
+                                       "labelled": bool(lab[k]) if a.cond in SUB else True}) + "\n")
             roll.flush()
         print(f"step {step} acc {v.mean():.3f} R {R.mean():.3f} Pc {pc.mean():.3f} auroc {rec['kev_correct_auroc']} "
               f"len {Ls.mean():.0f} gn {gn:.3f} t {rec['seconds']}", flush=True)
         if (step + 1) % a.ckpt_every == 0 and step + 1 < a.steps:
-            save_ckpt(out, sb, opt, sampler, step + 1)
+            save_ckpt(out, sb, opt, sampler, step + 1, recal)
 
     final = {"config": vars(a)}
     if a.final_eval:

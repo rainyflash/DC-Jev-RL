@@ -1,0 +1,8 @@
+{
+ "arrangement": "mem_separate",
+ "after_load_gb": 17.097218048,
+ "peak_after_train_step_gb": 22.717899776,
+ "kev_requests_per_s": 39.22686566081739,
+ "peak_gb": 32.313744896,
+ "reserved_gb": 34.170994688
+}

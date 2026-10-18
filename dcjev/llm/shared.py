@@ -94,6 +94,15 @@ class SharedBackbone:
         finally:
             self.use("default")
 
+    @torch.no_grad()
+    def kev_probs_features(self, requests, question=0):
+        """kev_probs plus the pointer head's inputs for question index `question` (see KevJudge.probs_and_features)."""
+        self.model.eval(); self.use("kev")
+        try:
+            return self.kev.probs_and_features(requests, question)
+        finally:
+            self.use("default")
+
     # --- policy log-probabilities ----------------------------------------------------------------------------------
     def token_logprobs(self, seqs):
         """seqs: list of (prompt_ids, completion_ids). -> list of 1-D tensors, the policy's log-probability of each
@@ -104,7 +113,7 @@ class SharedBackbone:
         att = torch.zeros((len(seqs), L), dtype=torch.long, device=self.device)
         for i, (p, c) in enumerate(seqs):
             x = torch.tensor(p + c, device=self.device); ids[i, : len(x)] = x; att[i, : len(x)] = 1
-        h = self.backbone(input_ids=ids, attention_mask=att).last_hidden_state
+        h = self.backbone(input_ids=ids, attention_mask=att, use_cache=False).last_hidden_state
         rows = torch.cat([torch.full((len(c),), i, device=self.device) for i, (p, c) in enumerate(seqs)])
         pos = torch.cat([torch.arange(len(p) - 1, len(p) + len(c) - 1, device=self.device) for p, c in seqs])
         tgt = torch.cat([torch.tensor(c, device=self.device) for _, c in seqs])

@@ -1,0 +1,15 @@
+{
+ "n": 300,
+ "progress_expected_abs_diff": {
+  "max": 0.04951802706736308,
+  "mean": 0.006688242802036714
+ },
+ "healthy_p_yes_abs_diff": {
+  "max": 0.030477184679387315,
+  "mean": 0.005261774322316396
+ },
+ "progress_argmax_agreement": 0.9833333333333333,
+ "valid_mass_progress_mean": 0.8602054860309,
+ "valid_mass_healthy_mean": 0.9980194881310066,
+ "fused_windows_per_s_two_questions": 75.87135446108803
+}

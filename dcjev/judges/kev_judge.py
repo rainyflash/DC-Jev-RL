@@ -110,7 +110,13 @@ class KevJudge:
         return out, list(metas)
 
     @torch.no_grad()
-    def _probs_shared(self, requests):
+    def probs_and_features(self, requests, question=0):
+        """Shared-prefix probabilities plus, for question index `question` of every request, the pointer head's inputs
+        (h at <decide> [d], h at the options [K, d], fp32 on the device): what an online recalibration of the head trains on."""
+        return self._probs_shared(requests, capture=question)
+
+    @torch.no_grad()
+    def _probs_shared(self, requests, capture=None):
         """Shared-prefix form: kev.shared_prefix.branch_hidden over chunks of records (states left-padded, branches
         right-padded), then the pointer head on each branch's <decide> and option positions."""
         from kev.shared_prefix import branch_hidden
@@ -118,6 +124,7 @@ class KevJudge:
         encs, metas = zip(*(self.encode(r) for r in requests)) if requests else ((), ())
         splits = [rows_of(e) for e in encs]
         out = [None] * len(encs)
+        feats = [None] * len(encs)
         order = sorted(range(len(encs)), key=lambda k: len(splits[k][0]))
         i = 0
         while i < len(order):
@@ -133,16 +140,17 @@ class KevJudge:
             hs = branch_hidden(self.model.lm, [splits[k] for k in idx], self.model.pad_id, self.device)
             for k, h_rec in zip(idx, hs):
                 ps = []
-                for h, r in zip(h_rec, splits[k][2]):
-                    z = self.model.head(h[r["decide"]], h[torch.tensor(r["opts"], device=self.device)])
-                    ps.append(F.softmax(z, -1))
+                for q, (h, r) in enumerate(zip(h_rec, splits[k][2])):
+                    hd, ho = h[r["decide"]], h[torch.tensor(r["opts"], device=self.device)]
+                    if q == capture: feats[k] = (hd.clone(), ho.clone())
+                    ps.append(F.softmax(self.model.head(hd, ho), -1))
                 out[k] = [p.cpu().tolist() for p in ps]
             self.stats.rows += sum(len(splits[k][2]) for k in idx)
             self.stats.tokens += sum(len(splits[k][0]) + sum(len(x["ids"]) for x in splits[k][2]) for k in idx)
             i = j
         self.stats.requests += len(encs)
         self.stats.seconds += time.perf_counter() - t0
-        return out, list(metas)
+        return (out, list(metas)) if capture is None else (out, list(metas), feats)
 
     def answers(self, requests):
         """TypeSafe-style answers (kev.api.to_answers): score = expected level, noul = p(yes), choice = argmax."""

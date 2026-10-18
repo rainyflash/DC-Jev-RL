@@ -1,5 +1,6 @@
-"""Verifies the trainer -> vLLM LoRA hand-off (run in two steps, one per environment).
+"""Verifies the trainer -> vLLM LoRA hand-off (three steps: make and score in kev's environment, gen in vLLM's).
 
+  kev env:  python -m dcjev.llm.check_vllm_lora make  --lora /content/work/tmp/lora_rand --out /content/work/tmp/vllm_check.json
   vLLM env: python -m dcjev.llm.check_vllm_lora gen   --lora /content/work/tmp/lora_rand --out /content/work/tmp/vllm_check.json
   kev env:  python -m dcjev.llm.check_vllm_lora score --lora /content/work/tmp/lora_rand --out /content/work/tmp/vllm_check.json
 
@@ -15,6 +16,22 @@ import json
 BASE, REV = "Qwen/Qwen3.5-4B-Base", "1001bb4d826a52d1f399e183466143f4da7b741b"
 PROMPTS = ["Solve the following math problem step by step. Put your final answer within \\boxed{}.\n\nProblem: What is 17 * 23?\n\nSolution:",
            "Solve the following math problem step by step. Put your final answer within \\boxed{}.\n\nProblem: A train travels 60 miles per hour for 3 hours. How far does it go?\n\nSolution:"]
+
+
+def make(a):
+    """Two PEFT adapters with the policy's configuration: zero-initialised (B = 0, must equal the base) and random."""
+    import torch
+    from peft import LoraConfig, get_peft_model
+    from transformers import AutoModelForCausalLM
+    from dcjev.llm.shared import POLICY_TARGETS
+    lm = AutoModelForCausalLM.from_pretrained(BASE, revision=REV, dtype=torch.bfloat16)
+    pm = get_peft_model(lm, LoraConfig(r=32, lora_alpha=64, lora_dropout=0.0, target_modules=POLICY_TARGETS, task_type="CAUSAL_LM"))
+    pm.save_pretrained(a.lora.replace("lora_rand", "lora_zero"))
+    torch.manual_seed(0)
+    for n, p in pm.named_parameters():
+        if "lora_B" in n: p.data.normal_(0, 0.02)
+    pm.save_pretrained(a.lora)
+    print("saved", a.lora, "trainable", sum(p.numel() for p in pm.parameters() if p.requires_grad))
 
 
 def gen(a):
@@ -62,8 +79,8 @@ def score(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["gen", "score"])
+    ap.add_argument("step", choices=["make", "gen", "score"])
     ap.add_argument("--lora", required=True)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    (gen if a.step == "gen" else score)(a)
+    {"make": make, "gen": gen, "score": score}[a.step](a)

@@ -41,8 +41,9 @@ class ARJudge:
         return self.tok.encode(text, add_special_tokens=False)
 
     @torch.no_grad()
-    def next_token_probs(self, prompts):
-        """prompts: list of token id lists -> [N, V] float32 next-token probabilities (on CPU)."""
+    def next_token_probs(self, prompts, keep=None):
+        """prompts: list of token id lists -> per prompt the float32 next-token probabilities (on CPU): all V of them, or
+        only the columns in keep (the softmax is still over the whole vocabulary)."""
         order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
         out = [None] * len(prompts)
         i = 0
@@ -56,10 +57,11 @@ class ARJudge:
             att = torch.zeros((len(chunk), L), dtype=torch.long, device=self.device)
             for n, p in enumerate(chunk):   # right padding: every read position precedes the pads
                 ids[n, : len(p)] = torch.tensor(p, device=self.device); att[n, : len(p)] = 1
-            h = self.backbone(input_ids=ids, attention_mask=att).last_hidden_state
+            h = self.backbone(input_ids=ids, attention_mask=att, use_cache=False).last_hidden_state
             last = torch.tensor([len(p) - 1 for p in chunk], device=self.device)
             logits = self.lm_head(h[torch.arange(len(chunk), device=self.device), last]).float()
-            P = torch.softmax(logits, -1).cpu()
+            P = torch.softmax(logits, -1)
+            P = (P if keep is None else P[:, torch.tensor(keep, device=self.device)]).cpu()
             for n, k in enumerate(order[i:j]):
                 out[k] = P[n]
             i = j
@@ -68,17 +70,19 @@ class ARJudge:
     def score(self, message_lists, kind, levels=5):
         """kind 'score' -> dicts with expected, sampled, valid_mass, probs; kind 'noul' -> p_yes, valid_mass."""
         t0 = time.perf_counter()
-        probs = self.next_token_probs([self.prompt_ids(m) for m in message_lists])
+        keep = self.digit_ids[:levels] if kind == "score" else self.yes_ids + self.no_ids
+        probs = self.next_token_probs([self.prompt_ids(m) for m in message_lists], keep=keep)
+        ny = len(self.yes_ids)
         res = []
         for p in probs:
             if kind == "score":
-                q = p[self.digit_ids[:levels]].numpy().astype(np.float64)
+                q = p.numpy().astype(np.float64)
                 mass = float(q.sum()); qn = q / mass if mass > 0 else np.full(levels, 1.0 / levels)
                 res.append({"expected": float((np.arange(levels) * qn).sum() / (levels - 1)),
                             "sampled": float(self.rng.choice(levels, p=qn) / (levels - 1)),
                             "valid_mass": mass, "probs": qn.tolist()})
             else:
-                y, n = float(p[self.yes_ids].sum()), float(p[self.no_ids].sum())
+                y, n = float(p[:ny].sum()), float(p[ny:].sum())
                 res.append({"p_yes": y / (y + n) if y + n > 0 else 0.5, "valid_mass": y + n})
         self.seconds += time.perf_counter() - t0
         return res
