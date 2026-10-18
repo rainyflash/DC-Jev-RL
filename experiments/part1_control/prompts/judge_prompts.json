@@ -1,0 +1,70 @@
+{
+  "_about": "Judge prompts for Part I, fixed before the main experiment grid was run (git history records when). The state given to a judge is {task, reference, segment summary}; it never contains the environment's reward. Kev-4B receives the state and the questions through the System One schema (kev.api); the autoregressive judge receives the same text in a chat prompt (dcjev/judges/ar_judge.py).",
+  "version": 1,
+  "envs": {
+    "Hopper-v5": {
+      "task": "A one-legged hopping robot (MuJoCo Hopper) must hop forward along the x-axis as fast as possible without falling over.",
+      "reference": "When the robot stands upright its torso is about 1.25 m above the ground. A strong policy for this robot hops forward at about 3 m/s.",
+      "progress": ["failing: it falls over, or it moves backward",
+                   "poor: it stays up but makes little or no forward progress",
+                   "fair: it moves forward, but slowly",
+                   "good: it moves forward at a solid speed",
+                   "excellent: it moves forward fast while staying upright and in control"],
+      "healthy": "Is the robot making genuine forward progress with a controlled, upright gait (not fallen, not falling, not standing still)?"
+    },
+    "Walker2d-v5": {
+      "task": "A two-legged walking robot (MuJoCo Walker2d) must walk or run forward along the x-axis as fast as possible without falling over.",
+      "reference": "When the robot stands upright its torso is about 1.25 m above the ground. A strong policy for this robot runs forward at about 4 m/s.",
+      "progress": ["failing: it falls over, or it moves backward",
+                   "poor: it stays up but makes little or no forward progress",
+                   "fair: it moves forward, but slowly",
+                   "good: it moves forward at a solid speed",
+                   "excellent: it moves forward fast while staying upright and in control"],
+      "healthy": "Is the robot making genuine forward progress with a controlled, upright gait (not fallen, not falling, not standing still)?"
+    },
+    "HalfCheetah-v5": {
+      "task": "A planar cheetah-like robot with two legs (MuJoCo HalfCheetah) must run forward along the x-axis as fast as possible.",
+      "reference": "The robot cannot fall, but it can flip onto its back, which is undesirable. A strong policy for this robot runs forward at about 10 m/s.",
+      "progress": ["failing: it moves backward, or it has flipped onto its back",
+                   "poor: it makes little or no forward progress",
+                   "fair: it moves forward, but slowly",
+                   "good: it runs forward at a solid speed",
+                   "excellent: it runs forward fast with a controlled, upright posture"],
+      "healthy": "Is the robot running forward with an upright, coordinated gait (not flipped onto its back, not stuck in place)?"
+    },
+    "Swimmer-v5": {
+      "task": "A three-segment swimming robot in a viscous fluid (MuJoCo Swimmer) must swim forward along the x-axis as fast as possible.",
+      "reference": "Motion in the fluid is slow: a strong policy for this robot swims forward at about 0.3 m/s.",
+      "progress": ["failing: it moves backward",
+                   "poor: it makes little or no forward progress",
+                   "fair: it moves forward, but slowly",
+                   "good: it swims forward at a solid speed",
+                   "excellent: it swims forward fast"],
+      "healthy": "Is the robot swimming forward with a coordinated undulating motion (not drifting backward, not stuck)?"
+    },
+    "Reacher-v5": {
+      "task": "A two-joint robot arm (MuJoCo Reacher) must move its fingertip to a target point and keep it there, using as little control effort as possible.",
+      "reference": "The arm is about 0.21 m long. A fingertip within about 0.01 m of the target is on target; control effort ranges from 0 (none) to 1 (maximum).",
+      "progress": ["failing: the fingertip stays far from the target or moves away from it",
+                   "poor: the fingertip gets only slightly closer to the target",
+                   "fair: the fingertip approaches the target but is not yet close",
+                   "good: the fingertip is close to the target",
+                   "excellent: the fingertip is on the target and held there with little effort"],
+      "healthy": "Is the arm bringing its fingertip to the target or holding it there (not moving away, not flailing)?"
+    }
+  },
+  "questions": {
+    "progress": {"type": "score", "instructions": "How well is the robot accomplishing its task in this segment?"},
+    "healthy": {"type": "noul"}
+  },
+  "summary_fields": {
+    "segment_duration_s": "length of the segment in seconds",
+    "forward_velocity_m_per_s": "forward velocity along the x-axis (mean, min, max over the segment)",
+    "torso_height_m": "torso height above the ground",
+    "torso_tilt_deg": "largest torso tilt from vertical",
+    "torso_pitch_deg": "torso pitch angle",
+    "fingertip_to_target_distance_m": "distance from the fingertip to the target",
+    "control_effort_0_to_1": "mean squared motor command, from 0 (none) to 1 (maximum)",
+    "fell_over": "whether the robot fell over during the segment"
+  }
+}
