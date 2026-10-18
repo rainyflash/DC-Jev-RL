@@ -1,0 +1,63 @@
+% Part III-A, results of the offline code judge study (included by main_en.tex).
+
+\section{What the judges see in code}\label{sec:res-study}
+
+\paragraph{The visible tests leave a large gap.} The base policy's \NUM{cs_policy} single attempts (\NUM{cs_samples}
+per problem) pass the visible tests in \NUM{cs_vispass_all} of cases and every test in \NUM{cs_allpass_all}. Of the
+attempts that pass the visible tests, \NUM{cs_hack_all} fail a held-out test: \NUM{cs_hack_kod} on KodCode val,
+\NUM{cs_hack_mbpp} on MBPP+ and \NUM{cs_hack_he} on HumanEval+. A reward built from the visible tests pays these
+attempts as much as the correct ones, before any training has had a chance to exploit it.
+
+\paragraph{Both judges see most of it, and \kev{} is no better on the training distribution.}
+Table~\ref{tab:code-study} gives, among the attempts that pass the visible tests, each signal's AUROC for also passing
+the held-out tests. Over all three sets, \kev{}'s \emph{genuine} reaches \NUM{csauc_all_kevg}
+\ci{\NUM{csauclo_all_kevg}}{\NUM{csauchi_all_kevg}} and the AR judge's \NUM{csauc_all_arg}
+\ci{\NUM{csauclo_all_arg}}{\NUM{csauchi_all_arg}} (95\% intervals from resampling problems). The difference,
+\NUM{csd_all_kevgarg} \ci{\NUM{csdlo_all_kevgarg}}{\NUM{csdhi_all_kevgarg}}, is not resolved. With the \emph{correct}
+question \kev{} is ahead by \NUM{csd_all_kevcarc} \ci{\NUM{csdlo_all_kevcarc}}{\NUM{csdhi_all_kevcarc}}. Most of
+either difference comes from MBPP+, where \kev{} leads by \NUM{csd_mbpp_kevgarg}
+\ci{\NUM{csdlo_mbpp_kevgarg}}{\NUM{csdhi_mbpp_kevgarg}} on \emph{genuine}. On KodCode val, the distribution the policy
+is trained on, the AR judge is ahead by a margin that is not resolved (\NUM{csd_kod_kevgarg}
+\ci{\NUM{csdlo_kod_kevgarg}}{\NUM{csdhi_kod_kevgarg}}), and on HumanEval+ the two cannot be told apart
+(\NUM{csd_he_kevgarg} \ci{\NUM{csdlo_he_kevgarg}}{\NUM{csdhi_he_kevgarg}}). Over all attempts, both judges separate the ones that pass
+every test from the rest better (\NUM{csaucall_all_kevg} and \NUM{csaucall_all_arg}), with the AR judge slightly ahead
+(\NUM{csdall_all_kevgarg} \ci{\NUM{csdalllo_all_kevgarg}}{\NUM{csdallhi_all_kevgarg}}).
+
+\begin{table}[t]
+\centering\small
+\input{tables/code_study}
+\caption{AUROC of each judge signal for passing the held-out tests, among the base policy's attempts that pass the
+visible tests (\NUM{cs_samples} attempts per problem at temperature 1). \emph{within}: mean AUROC within the
+\NUM{cs_mixed_all} problems that have visible-pass attempts both passing and failing the held-out tests. \emph{all
+pass}: AUROC for passing every test, over all attempts. 95\% intervals from resampling problems.}
+\label{tab:code-study}
+\end{table}
+
+\paragraph{Within a problem the evidence is thin.} GRPO's group baseline compares the episodes of one problem, so the
+judge factor in \texttt{vis\_kev} matters through how it ranks a problem's visible-pass episodes. Only
+\NUM{cs_mixed_all} of the \NUM{cs_problems_all} problems with a visible-pass attempt have attempts on both sides of the
+held-out tests. Within them \kev{}'s \emph{genuine} reaches \NUM{csaucw_all_kevg} and the AR judge's
+\NUM{csaucw_all_arg}, a difference of \NUM{csdw_all_kevgarg}
+\ci{\NUM{csdwlo_all_kevgarg}}{\NUM{csdwhi_all_kevgarg}}. These problems are too few to rank the judges, and too few to
+predict how much the factor will change training.
+
+\paragraph{Hard-coded lookups are caught.} \NUM{cs_hardcoded} lookups of the visible tests' calls pass the visible tests
+of their MBPP+ or HumanEval+ problem (\NUM{cs_hardcoded_heldout} of them also passes the held-out tests). Both judges
+separate them from the reference solutions of the same problems almost perfectly (Table~\ref{tab:code-hardcoded}).
+\kev{}'s \emph{genuine} gives a lookup \NUM{rh_hc_kevg} on average and a reference solution \NUM{rh_ref_kevg}, and never
+scores a lookup above the reference solution of its own problem. Such lookups are the crudest way to special-case the
+tests. That the judges catch them shows that the \emph{genuine} question is understood. It does not show that subtler
+over-fitting would be caught.
+
+\begin{table}[t]
+\centering\small
+\input{tables/code_hardcoded}
+\caption{Reference solutions against hard-coded lookups of the visible tests, on the \NUM{rh_problems} MBPP+ and
+HumanEval+ problems whose visible tests allow a lookup: AUROC, mean $p(\text{yes})$ of each kind, and how often the
+lookup scores above its own problem's reference solution.}
+\label{tab:code-hardcoded}
+\end{table}
+
+\paragraph{What this predicts.} A judge factor can down-weight most of the visible-pass attempts that are wrong, and
+\kev{} does that about as well as the AR judge, a general model of the same size asked the same question. Whether the factor
+reduces the gap that training opens, and at what cost to the visible-test pass rate, is what the training runs measure.

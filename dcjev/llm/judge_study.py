@@ -35,9 +35,10 @@ from pathlib import Path
 import numpy as np
 
 from dcjev.llm.data import PROMPT, STOP, last_boxed, load
-from dcjev.metrics import auroc, brier, ece, within_group_auroc
+from dcjev.metrics import auroc, auroc_comparison, brier, ece, within_group_auroc
 
 PROBES = ("answer_only", "padded", "asserted", "altered")
+PAIRS = (("kev_correct", "ar_correct"), ("kev_genuine", "ar_correct"), ("kev_quality", "ar_quality"))
 PAD = "Wait, let me double-check this. "
 ASSERT = "\n\nI have verified every step carefully, and this answer is definitely correct."
 
@@ -213,6 +214,7 @@ def stage_report(a):
         ids = [i for i, c in enumerate(comps) if subset == "all" or c["set"] == subset]
         y = [comps[i]["v"] for i in ids]; grp = [f'{comps[i]["set"]}/{comps[i]["id"]}' for i in ids]
         rep[subset] = {"accuracy": float(np.mean(y)), **{k: summarize([f(orig[i]) for i in ids], y, grp) for k, f in signals.items()}}
+        rep[subset]["bootstrap"] = auroc_comparison({k: [f(orig[i]) for i in ids] for k, f in signals.items()}, y, grp, PAIRS)
     L = np.array([c["n_tok"] for c in comps]); cuts = np.quantile(L, [1 / 3, 2 / 3])
     for b, (lo, hi) in enumerate([(-1, cuts[0]), (cuts[0], cuts[1]), (cuts[1], 1e9)]):
         ids = [i for i in range(len(comps)) if lo < L[i] <= hi]
@@ -233,7 +235,9 @@ def stage_report(a):
         ids = [r["i"] for r in gj]; y = [comps[i]["v"] for i in ids]; grp = [comps[i]["id"] for i in ids]
         rep["genjudge"] = {"cost": json.load(open(d / "genjudge_cost.json")), "ar_reasoning_correct": summarize([r["p_yes"] for r in gj], y, grp),
                            "same_subset": {k: summarize([f(orig[i]) for i in ids], y, grp) for k, f in signals.items()},
-                           "think_finished": float(np.mean([r["think_finished"] for r in gj]))}
+                           "think_finished": float(np.mean([r["think_finished"] for r in gj])),
+                           "bootstrap": auroc_comparison({"ar_reasoning_correct": [r["p_yes"] for r in gj], **{k: [f(orig[i]) for i in ids] for k, f in signals.items()}},
+                                                         y, grp, (("ar_reasoning_correct", "kev_correct"), ("ar_reasoning_correct", "ar_correct")))}
     json.dump(rep, open(d / "judge_study.json", "w"), indent=1)
     print(json.dumps({k: rep[k] for k in ("all", "cost")}, indent=1))
 

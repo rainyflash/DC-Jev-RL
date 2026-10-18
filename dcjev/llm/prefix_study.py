@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 
 from dcjev.llm.data import PROMPT, STOP, train_val
-from dcjev.metrics import auroc, ranks, within_group_auroc
+from dcjev.metrics import auroc, auroc_comparison, ranks, within_group_auroc
 
 
 def jl_write(path, recs):
@@ -191,6 +191,8 @@ def stage_report(a):
                                         "dead_caught": float(p[V == 0].mean()) if (V == 0).any() else None,
                                         "correct_continuations_lost": float(V[p].sum() / V.sum()) if V.sum() else None}
             e[name] = sig
+        e["bootstrap"] = auroc_comparison({name: np.repeat([f(r) for r in R], nb) for name, f in signals.items()}, y, grp,
+                                          (("kev_on_track", "ar_on_track"), ("kev_on_track", "policy_logprob"), ("ar_on_track", "policy_logprob")))
         rep[f"cut_{cut}"] = e
     json.dump(rep, open(d / "prefix_study.json", "w"), indent=1)
     print(json.dumps(rep, indent=1), flush=True)

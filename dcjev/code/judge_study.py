@@ -30,9 +30,10 @@ import numpy as np
 from dcjev.code.data import load, solution_code
 from dcjev.code.episode import ar_code_messages, kev_code_request, passed, run_episodes
 from dcjev.code.sandbox import Executor
-from dcjev.metrics import auroc
+from dcjev.metrics import auroc, auroc_comparison
 
 SETS = ("kodcode_val", "mbppplus", "humanevalplus")
+PAIRS = (("kev_genuine", "ar_genuine"), ("kev_correct", "ar_correct"), ("kev_genuine", "ar_correct"))
 
 
 def jl_write(path, recs):
@@ -146,6 +147,12 @@ def stage_report(a):
             e[s] = {"auroc_heldout_given_vis": auroc([c[s] for c in vis], [c["held_pass"] for c in vis]) if vis else None,
                     "auroc_all_pass": auroc([c[s] for c in pol], [c["vis_pass"] and c["held_pass"] for c in pol]),
                     "mean": float(np.mean([c[s] for c in pol]))}
+        # the same AUROCs with 95% intervals from resampling problems (the within-problem one compares attempts at one problem)
+        e["bootstrap_heldout_given_vis"] = auroc_comparison({s: [c[s] for c in vis] for s in sig}, [c["held_pass"] for c in vis],
+                                                            [f'{c["set"]}/{c["id"]}' for c in vis], PAIRS) if vis else None
+        e["bootstrap_all_pass"] = auroc_comparison({s: [c[s] for c in pol] for s in sig}, [c["vis_pass"] and c["held_pass"] for c in pol],
+                                                   [f'{c["set"]}/{c["id"]}' for c in pol], PAIRS)
+        e["vis_pass_attempts"] = len(vis); e["vis_pass_heldout_fail"] = sum(not c["held_pass"] for c in vis)
         rep[f"policy_{name}"] = e
     known = [c for c in codes if c["kind"] in ("reference", "hardcoded")]
     hc_ids = {c["id"] for c in known if c["kind"] == "hardcoded"}

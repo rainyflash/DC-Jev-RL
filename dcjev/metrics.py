@@ -6,18 +6,8 @@ import numpy as np
 
 def ranks(x):
     """1-based ranks with ties averaged."""
-    x = np.asarray(x, dtype=float)
-    order = np.argsort(x, kind="mergesort")
-    r = np.empty(len(x))
-    xs = x[order]
-    i = 0
-    while i < len(xs):
-        j = i
-        while j + 1 < len(xs) and xs[j + 1] == xs[i]:
-            j += 1
-        r[order[i:j + 1]] = (i + j + 2) / 2
-        i = j + 1
-    return r
+    _, inv, cnt = np.unique(np.asarray(x, dtype=float), return_inverse=True, return_counts=True)
+    return (np.cumsum(cnt) - (cnt - 1) / 2)[inv.ravel()]
 
 
 def auroc(scores, labels):
@@ -49,3 +39,33 @@ def within_group_auroc(scores, labels, groups):
     s, y, g = np.asarray(scores, dtype=float), np.asarray(labels), np.asarray(groups)
     vals = [a for k in np.unique(g) if (a := auroc(s[g == k], y[g == k])) is not None]
     return (float(np.mean(vals)) if vals else None), len(vals)
+
+
+def auroc_comparison(signals, labels, groups, pairs=(), n=2000, seed=0):
+    """AUROC over all items and mean within-group AUROC of each signal, and their differences for the (a, b) pairs of
+    signal names, each with a 95% percentile interval from resampling the groups (problems) with replacement."""
+    y = np.asarray(labels).astype(bool)
+    _, inv = np.unique(np.asarray(groups), return_inverse=True)
+    members = [np.flatnonzero(inv.ravel() == k) for k in range(inv.max() + 1)]
+    S = {k: np.asarray(v, dtype=float) for k, v in signals.items()}
+    mixed = np.array([0 < y[m].sum() < len(m) for m in members])
+    per_group = {k: np.array([auroc(s[m], y[m]) if mx else np.nan for m, mx in zip(members, mixed)]) for k, s in S.items()}
+
+    def stat(gs):
+        idx = np.concatenate([members[g] for g in gs])
+        a = {k: auroc(s[idx], y[idx]) for k, s in S.items()}
+        w = {k: float(np.mean(pg[gs][mixed[gs]])) if mixed[gs].any() else None for k, pg in per_group.items()}
+        row = ([a[k] for k in S] + [w[k] for k in S] + [None if None in (a[p], a[q]) else a[p] - a[q] for p, q in pairs]
+               + [None if None in (w[p], w[q]) else w[p] - w[q] for p, q in pairs])
+        return [np.nan if v is None else v for v in row]
+
+    point = stat(np.arange(len(members)))
+    rng = np.random.default_rng(seed)
+    boots = np.array([stat(rng.integers(0, len(members), len(members))) for _ in range(n)])
+    lo, hi = np.nanquantile(boots, 0.025, axis=0), np.nanquantile(boots, 0.975, axis=0)
+    cells = [{"value": None if np.isnan(v) else float(v), "ci95": [float(l), float(h)]} for v, l, h in zip(point, lo, hi)]
+    k, m, names = len(S), len(pairs), list(S)
+    return {"groups": len(members), "groups_mixed": int(mixed.sum()), "resamples": n,
+            "auroc": dict(zip(names, cells[:k])), "auroc_within": dict(zip(names, cells[k:2 * k])),
+            "diff_auroc": {f"{p}-{q}": c for (p, q), c in zip(pairs, cells[2 * k:2 * k + m])},
+            "diff_auroc_within": {f"{p}-{q}": c for (p, q), c in zip(pairs, cells[2 * k + m:])}}

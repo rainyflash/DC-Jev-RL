@@ -48,6 +48,24 @@ class Out:
         print(f"{len(self.nums)} numbers -> {self.out / 'numbers.tex'}")
 
 
+SHORT = {"kev_correct": "kevc", "kev_genuine": "kevg", "kev_quality": "kevq", "ar_correct": "arc", "ar_genuine": "arg",
+         "ar_quality": "arq", "ar_reasoning_correct": "gen", "kev_on_track": "kevtrack", "ar_on_track": "artrack", "policy_logprob": "logprob"}
+
+
+def pair_key(pair):
+    """'kev_correct-ar_correct' -> 'kevcarc'."""
+    return "".join(SHORT[x] for x in pair.split("-"))
+
+
+def ci_nums(o, name, rest, d, nd=3, sign=False):
+    """A bootstrap cell {"value", "ci95"} -> \\NUM{<name>_<rest>}, \\NUM{<name>lo_<rest>}, \\NUM{<name>hi_<rest>}."""
+    o.num(f"{name}_{rest}", f(d["value"], nd, sign)); o.num(f"{name}lo_{rest}", f(d["ci95"][0], nd)); o.num(f"{name}hi_{rest}", f(d["ci95"][1], nd))
+
+
+def ci_cell(d, nd=2):
+    return f"{f(d['value'], nd)} \\ci{{{f(d['ci95'][0], nd)}}}{{{f(d['ci95'][1], nd)}}}"
+
+
 def validation(o, exp):
     p = json.loads((exp / "validation" / "kev_parity.json").read_text())
     o.num("parity_bf16_max", f(p["parity_bf16"]["max_abs_diff"], 3))
@@ -164,7 +182,11 @@ def judge_cost(o, exp):
     se = json.loads((exp / "validation" / "shared_check_idle.mem_separate.json").read_text())
     for k, d in (("shared", sh), ("separate", se)):
         o.num(f"mem_{k}_load", f(d["after_load_gb"], 1)); o.num(f"mem_{k}_peak", f(d["peak_gb"], 1)); o.num(f"rps_{k}", f(d["kev_requests_per_s"], 1))
-    o.num("mem_saving_load", pct(1 - sh["after_load_gb"] / se["after_load_gb"])); o.num("mem_saving_peak", pct(1 - sh["peak_gb"] / se["peak_gb"]))
+        o.num(f"mem_{k}_train", f(d["peak_after_train_step_gb"], 1))
+    # the training-step peak compares like with like; the overall peak also contains Kev's scoring batch, which is
+    # 8192 tokens on the shared backbone (the trainers' setting) and 32768 in the separate judge's default
+    o.num("mem_saving_load", pct(1 - sh["after_load_gb"] / se["after_load_gb"])); o.num("mem_saving_train", pct(1 - sh["peak_after_train_step_gb"] / se["peak_after_train_step_gb"]))
+    o.num("mem_backbone_copy", f(se["after_load_gb"] - sh["after_load_gb"], 1))
     o.num("adapter_switch_ms", f(sh["adapter_switch_round_trip_ms"], 0))
     old = json.loads((exp / "validation" / "shared_check.json").read_text())
     o.num("rps_shared_contended", f(old["mem_shared"]["kev_requests_per_s"], 1))
@@ -173,6 +195,7 @@ def judge_cost(o, exp):
     o.num("shared_parity_argmax", pct(par["shared_backbone_unmerged"]["argmax_agreement"], 1))
     o.num("separate_parity_max", f(par["separate_bf16_merged_fused"]["max_abs_diff"], 3))
     o.num("shared_parity_questions", str(par["shared_backbone_unmerged"]["questions"]))
+    for k, v in par["sanity_auroc_correct_vs_altered_answer"].items(): o.num(f"sanity_auc_{k.replace('_', '')}", f(v, 3))
 
 
 JS_SIGNALS = [("kev_correct", "kevc", "\\kev{} \\emph{correct}"), ("kev_genuine", "kevg", "\\kev{} \\emph{genuine}"),
@@ -194,6 +217,11 @@ def judge_study(o, exp):
                 o.num(f"js_{m.replace('auroc_within_problem', 'aucw').replace('auroc', 'auc')}_{sk}_{k}", f(s[m]))
             o.num(f"js_mixed_{sk}", str(s["problems_mixed"]))
             o.num(f"js_mean1_{sk}_{k}", f(s["mean_if_correct"])); o.num(f"js_mean0_{sk}_{k}", f(s["mean_if_incorrect"]))
+        b = e["bootstrap"]   # 95% intervals from resampling problems
+        for name, k, _ in JS_SIGNALS:
+            ci_nums(o, "jsauc", f"{sk}_{k}", b["auroc"][name]); ci_nums(o, "jsaucw", f"{sk}_{k}", b["auroc_within"][name])
+        for pair, d in b["diff_auroc"].items(): ci_nums(o, "jsd", f"{sk}_{pair_key(pair)}", d, sign=True)
+        for pair, d in b["diff_auroc_within"].items(): ci_nums(o, "jsdw", f"{sk}_{pair_key(pair)}", d, sign=True)
     rows = []
     for name, k, label in JS_SIGNALS:
         a, m, gs = j["all"][name], j["math500"][name], j["gsm8k500"][name]
@@ -205,6 +233,8 @@ def judge_study(o, exp):
         o.num("gj_mixed", str(r["problems_mixed"])); o.num("gj_finished", pct(gj["think_finished"]))
         for name, k, _ in JS_SIGNALS:
             o.num(f"gj_same_auc_{k}", f(same[name]["auroc"])); o.num(f"gj_same_aucw_{k}", f(same[name]["auroc_within_problem"]))
+        for pair, d in gj["bootstrap"]["diff_auroc"].items(): ci_nums(o, "gjd", pair_key(pair), d, sign=True)
+        for pair, d in gj["bootstrap"]["diff_auroc_within"].items(): ci_nums(o, "gjdw", pair_key(pair), d, sign=True)
     o.table("judge_study", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & \\multicolumn{2}{c}{all} & MATH-500 & GSM8K & & \\\\ "
             "\\cmidrule(lr){2-3}\nsignal & AUROC & within & AUROC & AUROC & ECE & Brier \\\\ \\midrule\n" + "\n".join(rows)
             + "\n\\bottomrule\n\\end{tabular}\n")
@@ -263,10 +293,14 @@ def part3c(o, exp):
             o.num(f"auc_{c}_{k}", f(s["auroc"])); o.num(f"aucw_{c}_{k}", f(s["auroc_within_problem"])); o.num(f"rho_{c}_{k}", f(s["spearman_value"]))
             gs = s["selection_gain"]
             o.num(f"gain_{c}_{k}", f(gs["mean"], 3, sign=True)); o.num(f"gainlo_{c}_{k}", f(gs["ci95"][0], 3)); o.num(f"gainhi_{c}_{k}", f(gs["ci95"][1], 3))
+            bw = e["bootstrap"]["auroc_within"][name]
+            o.num(f"aucwlo_{c}_{k}", f(bw["ci95"][0])); o.num(f"aucwhi_{c}_{k}", f(bw["ci95"][1]))
             t = s.get("threshold_0.3")
             if t:
                 o.num(f"thrpruned_{c}_{k}", pct(t["pruned_frac"], 1)); o.num(f"thrdead_{c}_{k}", pct(t["dead_among_pruned"]))
                 o.num(f"thrcaught_{c}_{k}", pct(t["dead_caught"])); o.num(f"thrlost_{c}_{k}", pct(t["correct_continuations_lost"], 1))
+        for pair, d in e["bootstrap"]["diff_auroc"].items(): ci_nums(o, "psd", f"{c}_{pair_key(pair)}", d, sign=True)
+        for pair, d in e["bootstrap"]["diff_auroc_within"].items(): ci_nums(o, "psdw", f"{c}_{pair_key(pair)}", d, sign=True)
     head = " & ".join(f"\\multicolumn{{3}}{{c}}{{{c} tokens}}" for c in cuts)
     rule = "".join(f"\\cmidrule(lr){{{2 + 3 * i}-{4 + 3 * i}}}" for i in range(len(cuts)))
     rows = [f"{label} & " + " & ".join(f"{f(p[f'cut_{c}'][n]['auroc'])} & {f(p[f'cut_{c}'][n]['auroc_within_problem'])} & {f(p[f'cut_{c}'][n]['spearman_value'])}"
@@ -291,14 +325,65 @@ def part3c(o, exp):
             + " & ".join(["pruned & dead & lost"] * len(cuts)) + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
+CODE_SIGNALS = [("kev_genuine", "kevg", "\\kev{} \\emph{genuine}"), ("kev_correct", "kevc", "\\kev{} \\emph{correct}"),
+                ("ar_genuine", "arg", "AR \\emph{genuine}"), ("ar_correct", "arc", "AR \\emph{correct}")]
+CODE_SETS = [("kodcode_val", "kod", "KodCode val"), ("mbppplus", "mbpp", "MBPP+"), ("humanevalplus", "he", "HumanEval+"), ("all", "all", "all")]
+
+
+def code_study(o, exp):
+    """Part III-A offline code judge study (experiments/part3a_code/judge_study/judge_study.json)."""
+    j = json.loads((exp / "part3a_code" / "judge_study" / "judge_study.json").read_text())
+    g = j["generation"]
+    o.num("cs_samples", str(g["samples_per_problem"])); o.num("cs_policy", f"{g['kinds']['policy']:,}".replace(",", "{,}"))
+    o.num("cs_hardcoded", str(g["kinds"]["hardcoded"])); o.num("cs_reference", str(g["kinds"]["reference"]))
+    o.num("cs_hardcoded_heldout", str(g["hardcoded_passing_heldout"]))
+    for name, sk, _ in CODE_SETS:
+        e = j[f"policy_{name}"]
+        o.num(f"cs_attempts_{sk}", f"{e['attempts']:,}".replace(",", "{,}")); o.num(f"cs_vispass_{sk}", pct(e["vis_pass"], 1))
+        o.num(f"cs_allpass_{sk}", pct(e["all_pass"], 1)); o.num(f"cs_hack_{sk}", pct(e["heldout_fail_among_vis_pass"]))
+        o.num(f"cs_visn_{sk}", str(e["vis_pass_attempts"])); o.num(f"cs_failn_{sk}", str(e["vis_pass_heldout_fail"]))
+        b, ba = e["bootstrap_heldout_given_vis"], e["bootstrap_all_pass"]
+        o.num(f"cs_problems_{sk}", str(b["groups"])); o.num(f"cs_mixed_{sk}", str(b["groups_mixed"]))
+        for s, k, _ in CODE_SIGNALS:
+            ci_nums(o, "csauc", f"{sk}_{k}", b["auroc"][s], nd=2); ci_nums(o, "csaucw", f"{sk}_{k}", b["auroc_within"][s], nd=2)
+            ci_nums(o, "csaucall", f"{sk}_{k}", ba["auroc"][s], nd=2)
+        for pair, d in b["diff_auroc"].items(): ci_nums(o, "csd", f"{sk}_{pair_key(pair)}", d, sign=True)
+        for pair, d in b["diff_auroc_within"].items(): ci_nums(o, "csdw", f"{sk}_{pair_key(pair)}", d, sign=True)
+        for pair, d in ba["diff_auroc"].items(): ci_nums(o, "csdall", f"{sk}_{pair_key(pair)}", d, sign=True)
+    al = j["policy_all"]
+    rows = [" & ".join(["attempts passing the visible tests"] + [str(j[f"policy_{n}"]["vis_pass_attempts"]) for n, _, _ in CODE_SETS]) + " & & \\\\",
+            " & ".join(["\\quad of which fail a held-out test"] + [str(j[f"policy_{n}"]["vis_pass_heldout_fail"]) for n, _, _ in CODE_SETS]) + " & & \\\\ \\midrule"]
+    for s, k, label in CODE_SIGNALS:
+        cells = [f(j[f"policy_{n}"]["bootstrap_heldout_given_vis"]["auroc"][s]["value"]) for n, _, _ in CODE_SETS[:3]]
+        rows.append(f"{label} & " + " & ".join(cells) + f" & {ci_cell(al['bootstrap_heldout_given_vis']['auroc'][s])} & "
+                    f"{f(al['bootstrap_heldout_given_vis']['auroc_within'][s]['value'])} & {f(al['bootstrap_all_pass']['auroc'][s]['value'])} \\\\")
+    o.table("code_study", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{held-out tests pass, among visible-pass attempts} & all pass \\\\ "
+            "\\cmidrule(lr){2-6}\\cmidrule(l){7-7}\n & KodCode val & MBPP+ & HumanEval+ & all [95\\% CI] & within & all \\\\ \\midrule\n" + "\n".join(rows)
+            + "\n\\bottomrule\n\\end{tabular}\n")
+    r = j["reference_vs_hardcoded"]
+    o.num("rh_problems", str(r["problems"]))
+    rows = []
+    for s, k, label in CODE_SIGNALS:
+        d = r[s]
+        o.num(f"rh_auc_{k}", f(d["auroc"], 3)); o.num(f"rh_ref_{k}", f(d["mean_reference"])); o.num(f"rh_hc_{k}", f(d["mean_hardcoded"]))
+        o.num(f"rh_above_{k}", pct(d["hardcoded_scored_above_reference"], 1))
+        rows.append(f"{label} & {f(d['auroc'], 3)} & {f(d['mean_reference'])} & {f(d['mean_hardcoded'])} & {pct(d['hardcoded_scored_above_reference'], 1)} \\\\")
+    o.table("code_hardcoded", "\\begin{tabular}{@{}lcccc@{}}\n\\toprule\n & & \\multicolumn{2}{c}{mean $p(\\text{yes})$} & lookup scored \\\\ \\cmidrule(lr){3-4}\n"
+            "signal & AUROC & reference & lookup & above reference \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def part3a(o, exp):
+    code_study(o, exp)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("part", choices=["part1", "part2", "part3c"])
+    ap.add_argument("part", choices=["part1", "part2", "part3a", "part3c"])
     ap.add_argument("--exp", default="experiments")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     o = Out(a.out)
-    {"part1": part1, "part2": part2, "part3c": part3c}[a.part](o, Path(a.exp))
+    {"part1": part1, "part2": part2, "part3a": part3a, "part3c": part3c}[a.part](o, Path(a.exp))
     o.write()
 
 
