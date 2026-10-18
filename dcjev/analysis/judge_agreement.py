@@ -6,13 +6,16 @@ with the environment's own reward on the same windows.
 The windows are the 2% sample every run logs (dcjev.control.ppo, type "window"), from all seeds and all of training, so
 they cover failing, mediocre and good behaviour of the reference learner. Judges are queried through the running judge
 server (dcjev.judges.server), with the prompts of the training runs. Reported per task: Spearman correlation of each
-judge signal with the per-step environment reward of the window and with its mean forward velocity, and for the tasks
-with falls the AUROC of p(healthy) for windows that did not end in a fall.
+judge signal with the per-step environment reward of the window and with the physical quantity the task is about (the
+mean forward velocity; for Reacher the reduction of the fingertip-target distance over the window), and for the tasks
+with falls the AUROC of p(healthy) for windows that did not end in a fall. Each task's result is written as soon as it
+is done, and a task already in the output file is not scored again.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -29,6 +32,19 @@ def spearman(x, y):
     return float(np.corrcoef(ranks(x), ranks(y))[0, 1])
 
 
+def score(jc, judge, env, summaries, questions, chunk=256):
+    """Scores in chunks, so that the training runs sharing the judge server are not held up behind one large batch."""
+    out = {}
+    for i in range(0, len(summaries), chunk):
+        r = jc.score(judge, env, summaries[i:i + chunk], questions)
+        for k, v in r.items():
+            if isinstance(v, dict):
+                for q, x in v.items(): out.setdefault(k, {}).setdefault(q, []).extend(x)
+            else:
+                out.setdefault(k, []).extend(v)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
@@ -37,9 +53,11 @@ def main():
     ap.add_argument("--max_per_env", type=int, default=4000)
     a = ap.parse_args()
     jc = JudgeClient(port=a.port)
-    rng = np.random.default_rng(0)
-    rep = {}
+    out_path = Path(a.out); out_path.parent.mkdir(parents=True, exist_ok=True)
+    rep = json.loads(out_path.read_text()) if out_path.exists() else {}
     for e in ENVS:
+        if e in rep: continue
+        rng = np.random.default_rng(zlib.crc32(e.encode()))
         wins = []
         for d in sorted(Path(a.root).glob(f"{e}/env/s*")):
             wins += [r for r in read_log(d) if r["type"] == "window"]
@@ -47,9 +65,12 @@ def main():
         if len(wins) > a.max_per_env: wins = [wins[i] for i in sorted(rng.choice(len(wins), a.max_per_env, replace=False))]
         S = [w["summary"] for w in wins]
         per_step = np.array([w["env_reward_sum"] / w["len"] for w in wins])
-        vx = np.array([w["summary"]["forward_velocity_m_per_s"]["mean"] for w in wins])
-        k = jc.score("kev", e, S, ("progress", "healthy"))
-        r = jc.score("ar", e, S, ("progress", "healthy"))
+        if e == "Reacher-v5":
+            phys = np.array([w["summary"]["fingertip_to_target_distance_m"]["start"] - w["summary"]["fingertip_to_target_distance_m"]["end"] for w in wins])
+        else:
+            phys = np.array([w["summary"]["forward_velocity_m_per_s"]["mean"] for w in wins])
+        k = score(jc, "kev", e, S, ("progress", "healthy"))
+        r = score(jc, "ar", e, S, ("progress", "healthy"))
         sig = {"kev_progress": np.array(k["progress"]), "kev_healthy": np.array(k["healthy"]),
                "kev_gated": np.array(k["progress"]) * np.array(k["healthy"]),
                "ar_progress": np.array(r["progress"]), "ar_progress_sampled": np.array(r["progress_sampled"]),
@@ -57,15 +78,15 @@ def main():
         out = {"windows": len(wins), "env_reward_per_step": {"mean": float(per_step.mean()), "std": float(per_step.std())},
                "ar_valid_mass": {q: float(np.mean(v)) for q, v in r.get("valid_mass", {}).items()}}
         for name, s in sig.items():
-            out[name] = {"mean": float(s.mean()), "std": float(s.std()), "spearman_env_reward": spearman(s, per_step), "spearman_vx": spearman(s, vx)}
+            out[name] = {"mean": float(s.mean()), "std": float(s.std()), "spearman_env_reward": spearman(s, per_step), "spearman_physical": spearman(s, phys)}
+        out["physical_quantity"] = "fingertip-target distance reduction (m)" if e == "Reacher-v5" else "mean forward velocity (m/s)"
         fell = [w["summary"].get("fell_over") for w in wins]
         if any(x is not None for x in fell):
             ok = np.array([x == "no" for x in fell])
             out["healthy_auroc_no_fall"] = {"kev": auroc(sig["kev_healthy"], ok), "ar": auroc(sig["ar_healthy"], ok), "fall_rate": float(1 - ok.mean())}
         rep[e] = out
+        out_path.write_text(json.dumps(rep, indent=1))
         print(e, json.dumps({n: out[n] for n in sig}, indent=0), flush=True)
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(json.dumps(rep, indent=1))
 
 
 if __name__ == "__main__":

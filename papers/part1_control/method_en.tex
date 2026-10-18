@@ -86,7 +86,8 @@ confidence intervals (10\,000 resamples), and the probability of improvement of 
 over the window. The windows logged by the \texttt{env} runs (all seeds, all of training) cover the failing, mediocre
 and good behaviour of the reference learner. Offline, both judges score up to 4000 of them per task, through the same
 server and prompts as in training. We report each signal's Spearman correlation with the window's per-step
-environment reward and with its mean forward velocity. For Hopper and Walker2d we also report the AUROC of
+environment reward. We also report it with the physical quantity the task is about: the mean forward velocity, or for
+Reacher the reduction of the fingertip--target distance over the window. For Hopper and Walker2d we also report the AUROC of
 $p(\text{healthy})$ for windows that did not end in a fall. During training, each judge-reward run also logs, per
 rollout, the correlation between the window scores it trained on and the environment reward of the same windows.
 
