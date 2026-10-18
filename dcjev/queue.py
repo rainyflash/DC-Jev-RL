@@ -8,6 +8,8 @@ checkpoints). The first job in file order whose <free_gb> GB are free on the GPU
 are running and the previous launch was at least --settle seconds ago (so that its memory has grown before the next
 check); a job that needs more memory does not hold up the smaller ones behind it.
 A job that exits without final.json is logged to <log_dir>/<name>.failures.jsonl and not retried.
+With --deadline (unix time, e.g. the end of a Colab runtime) no job is started later than --job_hours before it; the
+queue then exits with the jobs it did not start listed, to be run elsewhere.
 """
 from __future__ import annotations
 
@@ -30,6 +32,8 @@ def main():
     ap.add_argument("--name", required=True)
     ap.add_argument("--log_dir", default="/content/work/logs")
     ap.add_argument("--settle", type=float, default=240.0)
+    ap.add_argument("--deadline", type=float, default=0.0, help="unix time after which no job may still be running (0: none)")
+    ap.add_argument("--job_hours", type=float, default=7.0, help="expected duration of one job, for --deadline")
     a = ap.parse_args()
     jobs = []
     for line in Path(a.jobs).read_text().splitlines():
@@ -41,6 +45,9 @@ def main():
     logs = Path(a.log_dir); logs.mkdir(parents=True, exist_ok=True)
     running, last = [], 0.0
     while todo or running:
+        if todo and a.deadline and time.time() + 3600 * a.job_hours > a.deadline:
+            print(f"{time.strftime('%H:%M:%S')} deadline: not starting {len(todo)} jobs: " + " ".join(str(j[0]) for j in todo), flush=True)
+            todo = []
         fit = None
         if todo and len(running) < a.workers and time.time() - last >= a.settle:
             free = free_gb()
