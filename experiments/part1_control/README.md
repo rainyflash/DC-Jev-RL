@@ -18,5 +18,7 @@ Status: the `env` and `env_window` baselines are complete (5 tasks x 5 seeds). T
 
 with the judge server running (`scripts/run_part1.sh server`); `--from_scores` recomputes the statistics from the saved
 scores without it. The committed file was produced on an otherwise idle GPU of a second Colab VM, with the same code,
-server and prompts as the training runs. An earlier run on the training VM, without saved scores, gave the same
-correlations to within 0.003, except for the sampled AR level, which is drawn at random (within 0.03).
+server and prompts as the training runs. An earlier run on the training VM, without saved scores, gave correlations
+within 0.004 of these for Kev-4B's signals and within 0.02 for the AR judge's (largest on Reacher, where its correlations
+are near zero and small numerical differences between batches reorder many windows); the sampled AR level, which is
+drawn at random, differed by up to 0.03.
