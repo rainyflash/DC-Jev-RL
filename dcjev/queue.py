@@ -1,15 +1,19 @@
-"""Run a list of GPU jobs with bounded concurrency and a free-memory gate, skipping the finished ones.
+"""Run a list of GPU jobs with bounded concurrency and a memory budget, skipping the finished ones.
 
-    python -m dcjev.queue --jobs scripts/jobs/part2_main.txt --workers 3 --name part2_main
+    python -m dcjev.queue --jobs scripts/jobs/part2_main.txt --workers 3 --budget_gb 73 --name part2_main
 
-Each non-comment line of the jobs file is `<out_dir> <free_gb> <command ...>`. A job is finished when <out_dir>/final.json
+Each non-comment line of the jobs file is `<out_dir> <gb> [h=<hours>] <command ...>`, where <gb> is the job's peak GPU
+memory (GiB, as nvidia-smi counts it) and <hours> its expected duration. A job is finished when <out_dir>/final.json
 exists, and is then skipped, so the queue can be started again after an interruption (GRPO jobs resume from their
-checkpoints). The first job in file order whose <free_gb> GB are free on the GPU is launched when fewer than --workers jobs of this queue
-are running and the previous launch was at least --settle seconds ago (so that its memory has grown before the next
-check); a job that needs more memory does not hold up the smaller ones behind it.
+checkpoints).
+The first job in file order that fits is launched when fewer than --workers jobs of this queue are running and the
+previous launch was at least --settle seconds ago. A job fits when the peaks of the running jobs plus its own stay within
+--budget_gb (the memory left to this queue by the processes it does not manage, e.g. the vLLM server), and when its peak
+is free on the GPU right now. The budget matters because a trainer reaches its peak only after its first evaluation,
+minutes after it starts. A job that needs more memory does not hold up the smaller ones behind it.
 A job that exits without final.json is logged to <log_dir>/<name>.failures.jsonl and not retried.
-With --deadline (unix time, e.g. the end of a Colab runtime) no job is started later than --job_hours before it; the
-queue then exits with the jobs it did not start listed, to be run elsewhere.
+With --deadline (unix time, e.g. the end of a Colab runtime) no job is started later than its expected duration
+(h=, or --job_hours) before it; the jobs that are not started are listed, to be run elsewhere.
 """
 from __future__ import annotations
 
@@ -32,39 +36,45 @@ def main():
     ap.add_argument("--name", required=True)
     ap.add_argument("--log_dir", default="/content/work/logs")
     ap.add_argument("--settle", type=float, default=240.0)
+    ap.add_argument("--budget_gb", type=float, default=0.0, help="GPU memory for this queue's jobs (0: no budget, free memory only)")
     ap.add_argument("--deadline", type=float, default=0.0, help="unix time after which no job may still be running (0: none)")
-    ap.add_argument("--job_hours", type=float, default=7.0, help="expected duration of one job, for --deadline")
+    ap.add_argument("--job_hours", type=float, default=7.0, help="expected duration of a job without h=, for --deadline")
     a = ap.parse_args()
     jobs = []
     for line in Path(a.jobs).read_text().splitlines():
         if not line.strip() or line.lstrip().startswith("#"): continue
         out, gb, cmd = line.split(None, 2)
-        jobs.append((Path(out), float(gb), cmd))
+        hours = a.job_hours
+        if cmd.startswith("h="):
+            h, cmd = cmd.split(None, 1); hours = float(h[2:])
+        jobs.append((Path(out), float(gb), cmd, hours))
     todo = [j for j in jobs if not (j[0] / "final.json").exists()]
     print(f"{len(todo)} of {len(jobs)} jobs to run", flush=True)
     logs = Path(a.log_dir); logs.mkdir(parents=True, exist_ok=True)
     running, last = [], 0.0
     while todo or running:
-        if todo and a.deadline and time.time() + 3600 * a.job_hours > a.deadline:
-            print(f"{time.strftime('%H:%M:%S')} deadline: not starting {len(todo)} jobs: " + " ".join(str(j[0]) for j in todo), flush=True)
-            todo = []
+        late = [j for j in todo if a.deadline and time.time() + 3600 * j[3] > a.deadline]
+        if late:
+            print(f"{time.strftime('%H:%M:%S')} deadline: not starting " + " ".join(str(j[0]) for j in late), flush=True)
+            todo = [j for j in todo if j not in late]
         fit = None
         if todo and len(running) < a.workers and time.time() - last >= a.settle:
-            free = free_gb()
-            fit = next((k for k, j in enumerate(todo) if free >= j[1]), None)
+            free, used = free_gb(), sum(r[4] for r in running)
+            fit = next((k for k, j in enumerate(todo) if free >= j[1] and (not a.budget_gb or used + j[1] <= a.budget_gb)), None)
         if fit is not None:
-            out, gb, cmd = todo.pop(fit)
+            out, gb, cmd, _ = todo.pop(fit)
             out.mkdir(parents=True, exist_ok=True)
             tag = "_".join(out.parts[-2:])
             f = open(logs / f"{a.name}.{tag}.log", "a")
             p = subprocess.Popen(["bash", "-c", f"source /content/work/env.sh; cd /content/work/code/DC-Jev-RL; {cmd}"],
                                  stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
-            running.append((p, out, f, cmd)); last = time.time()
-            print(f"{time.strftime('%H:%M:%S')} start {out} (free {free_gb():.1f} GB before)", flush=True)
+            running.append((p, out, f, cmd, gb)); last = time.time()
+            print(f"{time.strftime('%H:%M:%S')} start {out} (free {free:.1f} GiB, budget used {used + gb:.0f} GiB)", flush=True)
         still = []
-        for p, out, f, cmd in running:
+        for r in running:
+            p, out, f, cmd, _ = r
             if p.poll() is None:
-                still.append((p, out, f, cmd)); continue
+                still.append(r); continue
             f.close()
             ok = (out / "final.json").exists()
             print(f"{time.strftime('%H:%M:%S')} {'done' if ok else 'FAILED'} {out} (exit {p.returncode})", flush=True)
