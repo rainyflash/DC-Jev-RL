@@ -1,0 +1,39 @@
+{
+ "rule": "argmax over learning rates of mean(val acc at steps 30 and 60); the smaller of the best two if within 0.5 points",
+ "runs": {
+  "1e-4": {
+   "val_acc": {
+    "0": 0.698,
+    "30": 0.748,
+    "60": 0.678
+   },
+   "score": 0.7130000000000001,
+   "train_acc_last10": 0.675,
+   "grad_norm_mean": 0.09793240005771318,
+   "len_mean_last10": 564.48984375
+  },
+  "1e-5": {
+   "val_acc": {
+    "0": 0.692,
+    "30": 0.738,
+    "60": 0.738
+   },
+   "score": 0.738,
+   "train_acc_last10": 0.6328125,
+   "grad_norm_mean": 0.0843659018476804,
+   "len_mean_last10": 650.7078125
+  },
+  "3e-5": {
+   "val_acc": {
+    "0": 0.694,
+    "30": 0.73,
+    "60": 0.744
+   },
+   "score": 0.737,
+   "train_acc_last10": 0.66015625,
+   "grad_norm_mean": 0.08217543562253317,
+   "len_mean_last10": 609.78203125
+  }
+ },
+ "chosen_lr": "1e-5"
+}
