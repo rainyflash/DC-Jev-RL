@@ -1,0 +1,148 @@
+{
+ "generation": {
+  "samples_per_problem": 4,
+  "generation_seconds": 1033.8,
+  "kinds": {
+   "policy": 3340,
+   "hardcoded": 507,
+   "reference": 537
+  },
+  "hardcoded_passing_heldout": 1
+ },
+ "cost": {
+  "kev_seconds_per_1k": 73.58549649480484,
+  "ar_genuine_seconds_per_1k": 19.932967957353938,
+  "ar_correct_seconds_per_1k": 19.22992877934101
+ },
+ "policy_kodcode_val": {
+  "attempts": 1192,
+  "vis_pass": 0.32802013422818793,
+  "all_pass": 0.18624161073825504,
+  "heldout_fail_among_vis_pass": 0.4322250639386189,
+  "kev_genuine": {
+   "auroc_heldout_given_vis": 0.8861080014926169,
+   "auroc_all_pass": 0.8919569053589672,
+   "mean": 0.41641883978045124
+  },
+  "kev_correct": {
+   "auroc_heldout_given_vis": 0.8839490377951916,
+   "auroc_all_pass": 0.8875081266833844,
+   "mean": 0.3847223786237156
+  },
+  "ar_genuine": {
+   "auroc_heldout_given_vis": 0.898235513620129,
+   "auroc_all_pass": 0.9157889848611498,
+   "mean": 0.33937505562959897
+  },
+  "ar_correct": {
+   "auroc_heldout_given_vis": 0.8697691774614852,
+   "auroc_all_pass": 0.9041097798829758,
+   "mean": 0.3165120534655644
+  }
+ },
+ "policy_mbppplus": {
+  "attempts": 1504,
+  "vis_pass": 0.14960106382978725,
+  "all_pass": 0.11170212765957446,
+  "heldout_fail_among_vis_pass": 0.25333333333333335,
+  "kev_genuine": {
+   "auroc_heldout_given_vis": 0.827172096908939,
+   "auroc_all_pass": 0.9458226404334189,
+   "mean": 0.3640896064375448
+  },
+  "kev_correct": {
+   "auroc_heldout_given_vis": 0.8222639933166249,
+   "auroc_all_pass": 0.9489057599087539,
+   "mean": 0.33980248926673084
+  },
+  "ar_genuine": {
+   "auroc_heldout_given_vis": 0.7410192147034252,
+   "auroc_all_pass": 0.9464998574280011,
+   "mean": 0.27785260278096113
+  },
+  "ar_correct": {
+   "auroc_heldout_given_vis": 0.7401837928153717,
+   "auroc_all_pass": 0.9486250712859994,
+   "mean": 0.2661866528372328
+  }
+ },
+ "policy_humanevalplus": {
+  "attempts": 644,
+  "vis_pass": 0.18012422360248448,
+  "all_pass": 0.12267080745341614,
+  "heldout_fail_among_vis_pass": 0.31896551724137934,
+  "kev_genuine": {
+   "auroc_heldout_given_vis": 0.8494697228874444,
+   "auroc_all_pass": 0.9684328441805757,
+   "mean": 0.3534701370101954
+  },
+  "kev_correct": {
+   "auroc_heldout_given_vis": 0.8621279507355457,
+   "auroc_all_pass": 0.9709420858071021,
+   "mean": 0.32449090944874964
+  },
+  "ar_genuine": {
+   "auroc_heldout_given_vis": 0.8398905234348273,
+   "auroc_all_pass": 0.9763638400358463,
+   "mean": 0.2609480805222565
+  },
+  "ar_correct": {
+   "auroc_heldout_given_vis": 0.8446801231611358,
+   "auroc_all_pass": 0.9731824801165005,
+   "mean": 0.24122577819017751
+  }
+ },
+ "policy_all": {
+  "attempts": 3340,
+  "vis_pass": 0.21916167664670658,
+  "all_pass": 0.1404191616766467,
+  "heldout_fail_among_vis_pass": 0.3592896174863388,
+  "kev_genuine": {
+   "auroc_heldout_given_vis": 0.8732032396410128,
+   "auroc_all_pass": 0.9266861690948155,
+   "mean": 0.3807176027948896
+  },
+  "kev_correct": {
+   "auroc_heldout_given_vis": 0.8738680308398259,
+   "auroc_all_pass": 0.9257236730216658,
+   "mean": 0.35288148648551704
+  },
+  "ar_genuine": {
+   "auroc_heldout_given_vis": 0.8599965949719085,
+   "auroc_all_pass": 0.9390426580339086,
+   "mean": 0.2965496840567008
+  },
+  "ar_correct": {
+   "auroc_heldout_given_vis": 0.8435876024548631,
+   "auroc_all_pass": 0.9328012868928978,
+   "mean": 0.27933427986605547
+  }
+ },
+ "reference_vs_hardcoded": {
+  "problems": 507,
+  "kev_genuine": {
+   "auroc": 0.9999922193822968,
+   "mean_reference": 0.7532055429688101,
+   "mean_hardcoded": 0.03173435447623685,
+   "hardcoded_scored_above_reference": 0.0
+  },
+  "kev_correct": {
+   "auroc": 0.9966426634610521,
+   "mean_reference": 0.7512004338498769,
+   "mean_hardcoded": 0.0728589977657595,
+   "hardcoded_scored_above_reference": 0.0019723865877712033
+  },
+  "ar_genuine": {
+   "auroc": 0.999949425984929,
+   "mean_reference": 0.7950676875602312,
+   "mean_hardcoded": 0.017594790281905963,
+   "hardcoded_scored_above_reference": 0.0
+  },
+  "ar_correct": {
+   "auroc": 0.9914140883644753,
+   "mean_reference": 0.7871537766783464,
+   "mean_hardcoded": 0.05250442170754378,
+   "hardcoded_scored_above_reference": 0.007889546351084813
+  }
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "samples_per_problem": 4,
+ "generation_seconds": 1033.8,
+ "kinds": {
+  "policy": 3340,
+  "hardcoded": 507,
+  "reference": 537
+ },
+ "hardcoded_passing_heldout": 1
+}
