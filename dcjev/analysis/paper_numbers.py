@@ -182,6 +182,14 @@ def part1(o, exp):
             "corr.\\ (score, env reward) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
+    # runs resumed from a checkpoint after a runtime reset
+    rs = s["resumed_runs"]
+    o.num("runs_total", str(s["runs"])); o.num("resumed_runs", str(len(rs)))
+    o.num("resumed_conds", ", ".join(tt(c) for c in P1_CONDS if any(r["reward"] == c for r in rs)) or "--")
+    steps = sorted({x["step"] for r in rs for x in r["resumes"]})
+    o.num("resumed_steps", ", ".join(f"{x:,}".replace(",", "{,}") for x in steps) or "--")
+    drop = [x["dropped_episode_steps"] for r in rs for x in r["resumes"]]
+    o.num("resumed_dropped_max", str(max(drop)) if drop else "0")
 
 
 BENCH_KEV = [("kev_rows_fused", "kevrows", "\\kev{}, merged, fused kernels, one row per question", "Part I judge server"),

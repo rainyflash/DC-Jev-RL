@@ -65,6 +65,7 @@ def load_runs(root):
         log = read_log(f.parent)
         j["curve"] = [(r["step"], r["return_mean"]) for r in log if r["type"] == "eval"]
         j["corr"] = [r.get("corr_window_score_env") for r in log if r["type"] == "update"]
+        j["resumes"] = [{"step": r["step"], "dropped_episode_steps": r["dropped_episode_steps"]} for r in log if r["type"] == "resume"]
         runs.append(j)
     return runs
 
@@ -90,7 +91,10 @@ def main():
         f.write(",".join(keys) + "\n")
         for r in rows: f.write(",".join("" if r[k] is None else str(r[k]) for k in keys) + "\n")
 
-    summary = {"random_policy_return": rand, "env_reference_return": ref, "per_task": {}, "aggregate": {}}
+    # runs interrupted by a runtime reset and resumed from their last checkpoint (the episode in progress is dropped)
+    resumed = [{"env_id": r["env_id"], "reward": r["reward"], "seed": r["seed"], "resumes": r["resumes"]} for r in runs if r["resumes"]]
+    summary = {"random_policy_return": rand, "env_reference_return": ref, "per_task": {}, "aggregate": {},
+               "runs": len(runs), "resumed_runs": resumed}
     for e in ENVS:
         summary["per_task"][e] = {}
         for c in conds:
