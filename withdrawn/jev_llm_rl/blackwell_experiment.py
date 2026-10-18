@@ -16,8 +16,8 @@ import time
 from pathlib import Path
 import requests
 
-CONNECT_URL = "https://cedar-robert-ian-oxford.trycloudflare.com"
-CONNECT_TOKEN = "6VODqMBk2YcsoTyvtGjozg"
+CONNECT_URL = "<redacted>"   # a credential of an expired Colab tunnel was here (removed in v4)
+CONNECT_TOKEN = "<redacted>"
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_JSON = WORKSPACE_DIR / "jev_llm_rl_leaderboard_sota.json"
 

@@ -4,6 +4,9 @@
 
 Jobs are ordered seed-major so that a partial grid always covers every condition with the first seeds. A failed job is
 logged to <root>/failures.jsonl with its exit code and the tail of its output, and is not retried automatically.
+--workers bounds all PPO processes on the machine, including those of an earlier grid process that are still running;
+--skip_active leaves out the jobs whose log was written in the last few minutes (they are running already). A job
+that was interrupted resumes from its last checkpoint (dcjev.control.ppo).
 """
 from __future__ import annotations
 
@@ -28,6 +31,19 @@ def parse_seeds(s):
     return out
 
 
+def active_ppo(exclude=()):
+    """PPO jobs running on this machine (any parent), found by their command line."""
+    n = 0
+    for p in Path("/proc").iterdir():
+        if not p.name.isdigit() or int(p.name) in exclude: continue
+        try:
+            argv = (p / "cmdline").read_bytes().split(b"\0")
+        except OSError:
+            continue
+        n += b"dcjev.control.ppo" in argv
+    return n
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
@@ -37,15 +53,24 @@ def main():
     ap.add_argument("--workers", type=int, default=40)
     ap.add_argument("--port", type=int, default=6100)
     ap.add_argument("--extra", default="", help="extra arguments passed to every ppo job")
+    ap.add_argument("--skip_active", type=float, default=10.0, help="minutes: skip jobs whose log changed more recently")
+    ap.add_argument("--dry", action="store_true", help="print the jobs and exit")
     a = ap.parse_args()
     envs = ENVS if a.envs == "all" else a.envs.split(",")
     root = Path(a.root); root.mkdir(parents=True, exist_ok=True)
     jobs = [(e, r, s) for s in parse_seeds(a.seeds) for r in a.rewards.split(",") for e in envs]
     jobs = [j for j in jobs if not (root / j[0] / j[1] / f"s{j[2]}" / "final.json").exists()]
-    print(f"{len(jobs)} jobs to run", flush=True)
+    def active_dir(j):
+        f = root / j[0] / j[1] / f"s{j[2]}" / "log.jsonl"
+        return f.exists() and time.time() - f.stat().st_mtime < 60 * a.skip_active
+    busy = [j for j in jobs if active_dir(j)]
+    jobs = [j for j in jobs if j not in busy]
+    print(f"{len(jobs)} jobs to run ({len(busy)} running already, {active_ppo()} ppo processes active)", flush=True)
+    if a.dry:
+        print("\n".join(map(str, jobs))); return
     running, t0 = [], time.time()
     while jobs or running:
-        while jobs and len(running) < a.workers:
+        while jobs and len(running) + active_ppo(exclude={p.pid for p, *_ in running}) < a.workers:
             e, r, s = jobs.pop(0)
             out = root / e / r / f"s{s}"; out.mkdir(parents=True, exist_ok=True)
             cmd = [sys.executable, "-m", "dcjev.control.ppo", "--env_id", e, "--reward", r, "--seed", str(s), "--out", str(out),

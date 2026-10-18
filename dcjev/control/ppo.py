@@ -114,6 +114,15 @@ class Distiller:
     def predict(self, X):
         return torch.sigmoid(self.net(self._norm(X)).squeeze(-1)).numpy()
 
+    def state(self):
+        return {"net": self.net.state_dict(), "opt": self.opt.state_dict(), "X": self.X, "y": self.y, "w": self.w,
+                "rms": (self.rms.mean, self.rms.var, self.rms.count), "rng": self.rng.bit_generator.state}
+
+    def load(self, s):
+        self.net.load_state_dict(s["net"]); self.opt.load_state_dict(s["opt"])
+        self.X, self.y, self.w = s["X"], s["y"], s["w"]
+        self.rms.mean, self.rms.var, self.rms.count = s["rms"]; self.rng.bit_generator.state = s["rng"]
+
 
 def evaluate(env_id, agent, obs_rms, episodes, seed0):
     """Deterministic policy (actor mean), frozen observation statistics, environment's own return."""
@@ -167,10 +176,18 @@ def main():
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     if (out / "final.json").exists():
         print("already finished:", out); return
-    log = open(out / "log.jsonl", "w")
+    # A checkpoint is written after every periodic evaluation; a restarted job resumes from it, with the log cut back
+    # to what had been written at that point.
+    ck_path = out / "ckpt.pt"
+    ck = torch.load(ck_path, weights_only=False) if ck_path.exists() else None
+    if ck is not None:
+        log = open(out / "log.jsonl", "r+"); log.truncate(ck["log_bytes"]); log.seek(ck["log_bytes"])
+    else:
+        log = open(out / "log.jsonl", "w")
     def emit(rec):
         log.write(json.dumps(rec) + "\n"); log.flush()
-    emit({"type": "config", **vars(a), "window": WINDOW[a.env_id], "torch": torch.__version__})
+    if ck is None:
+        emit({"type": "config", **vars(a), "window": WINDOW[a.env_id], "torch": torch.__version__})
 
     torch.set_num_threads(1)
     random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
@@ -200,14 +217,43 @@ def main():
         if update: obs_rms.update(o[None])
         return np.clip((o - obs_rms.mean) / np.sqrt(obs_rms.var + 1e-8), -10, 10)
 
-    raw_obs, _ = env.reset(seed=a.seed)
-    next_obs = torch.tensor(norm_obs(raw_obs), dtype=torch.float32)
-    next_done = 0.0
     ep_ret, ep_len, global_step, t_start = 0.0, 0, 0, time.time()
     judge_calls = judge_windows = 0
-    next_eval = a.eval_every
+    next_eval, first_update, resumes = a.eval_every, 1, 0
+    if ck is None:
+        raw_obs, _ = env.reset(seed=a.seed)
+        next_done = 0.0
+    else:
+        agent.load_state_dict(ck["agent"]); optimizer.load_state_dict(ck["opt"])
+        obs_rms.mean, obs_rms.var, obs_rms.count = ck["obs_rms"]; ret_rms.mean, ret_rms.var, ret_rms.count = ck["ret_rms"]
+        disc_ret = ck["disc_ret"]
+        random.setstate(ck["py_rng"]); np.random.set_state(ck["np_rng"]); torch.set_rng_state(ck["torch_rng"])
+        rng.bit_generator.state = ck["rng"]
+        if distiller is not None: distiller.load(ck["distiller"])
+        first_update, global_step, next_eval = ck["update"] + 1, ck["global_step"], ck["next_eval"]
+        judge_calls, judge_windows, resumes = ck["judge_calls"], ck["judge_windows"], ck["resumes"] + 1
+        if judge is not None: judge.seconds = ck["judge_s"]
+        t_start = time.time() - ck["wall_s"]
+        # the simulator state is not saved: the episode that was running at the checkpoint is dropped and a new one
+        # starts from a reset with a seed of its own
+        raw_obs, _ = env.reset(seed=a.seed + 1_000_003 * resumes)
+        next_done = 1.0
+        emit({"type": "resume", "step": global_step, "update": ck["update"], "resumes": resumes,
+              "dropped_episode_steps": ck["ep_len"]})
+    next_obs = torch.tensor(norm_obs(raw_obs), dtype=torch.float32)
 
-    for update in range(1, num_updates + 1):
+    def save_ckpt(update):
+        tmp = out / "ckpt.tmp"
+        torch.save({"agent": agent.state_dict(), "opt": optimizer.state_dict(), "obs_rms": (obs_rms.mean, obs_rms.var, obs_rms.count),
+                    "ret_rms": (ret_rms.mean, ret_rms.var, ret_rms.count), "disc_ret": disc_ret, "py_rng": random.getstate(),
+                    "np_rng": np.random.get_state(), "torch_rng": torch.get_rng_state(), "rng": rng.bit_generator.state,
+                    "distiller": distiller.state() if distiller is not None else None, "update": update, "global_step": global_step,
+                    "next_eval": next_eval, "judge_calls": judge_calls, "judge_windows": judge_windows, "resumes": resumes,
+                    "judge_s": judge.seconds if judge is not None else 0.0, "wall_s": time.time() - t_start, "ep_len": ep_len,
+                    "log_bytes": log.tell()}, tmp)
+        os.replace(tmp, ck_path)
+
+    for update in range(first_update, num_updates + 1):
         if True:  # anneal_lr
             optimizer.param_groups[0]["lr"] = (1.0 - (update - 1.0) / num_updates) * a.learning_rate
         for t in range(T):
@@ -323,15 +369,17 @@ def main():
         if global_step >= next_eval or update == num_updates:
             ev = evaluate(a.env_id, agent, copy.deepcopy(obs_rms), a.eval_episodes, 10_000)
             emit({"type": "eval", "step": global_step, **ev}); next_eval += a.eval_every
+            if update < num_updates: save_ckpt(update)
 
     final = evaluate(a.env_id, agent, copy.deepcopy(obs_rms), a.final_eval_episodes, 20_000)
     torch.save({"agent": agent.state_dict(), "obs_mean": obs_rms.mean, "obs_var": obs_rms.var}, out / "policy.pt")
     summary = {"env_id": a.env_id, "reward": a.reward, "seed": a.seed, "steps": global_step, "wall_s": time.time() - t_start,
                "judge_windows": judge_windows, "judge_calls": judge_calls,
-               "judge_wait_s": judge.seconds if judge else 0.0, **{f"final_{k}": v for k, v in final.items()}}
+               "judge_wait_s": judge.seconds if judge else 0.0, "resumes": resumes, **{f"final_{k}": v for k, v in final.items()}}
     emit({"type": "final", **summary})
     (out / "final.json").write_text(json.dumps(summary, indent=1))
     log.close()
+    ck_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
