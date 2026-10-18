@@ -27,6 +27,10 @@ window-level feedback from the effect of the judge.
   per task (3 for the sampled AR judge), and statistics after \citet{agarwal2021deep} (\S\ref{sec:results}).
 \item An offline agreement study that relates each judge signal to the environment's reward on the same windows
   (\S\ref{sec:agreement}).
+\item An analysis of what the final policies do, which explains the main differences (\S\ref{sec:behaviour}). The AR
+  judge's reward teaches Hopper and Walker2d to stand still, because the judge pays an upright, slow window almost as
+  much as a fast one. No judge's reward lets the cheetah flip onto its back, which the engineered reward does. On
+  Reacher, every judge's reward makes the arm flail.
 \item Measured costs: judged windows, judge time and wall-clock per run (\S\ref{sec:cost}).
 \item A correction. Earlier versions of this paper (v1--v3) reported results that were not produced by these
   experiments. During training the ``judge'' was a hand-written function of the simulator state, and the leaderboards

@@ -15,7 +15,7 @@ complete.
 
 | Part | Question | Finished | Running |
 |---|---|---|---|
-| I | Do Kev-4B's judgments of short motion windows make a useful PPO reward on five MuJoCo tasks, compared with the environment reward and with an autoregressive judge of the same size? | 50 environment-reward runs; offline agreement of both judges with the environment reward | 115 judge-reward runs |
+| I | Do Kev-4B's judgments of short motion windows make a useful PPO reward on five MuJoCo tasks, compared with the environment reward and with an autoregressive judge of the same size? | all 165 runs; offline agreement of both judges with the environment reward; behaviour of the final policies; the paper, in English and Chinese | – |
 | II | What does sharing one Qwen3.5-4B backbone between the GRPO policy and Kev-4B save, and does Kev-4B's judgment add anything to the verifier reward on MATH? | memory and speed of the shared backbone; offline judge study; learning-rate sweep (1e-5, chosen on validation) | 12 GRPO runs |
 | III-A | How much reward hacking is there when multi-turn code repair is rewarded by visible tests and graded by held-out ones, and does a judge reduce it? | offline judge study on KodCode, MBPP+ and HumanEval+ | 6 GRPO runs |
 | III-B | When the verifier labels only 2 of 8 samples per prompt, can a frozen, a recalibrated or a scratch judge head fill in the rest? | – | 8 GRPO runs |
@@ -57,7 +57,7 @@ complete.
 
 | 部分 | 问题 | 已完成 | 运行中 |
 |---|---|---|---|
-| 第一部分 | 在五个 MuJoCo 任务上，Kev-4B 对短时运动窗口的判断能否作为有用的 PPO 奖励？与环境奖励和同等规模的自回归评判模型相比如何？ | 50 个环境奖励 run；两种评判模型与环境奖励的离线一致性 | 115 个评判奖励 run |
+| 第一部分 | 在五个 MuJoCo 任务上，Kev-4B 对短时运动窗口的判断能否作为有用的 PPO 奖励？与环境奖励和同等规模的自回归评判模型相比如何？ | 全部 165 个 run；两种评判模型与环境奖励的离线一致性；最终策略的行为分析；论文（英文和中文） | – |
 | 第二部分 | GRPO 策略与 Kev-4B 共用一个 Qwen3.5-4B 骨干能节省什么？在 MATH 上，Kev-4B 的判断能否为验证器奖励带来增益？ | 共享骨干的显存与速度；离线评判研究；学习率扫描（在验证集上选定 1e-5） | 12 个 GRPO run |
 | 第三部分 A | 多轮代码修复以可见测试为奖励、以留出测试评分时，奖励投机有多严重？评判模型能否减少它？ | 在 KodCode、MBPP+ 和 HumanEval+ 上的离线评判研究 | 6 个 GRPO run |
 | 第三部分 B | 验证器只为每个提示的 8 个样本中的 2 个打标签时，冻结、重新校准或从头训练的评判输出头能否补全其余标签？ | – | 8 个 GRPO run |

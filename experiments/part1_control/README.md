@@ -10,7 +10,33 @@
 
     python -m dcjev.analysis.part1 --root experiments/part1_control/runs --out experiments/part1_control/results
 
-Status: the `env` and `env_window` baselines are complete (5 tasks x 5 seeds). The judge-reward conditions are running and are added when they finish; `results/` is regenerated then.
+Status: complete. 165 runs: 7 conditions x 5 tasks x 5 seeds, 3 seeds for `ar_sampled`. A reset of the Colab VM
+interrupted 24 runs (`kev_score`, `kev_gated`, `kev_distill`, `ar_gated`). They resumed from their checkpoint at step
+301,056, and each dropped the episode in progress (at most 703 steps). Every resume is a `resume` record in the run's
+log and is listed in `results/summary.json` (`resumed_runs`).
+
+`results/behaviour.json` (what the final policies do: standing still, flips onto the back, control effort, fingertip
+distance, with a random policy as the reference) is produced by
+
+    python -m dcjev.analysis.behaviour --root experiments/part1_control/runs --out experiments/part1_control/results/behaviour.json
+
+It re-runs every final policy on its 20 evaluation episodes, and the returns reproduce `final.json` exactly.
+
+Main results (interquartile mean of the normalised score, 95% bootstrap interval; the paper is
+`papers/part1_control/`):
+
+| reward | IQM | note |
+|---|---|---|
+| `env` (engineered) | 1.05 [0.91, 1.16] | 1 of 5 HalfCheetah runs ends on its back |
+| `env_window` | 1.10 [0.89, 1.26] | 3 of 5 HalfCheetah runs end on their back |
+| `kev_score` | 0.78 [0.60, 0.91] | |
+| `kev_gated` | 1.00 [0.81, 1.09] | no flips; below a random policy on Reacher |
+| `kev_distill` | 0.98 [0.82, 1.10] | judge asked about 10% of the windows |
+| `ar_gated` | 0.35 [0.28, 0.46] | Hopper and Walker2d policies learn to stand still |
+| `ar_sampled` | 0.31 [0.19, 0.45] | |
+
+The numbers in this table are copied from `results/summary.json`, and the paper's numbers are generated from the
+results by `dcjev/analysis/paper_numbers.py`.
 
 `results/judge_agreement.json` and `results/judge_agreement_scores.jsonl.gz` (every window's scores) are produced by
 

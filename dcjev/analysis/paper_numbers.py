@@ -177,6 +177,9 @@ def behaviour(o, res):
     ref = [r for r in hc if r["reward"] in ("env", "env_window")]
     fl, up = [r["return_mean"] for r in ref if r["flipped_frac"] > 0.5], [r["return_mean"] for r in ref if r["flipped_frac"] <= 0.5]
     if fl and up: o.num("flip_maxret", f(max(fl), 0)); o.num("upright_minret", f(min(up), 0))
+    for c in ("env", "env_window"):
+        v = [r["return_mean"] for r in ref if r["reward"] == c and r["flipped_frac"] <= 0.5]
+        if v: o.num(f"uprightret_{c}", f(np.mean(v), 0)); o.num(f"uprightruns_{c}", str(len(v)))
     jr = [r for r in hc if r["reward"] not in ("env", "env_window")]
     o.num("judge_runs_cheetah", str(len(jr))); o.num("judge_flipped_cheetah", str(sum(r["flipped_frac"] > 0.5 for r in jr)))
     o.table("behaviour", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & Hopper & Walker2d & Swimmer & HalfCheetah & \\multicolumn{2}{c}{Reacher} \\\\ "
@@ -223,17 +226,19 @@ def part1(o, exp):
             "$P(\\,>\\texttt{env})$ & $P(\\,>\\texttt{env\\_window})$ \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
     # judge cost per run and the training-time agreement of the judge scores with the environment's reward
-    rows = []
+    rows, walls = [], {}
     for c in conds:
         ds = [s["per_task"][e][c] for e, _, _ in TASKS if c in s["per_task"].get(e, {})]
         win = np.mean([d["judge_windows_mean"] for d in ds]); wait = np.mean([d["judge_wait_s_mean"] for d in ds]) / 3600
-        wall = np.mean([d["wall_s_mean"] for d in ds]) / 3600
+        wall = np.mean([d["wall_s_mean"] for d in ds]) / 3600; walls[c] = wall
         cor = [d["mean_corr_window_score_env"] for d in ds if d.get("mean_corr_window_score_env") is not None]
         o.num(f"judgewin_{c}", f"{win / 1000:.1f}k" if win else "0"); o.num(f"wallh_{c}", f(wall, 1)); o.num(f"waith_{c}", f(wait, 1))
         o.num(f"traincorr_{c}", f(np.mean(cor)) if cor else "--")
         rows.append(f"{tt(c)} & {f'{win:,.0f}'.replace(',', '{,}') if win else '0'} & {f(wait, 1)} & {f(wall, 1)} & {f(np.mean(cor)) if cor else '--'} \\\\")
     o.table("cost", "\\begin{tabular}{@{}lcccc@{}}\n\\toprule\ncondition & judged windows & judge wait (h) & wall-clock (h) & "
             "corr.\\ (score, env reward) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    judged = [walls[c] for c in conds if c not in ("env", "env_window")]
+    if judged and walls.get("env"): o.num("wallratio", f"{np.mean(judged) / walls['env']:.0f}")
 
     o.num("ref_hopper", f(s["env_reference_return"]["Hopper-v5"], 0))
     for e, k, _ in TASKS:

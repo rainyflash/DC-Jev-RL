@@ -1,9 +1,9 @@
 #!/bin/bash
 # build_papers.sh <papers dir> [placeholders]: compile every main_en.tex (pdflatex) and main_zh.tex (xelatex) with
 # latexmk. With "placeholders", a missing \input file is created empty first (a trial build of unfinished papers).
-# Prints, per paper, the exit code, undefined numbers/references/citations and the first LaTeX errors.
+# PARTS="part1_control ..." restricts the build to those papers. Prints, per paper, the exit code, undefined numbers/references/citations and the first LaTeX errors.
 cd "$1" || exit 1
-for d in part1_control part2_grpo part3a_code part3b_labels part3c_tree; do
+for d in ${PARTS:-part1_control part2_grpo part3a_code part3b_labels part3c_tree}; do
   [ -d "$d" ] || continue
   cd "$d"
   for m in main_en main_zh; do
