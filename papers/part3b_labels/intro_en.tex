@@ -15,7 +15,7 @@ measure how good each fill-in reward was on the completions it scored, step by s
 
 \paragraph{Correction.} Versions 1--3 of this paper (``CoEvo-Jev-GRPO'') reported judge--policy co-evolution
 experiments, long-horizon curves and anti-hacking results that were not produced by any experiment. The script that
-``generated'' them contains no model code (see the notice above and \texttt{CORRECTION.md}). This version replaces the
+``generated'' them contains no model code (see the notice above and \file{CORRECTION.md}). This version replaces the
 co-evolution claim with an experiment we could run. The judge's backbone and adapter stay frozen and only its small
 head is refitted, so the judge adapts to the policy without being trained on the policy's reward.
 

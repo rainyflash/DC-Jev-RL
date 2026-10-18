@@ -4,7 +4,7 @@
 
 \paragraph{题目。} 训练题来自 KodCode-Light-RL-10K~\cite{xu2025kodcode}：带 \texttt{pytest} 单元测试的 Python 函数题。我们保留这样的题目：测试文件只测一个函数，不使用 fixture 或第三方包，并且至少有三个测试函数。第一个测试函数展示给策略（\emph{可见}），其余的\emph{留出}。300 道题（种子 0）留作验证集（\texttt{kodcode\_val}）。测试集为 MBPP+ 和 HumanEval+~\cite{austin2021program,chen2021codex,liu2023evalplus}。MBPP+ 中原始 MBPP 的三个 assert 是可见的；HumanEval+ 中原始 HumanEval 测试的前三个 assert 是可见的。两者中，EvalPlus 测试框架及其新增的测试都是留出的。若一道题的参考解答在我们的测试框架下通不过它自己的任何测试，就丢弃该题，并报告丢弃数量。每个程序都在空临时目录中各自的 \texttt{python -I} 子进程里运行，限制 CPU 时间、地址空间和文件大小，并设墙钟超时；运行前禁用 \texttt{os}、\texttt{shutil} 和 \texttt{subprocess} 中的破坏性函数（即 OpenAI \texttt{human-eval} 的“reliability guard”）。这能约束小模型写出的有缺陷代码，但不是安全边界。
 
-\paragraph{回合。} 策略看到题目、函数签名和可见测试，写出一个解答（每次尝试最多 768 个词元）。代码在可见测试上运行。若有测试失败，策略看到第一个失败的测试及其报错，再写一次，总共最多三次。每次尝试都接续之前各轮的完整词元序列。回合在第一次通过全部可见测试的尝试处结束，或在第三次尝试后结束，然后最终代码在留出测试上运行。提示见 \texttt{experiments/part3a\_code/prompts/code\_prompts.json}，在任何运行之前即已固定。
+\paragraph{回合。} 策略看到题目、函数签名和可见测试，写出一个解答（每次尝试最多 768 个词元）。代码在可见测试上运行。若有测试失败，策略看到第一个失败的测试及其报错，再写一次，总共最多三次。每次尝试都接续之前各轮的完整词元序列。回合在第一次通过全部可见测试的尝试处结束，或在第三次尝试后结束，然后最终代码在留出测试上运行。提示见 \file{experiments/part3a_code/prompts/code_prompts.json}，在任何运行之前即已固定。
 
 \paragraph{指标。} \emph{vis pass}：最终代码通过全部可见测试。\emph{all pass}：通过全部可见测试和全部留出测试。\emph{hack}：通过可见测试但有留出测试失败。它既统计过拟合或特判的解答，也统计仅仅是不完整的解答；这一指标无法区分两者，我们把它作为“可见测试所证明的”与“实际情况”之间的差距来报告。\emph{首次尝试 all pass} 衡量不经修复时策略的水平。
 

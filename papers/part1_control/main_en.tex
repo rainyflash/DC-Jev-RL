@@ -15,7 +15,7 @@ Versions 1.0--3.0 of this paper are withdrawn. Their results were not produced b
 During PPO training the ``Kev-4B judge'' was a hand-written function of the simulator state, never the model, and the
 leaderboard and the ``100\% win rate over the human oracle'' were built on those runs and on constants in the scripts.
 This version replaces every result with measured ones. The withdrawn files are kept in the repository under
-\texttt{withdrawn/}, and \texttt{CORRECTION.md} lists what was wrong.
+\file{withdrawn/}, and \file{CORRECTION.md} lists what was wrong.
 \end{correction}
 
 \begin{abstract}
@@ -30,9 +30,9 @@ This version replaces every result with measured ones. The withdrawn files are k
 
 \section*{Reproducibility}
 Code, prompts, configuration, raw logs (every training episode, update, evaluation and a 2\% sample of judged windows)
-and final policies of all runs are in the repository (\texttt{experiments/part1\_control/}). The tables and every number
-in the text are generated from them by \texttt{dcjev/analysis/part1.py}, \texttt{dcjev/analysis/judge\_agreement.py} and
-\texttt{dcjev/analysis/paper\_numbers.py}.
+and final policies of all runs are in the repository (\file{experiments/part1_control/}). The tables and every number
+in the text are generated from them by \file{dcjev/analysis/part1.py}, \file{dcjev/analysis/judge_agreement.py} and
+\file{dcjev/analysis/paper_numbers.py}.
 
 \bibliographystyle{plainnat}
 \bibliography{../common/refs}

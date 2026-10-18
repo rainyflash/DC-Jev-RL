@@ -2,16 +2,16 @@
 
 \section{评判模型}\label{sec:judges}
 
-\paragraph{\kev{}。} \kev{}~\cite{kev4b} 是一种“系统一”决策模型：在 Qwen3.5-4B-Base~\cite{qwen35}（一种混合架构模型，各层交替使用 Gated DeltaNet~\cite{yang2025gated} 和全注意力）上加一个 LoRA 适配器（秩 16）和一个指针头。一个请求包含一个\emph{状态}（JSON 对象，由 \texttt{kev.api} 渲染成文本）和一个或多个\emph{问题}。\texttt{score} 型问题列出有序的评判等级；\texttt{noul} 型问题要求回答是或否。\kev{} 不生成文本。每个问题作为一个分支接在渲染后的状态之后，指针头读取决策位置和各答案选项位置上的隐藏状态，再经过温度（存于检查点中，$T=2.406$）的 softmax 得到选项上的分布。同一请求的所有问题在一次前向传播中完成：共享的状态只算一次，各问题的短分支并行计算。我们原样使用 kev 代码中的模式定义、渲染、编码器和输出头（修订版 \texttt{6cfce5c}），我们的封装只改变行的批处理方式。在 \NUM{parity_questions} 个问题上，它的 bf16 概率与 kev 参考推理路径的差异最大为 \NUM{parity_bf16_max}（argmax 一致率 \NUM{parity_bf16_argmax}），fp32 下最大为 \NUM{parity_fp32_max}（\texttt{experiments/validation/kev\_parity.json}）。
+\paragraph{\kev{}。} \kev{}~\cite{kev4b} 是一种“系统一”决策模型：在 Qwen3.5-4B-Base~\cite{qwen35}（一种混合架构模型，各层交替使用 Gated DeltaNet~\cite{yang2025gated} 和全注意力）上加一个 LoRA 适配器（秩 16）和一个指针头。一个请求包含一个\emph{状态}（JSON 对象，由 \texttt{kev.api} 渲染成文本）和一个或多个\emph{问题}。\texttt{score} 型问题列出有序的评判等级；\texttt{noul} 型问题要求回答是或否。\kev{} 不生成文本。每个问题作为一个分支接在渲染后的状态之后，指针头读取决策位置和各答案选项位置上的隐藏状态，再经过温度（存于检查点中，$T=2.406$）的 softmax 得到选项上的分布。同一请求的所有问题在一次前向传播中完成：共享的状态只算一次，各问题的短分支并行计算。我们原样使用 kev 代码中的模式定义、渲染、编码器和输出头（修订版 \texttt{6cfce5c}），我们的封装只改变行的批处理方式。在 \NUM{parity_questions} 个问题上，它的 bf16 概率与 kev 参考推理路径的差异最大为 \NUM{parity_bf16_max}（argmax 一致率 \NUM{parity_bf16_argmax}），fp32 下最大为 \NUM{parity_fp32_max}（\file{experiments/validation/kev_parity.json}）。
 
 \paragraph{自回归（AR）评判模型。} 基线评判模型是 Qwen3.5-4B~\cite{qwen35}（修订版 \texttt{851bf6e}），即同一家族、同样大小的指令微调模型，关闭思考模式。它在对话提示中得到同样的渲染状态和同样的问题文本，后接编号的选项，并被要求只回答选项编号（或是/否）。我们读取一次下一词元分布，限制到合法答案对应的词元上并重新归一化。归一化之前合法答案上的概率质量会被记录下来（\S\ref{sec:agreement}）：对是/否问题它至少为 \NUM{validmass_min_healthy}，但对五级 \texttt{progress} 问题只有 \NUM{validmass_min_progress} 到 \NUM{validmass_max_progress}，所以在那里重新归一化并非可有可无。AR 评判与 \kev{} 一样，每个问题只需一次前向传播；不同的是，它每个问题需要单独一行，不能共享状态，而且没有做任何校准。
 
-\paragraph{问题。} 每个任务的状态都是 \{任务描述，参考信息，片段摘要\}（表~\ref{tab:prompts}）；问题固定在 \texttt{experiments/part1\_control/prompts/judge\_prompts.json} 中，在网格实验开始前即已冻结。\texttt{progress} 是一个五级 \texttt{score} 问题（\emph{failing}、\emph{poor}、\emph{fair}、\emph{good}、\emph{excellent}，每级附一行说明），读出为期望等级除以 4，取值于 $[0,1]$。\texttt{healthy} 是一个 \texttt{noul} 问题（“机器人是否在以受控、直立的步态真正向前推进……？”），读出为 $p(\text{yes})$。
+\paragraph{问题。} 每个任务的状态都是 \{任务描述，参考信息，片段摘要\}（表~\ref{tab:prompts}）；问题固定在 \file{experiments/part1_control/prompts/judge_prompts.json} 中，在网格实验开始前即已冻结。\texttt{progress} 是一个五级 \texttt{score} 问题（\emph{failing}、\emph{poor}、\emph{fair}、\emph{good}、\emph{excellent}，每级附一行说明），读出为期望等级除以 4，取值于 $[0,1]$。\texttt{healthy} 是一个 \texttt{noul} 问题（“机器人是否在以受控、直立的步态真正向前推进……？”），读出为 $p(\text{yes})$。
 
 \begin{table}[t]
 \centering\footnotesize
 \input{tables/prompts}
-\caption{两个评判模型读到的各任务文本（评判模型读的是英文原文）。每个请求还包含该窗口的摘要（\S\ref{sec:method} 所列各物理量）。\texttt{progress} 问题（“\NUM{progress_instruction}”）有五个随任务而定的等级，从 \emph{failing} 到 \emph{excellent}；全部内容见 \texttt{experiments/part1\_control/prompts/judge\_prompts.json}。}
+\caption{两个评判模型读到的各任务文本（评判模型读的是英文原文）。每个请求还包含该窗口的摘要（\S\ref{sec:method} 所列各物理量）。\texttt{progress} 问题（“\NUM{progress_instruction}”）有五个随任务而定的等级，从 \emph{failing} 到 \emph{excellent}；全部内容见 \file{experiments/part1_control/prompts/judge_prompts.json}。}
 \label{tab:prompts}
 \end{table}
 
@@ -33,7 +33,7 @@
 \end{itemize}
 所有条件都经过相同的奖励归一化（逐步复现 gymnasium 的 \texttt{NormalizeReward}，并截断到 $[-10,10]$）。评判模型是冻结的，没有任何条件让评判模型适应策略。
 
-\paragraph{PPO。} 我们使用 CleanRL 的 \texttt{ppo\_continuous\_action.py}~\cite{huang2022cleanrl,schulman2017ppo} 的单环境移植版，采用其默认超参数：$10^6$ 个环境步，每次 rollout 2048 步，10 个 epoch、每个 epoch 32 个小批量，学习率 $3\cdot10^{-4}$ 线性退火到零，$\gamma=0.99$，$\lambda_{\text{GAE}}=0.95$，裁剪系数 0.2，价值损失系数 0.5，无熵奖励，梯度范数裁剪到 0.5，并对观测做滑动归一化。所有条件的超参数相同，没有为任何条件调参。
+\paragraph{PPO。} 我们使用 CleanRL 的 \file{ppo_continuous_action.py}~\cite{huang2022cleanrl,schulman2017ppo} 的单环境移植版，采用其默认超参数：$10^6$ 个环境步，每次 rollout 2048 步，10 个 epoch、每个 epoch 32 个小批量，学习率 $3\cdot10^{-4}$ 线性退火到零，$\gamma=0.99$，$\lambda_{\text{GAE}}=0.95$，裁剪系数 0.2，价值损失系数 0.5，无熵奖励，梯度范数裁剪到 0.5，并对观测做滑动归一化。所有条件的超参数相同，没有为任何条件调参。
 
 \paragraph{评估。} 评估时策略采用确定性动作（高斯分布的均值），冻结观测归一化的统计量，使用环境自身的无折扣回报：每 $10^5$ 步评估 10 个回合，结束时评估 20 个回合，评估种子固定（第 $k$ 个回合分别为 $10,000+k$ 和 $20,000+k$）。评判模型从不看到这些回报。我们把一个 run 的最终回报 $R$ 按任务归一化为 $(R-R_{\text{rand}})/(R_{\text{env}}-R_{\text{rand}})$，其中 $R_{\text{rand}}$ 是均匀随机策略的平均回报，$R_{\text{env}}$ 是 \texttt{env} 条件的平均最终回报。分数为 1 表示“与在工程化奖励上训练的 PPO 一样好”。对 5 个任务 $\times$ 5 个种子的汇总依照 \citet{agarwal2021deep}：四分位间均值（IQM）及其 95\% 分层 bootstrap 置信区间（10\,000 次重采样），以及一个条件相对另一个条件的改进概率。
 
@@ -41,4 +41,4 @@
 
 \section{实验设置}\label{sec:setup}
 
-任务为 Hopper、Walker2d、HalfCheetah、Swimmer 和 Reacher，均为 Gymnasium~1.3 下的 MuJoCo v5 版本~\cite{todorov2012mujoco,towers2024gymnasium}。每个任务和条件有五个种子（\texttt{ar\_sampled} 为三个）。种子 $s$ 决定策略初始化、环境的种子以及该 run 自身的随机选择，包括为记录和蒸馏抽取的窗口。调用评判模型的 run 仍不能做到逐比特可复现：评判模型的浮点结果会因服务器如何把该请求与其他 run 的请求合批而略有不同，而且 \texttt{ar\_sampled} 抽取的等级来自所有 run 共享的服务器随机数生成器。所有 run 都在同一台 Colab 虚拟机上完成，配有一块 NVIDIA RTX PRO 6000 Blackwell Server Edition GPU（96\,GB）和 48 个 vCPU。PPO 在 CPU 上运行，每个 run 一个进程。两个评判模型在同一个 GPU 服务器进程中运行，其中同时装载 \kev{}（bf16，LoRA 已合并）和 AR 评判模型。服务器把所有 run 的并发请求合并成批（每批最多 4096 个窗口，聚合等待 15\,ms）。同时训练的 run 最多 24 个，因此一个 run 的总耗时取决于有多少其他 run 共用评判服务器，我们按实测报告。软件版本固定在仓库中（\texttt{scripts/setup\_colab.sh}，附两个环境的完整包列表）。因运行时重置而中断的 run 从最近一次定期检查点恢复。仿真器状态不在检查点中，因此正在进行的回合会被丢弃并开始一个新回合。日志记录每一次恢复，恢复过的 run 数会随结果一同报告。
+任务为 Hopper、Walker2d、HalfCheetah、Swimmer 和 Reacher，均为 Gymnasium~1.3 下的 MuJoCo v5 版本~\cite{todorov2012mujoco,towers2024gymnasium}。每个任务和条件有五个种子（\texttt{ar\_sampled} 为三个）。种子 $s$ 决定策略初始化、环境的种子以及该 run 自身的随机选择，包括为记录和蒸馏抽取的窗口。调用评判模型的 run 仍不能做到逐比特可复现：评判模型的浮点结果会因服务器如何把该请求与其他 run 的请求合批而略有不同，而且 \texttt{ar\_sampled} 抽取的等级来自所有 run 共享的服务器随机数生成器。所有 run 都在同一台 Colab 虚拟机上完成，配有一块 NVIDIA RTX PRO 6000 Blackwell Server Edition GPU（96\,GB）和 48 个 vCPU。PPO 在 CPU 上运行，每个 run 一个进程。两个评判模型在同一个 GPU 服务器进程中运行，其中同时装载 \kev{}（bf16，LoRA 已合并）和 AR 评判模型。服务器把所有 run 的并发请求合并成批（每批最多 4096 个窗口，聚合等待 15\,ms）。同时训练的 run 最多 24 个，因此一个 run 的总耗时取决于有多少其他 run 共用评判服务器，我们按实测报告。软件版本固定在仓库中（\file{scripts/setup_colab.sh}，附两个环境的完整包列表）。因运行时重置而中断的 run 从最近一次定期检查点恢复。仿真器状态不在检查点中，因此正在进行的回合会被丢弃并开始一个新回合。日志记录每一次恢复，恢复过的 run 数会随结果一同报告。

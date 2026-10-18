@@ -44,7 +44,7 @@ batch has 128 completions. Each run has 200 steps.
 ``Is the final answer of the proposed solution correct?''. $\pg$ is its $p(\text{yes})$ for ``Does the proposed
 solution reach its final answer through genuine, relevant step-by-step reasoning\ldots?''. $P_{\mathrm{a}}$ is the AR
 judge's $p(\text{yes})$ for the first question. The judge prompts are in
-\texttt{experiments/part2\_llm/prompts/judge\_prompts.json} and were fixed before any GRPO run. The judges see the problem
+\file{experiments/part2_llm/prompts/judge_prompts.json} and were fixed before any GRPO run. The judges see the problem
 and the completion, truncated to 1536 tokens.
 \begin{center}\small
 \begin{tabular}{@{}ll@{}}

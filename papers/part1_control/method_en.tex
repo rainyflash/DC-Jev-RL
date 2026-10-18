@@ -13,7 +13,7 @@ answered in one forward pass of the shared state and their short branches. We us
 rendering, the encoder and the head unchanged (revision \texttt{6cfce5c}). Our wrapper only changes how rows are
 batched. On \NUM{parity_questions} questions its bf16 probabilities differ from kev's reference serving path by at most
 \NUM{parity_bf16_max} (argmax agreement \NUM{parity_bf16_argmax}), and by at most \NUM{parity_fp32_max} in fp32
-(\texttt{experiments/validation/kev\_parity.json}).
+(\file{experiments/validation/kev_parity.json}).
 
 \paragraph{Autoregressive (AR) judge.} The baseline judge is Qwen3.5-4B~\cite{qwen35} (revision \texttt{851bf6e}), the
 instruction-tuned model of the same family and size, with thinking disabled. It gets the same rendered state and the
@@ -26,7 +26,7 @@ there. The AR judge costs one forward pass per question, like \kev{}. It needs o
 question instead of one shared state, and it is given no calibration.
 
 \paragraph{Questions.} For every task the state is \{task description, reference, segment summary\}
-(Table~\ref{tab:prompts}); the questions are fixed in \texttt{experiments/part1\_control/prompts/judge\_prompts.json} and
+(Table~\ref{tab:prompts}); the questions are fixed in \file{experiments/part1_control/prompts/judge_prompts.json} and
 were frozen before the grid was run. \texttt{progress} is a five-level \texttt{score} question (\emph{failing},
 \emph{poor}, \emph{fair}, \emph{good}, \emph{excellent}, each with a one-line description), read out as the expected
 level divided by four, in $[0,1]$. \texttt{healthy} is a \texttt{noul} question (``Is the robot making genuine forward
@@ -37,7 +37,7 @@ progress with a controlled, upright gait\ldots?'') read out as $p(\text{yes})$.
 \input{tables/prompts}
 \caption{The task text both judges read, per task. Each request also holds the window's summary (the quantities of
 \S\ref{sec:method}). The \texttt{progress} question (``\NUM{progress_instruction}'') has five task-specific levels, from
-\emph{failing} to \emph{excellent}; all are in \texttt{experiments/part1\_control/prompts/judge\_prompts.json}.}
+\emph{failing} to \emph{excellent}; all are in \file{experiments/part1_control/prompts/judge_prompts.json}.}
 \label{tab:prompts}
 \end{table}
 
@@ -80,7 +80,7 @@ perception from pixels or from raw observations.
 Every condition goes through the same reward normalisation (gymnasium's \texttt{NormalizeReward}, reproduced step by
 step, and clipping to $[-10,10]$). The judges are frozen, so no condition adapts the judge to the policy.
 
-\paragraph{PPO.} We use a single-environment port of CleanRL's \texttt{ppo\_continuous\_action.py}~\cite{huang2022cleanrl,
+\paragraph{PPO.} We use a single-environment port of CleanRL's \file{ppo_continuous_action.py}~\cite{huang2022cleanrl,
 schulman2017ppo} with its default hyperparameters: $10^6$ environment steps, rollouts of 2048 steps, 10 epochs of 32
 minibatches, learning rate $3\cdot10^{-4}$ annealed linearly to zero, $\gamma=0.99$, $\lambda_{\text{GAE}}=0.95$, clip
 coefficient 0.2, value coefficient 0.5, no entropy bonus, gradient-norm clipping at 0.5, and running observation
@@ -116,7 +116,7 @@ NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB) and 48 vCPUs. PPO runs
 judges run in one GPU server process that holds both \kev{} (bf16, LoRA merged) and the AR judge. The server merges
 concurrent requests from all runs into batches (at most 4096 windows, 15\,ms gathering). Up to 24 runs trained at the
 same time. A run's wall-clock time therefore depends on how many other runs shared the judge, and we report it as
-measured. Software versions are pinned in the repository (\texttt{scripts/setup\_colab.sh}, with the full package lists of
+measured. Software versions are pinned in the repository (\file{scripts/setup_colab.sh}, with the full package lists of
 both environments). A run interrupted by a runtime reset resumes from its last periodic checkpoint. The simulator state is not
 checkpointed, so the episode in progress is dropped and a new one starts. The log records every resume, and the number
 of resumed runs is reported with the results.

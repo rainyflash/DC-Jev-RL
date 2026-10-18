@@ -20,7 +20,7 @@ solution (at most 768 tokens per attempt). The code runs on the visible tests. I
 failing test and its error and writes another attempt, up to three in all. Every attempt continues the exact token
 sequence of the earlier turns. An episode ends at the first attempt that passes every visible test, or after the third,
 and its final code then runs on the held-out tests. The prompts are in
-\texttt{experiments/part3a\_code/prompts/code\_prompts.json} and were fixed before any run.
+\file{experiments/part3a_code/prompts/code_prompts.json} and were fixed before any run.
 
 \paragraph{Metrics.} \emph{vis pass}: the final code passes every visible test. \emph{all pass}: it passes every
 visible and every held-out test. \emph{hack}: it passes the visible tests and fails a held-out one. This counts an

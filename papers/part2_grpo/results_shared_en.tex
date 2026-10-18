@@ -15,7 +15,7 @@ backbone with both adapters and \kev{}'s head takes \NUM{mem_shared_load}\,GB of
 \NUM{mem_separate_load}\,GB, \NUM{mem_saving_load} less. Over a policy update on a fixed batch (8 sequences of 1024
 tokens, gradient checkpointing) the peak is \NUM{mem_shared_train}\,GB against \NUM{mem_separate_train}\,GB,
 \NUM{mem_saving_train} less. Each arrangement was measured in a fresh process with the same step
-(\texttt{experiments/validation/shared\_check\_idle.*.json}). The peak of the subsequent \kev{} scoring depends mostly on
+(\file{experiments/validation/shared_check_idle.*.json}). The peak of the subsequent \kev{} scoring depends mostly on
 how many tokens the judge processes at once, which is a setting rather than a property of either design, so we do not
 compare it.
 

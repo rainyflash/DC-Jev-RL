@@ -11,7 +11,7 @@
 \maketitle
 
 \begin{correction}
-本文第 1.0--3.0 版（“CoEvo-Jev-GRPO”）已撤回，其结果并非由任何实验产生。产生评判--策略协同演化结果、长时程曲线和反奖励投机结果的脚本里没有任何加载、训练或评估模型的代码，每个数字都是写进去的。本版用一个实际运行过的实验取代协同演化的说法：带部分验证器标签的 GRPO，其中只有评判模型很小的输出头会适应。撤回的文件保存在仓库的 \texttt{withdrawn/} 目录下，\texttt{CORRECTION.md} 列出了错误之处。
+本文第 1.0--3.0 版（“CoEvo-Jev-GRPO”）已撤回，其结果并非由任何实验产生。产生评判--策略协同演化结果、长时程曲线和反奖励投机结果的脚本里没有任何加载、训练或评估模型的代码，每个数字都是写进去的。本版用一个实际运行过的实验取代协同演化的说法：带部分验证器标签的 GRPO，其中只有评判模型很小的输出头会适应。撤回的文件保存在仓库的 \file{withdrawn/} 目录下，\file{CORRECTION.md} 列出了错误之处。
 \end{correction}
 
 \begin{abstract}
@@ -24,7 +24,7 @@
 \input{discussion_zh}
 
 \section*{可复现性}
-代码、提示、原始日志（每个 GRPO 步，包括补全奖励与被隐去标签的一致性，以及每次评估）都在仓库中（\texttt{experiments/part3b\_labels/}）。表格和正文中的每个数字都由 \texttt{dcjev/analysis/part2.py} 和 \texttt{dcjev/analysis/paper\_numbers.py} 从中生成。
+代码、提示、原始日志（每个 GRPO 步，包括补全奖励与被隐去标签的一致性，以及每次评估）都在仓库中（\file{experiments/part3b_labels/}）。表格和正文中的每个数字都由 \file{dcjev/analysis/part2.py} 和 \file{dcjev/analysis/paper_numbers.py} 从中生成。
 
 \bibliographystyle{plainnat}
 \bibliography{../common/refs}

@@ -11,7 +11,7 @@
 \maketitle
 
 \begin{correction}
-本文第 1.0--3.0 版已撤回，其结果并非由文中所述实验产生。排行榜数值（准确率、损失、死区率和投机率）是脚本中的常数，不是训练的输出。共享骨干节省的显存没有被测量：“两个独立模型”的显存被设成实测单骨干显存的 2.04 倍。本版用实测结果替换了所有结果。撤回的文件保存在仓库的 \texttt{withdrawn/} 目录下，\texttt{CORRECTION.md} 列出了错误之处。
+本文第 1.0--3.0 版已撤回，其结果并非由文中所述实验产生。排行榜数值（准确率、损失、死区率和投机率）是脚本中的常数，不是训练的输出。共享骨干节省的显存没有被测量：“两个独立模型”的显存被设成实测单骨干显存的 2.04 倍。本版用实测结果替换了所有结果。撤回的文件保存在仓库的 \file{withdrawn/} 目录下，\file{CORRECTION.md} 列出了错误之处。
 \end{correction}
 
 \begin{abstract}
@@ -26,7 +26,7 @@
 \input{discussion_zh}
 
 \section*{可复现性}
-代码、提示、学习率选择规则与扫描、原始日志（每个 GRPO 步和每次评估，以及逐题评估输出），以及离线研究的解答和评判分数都在仓库中（\texttt{experiments/part2\_llm/}、\texttt{experiments/validation/}）。表格和正文中的每个数字都由 \texttt{dcjev/analysis/sweep.py}、\texttt{dcjev/analysis/part2.py} 和 \texttt{dcjev/analysis/paper\_numbers.py} 从中生成。
+代码、提示、学习率选择规则与扫描、原始日志（每个 GRPO 步和每次评估，以及逐题评估输出），以及离线研究的解答和评判分数都在仓库中（\file{experiments/part2_llm/}、\file{experiments/validation/}）。表格和正文中的每个数字都由 \file{dcjev/analysis/sweep.py}、\file{dcjev/analysis/part2.py} 和 \file{dcjev/analysis/paper_numbers.py} 从中生成。
 
 \bibliographystyle{plainnat}
 \bibliography{../common/refs}

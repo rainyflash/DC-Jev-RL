@@ -62,6 +62,9 @@ def ci_nums(o, name, rest, d, nd=3, sign=False):
     o.num(f"{name}_{rest}", f(d["value"], nd, sign)); o.num(f"{name}lo_{rest}", f(d["ci95"][0], nd)); o.num(f"{name}hi_{rest}", f(d["ci95"][1], nd))
 
 
+RX = ">{\\raggedright\\arraybackslash}X"   # tabularx column that takes the remaining width, ragged right
+
+
 def ci_cell(d, nd=2):
     return f"{f(d['value'], nd)} \\ci{{{f(d['ci95'][0], nd)}}}{{{f(d['ci95'][1], nd)}}}"
 
@@ -78,8 +81,8 @@ def prompts_table(o, exp):
     """Table of the judges' task text (experiments/part1_control/prompts/judge_prompts.json), as the judges read it."""
     j = json.loads((exp / "part1_control" / "prompts" / "judge_prompts.json").read_text())
     rows = [f"{label} & {j['envs'][e]['task']} & {j['envs'][e]['reference']} & {j['envs'][e]['healthy']} \\\\" for e, _, label in TASKS]
-    o.table("prompts", "\\begin{tabular}{@{}p{0.11\\linewidth}p{0.3\\linewidth}p{0.3\\linewidth}p{0.25\\linewidth}@{}}\n\\toprule\n"
-            "task & task description & reference & \\texttt{healthy} question \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    o.table("prompts", "\\begin{tabularx}{\\linewidth}{@{}l" + RX * 3 + "@{}}\n\\toprule\n"
+            "task & task description & reference & \\texttt{healthy} question \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabularx}\n")
     o.num("progress_instruction", j["questions"]["progress"]["instructions"])
 
 
@@ -207,9 +210,10 @@ def judge_cost(o, exp):
     o.num("ratio_gen_ar", f(ms(g) / ms(ar["correct"]), 0))
     rows.append(f"AR judge reasoning first (vLLM) & baseline & -- & -- & {f(ms(g), 0)} & -- \\\\")
     o.num("bench_requests", str(b["n"]))
-    o.table("judge_cost", "\\begin{tabular}{@{}llcccc@{}}\n\\toprule\n & & \\multicolumn{2}{c}{3 questions} & 1 question & \\\\ "
-            "\\cmidrule(lr){3-4}\\cmidrule(lr){5-5}\njudge & used by & ms / request & ms / question & ms / question & peak GB \\\\ \\midrule\n"
-            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    o.table("judge_cost", "\\begin{tabularx}{\\linewidth}{@{}" + RX + ">{\\raggedright\\arraybackslash}p{2.2cm}cccc@{}}\n\\toprule\n"
+            " & & \\multicolumn{2}{c}{3 questions} & 1 question & \\\\ "
+            "\\cmidrule(lr){3-4}\\cmidrule(lr){5-5}\njudge & used by & ms/request & ms/question & ms/question & peak GB \\\\ \\midrule\n"
+            + "\n".join(rows) + "\n\\bottomrule\n\\end{tabularx}\n")
     sh = json.loads((exp / "validation" / "shared_check_idle.mem_shared.json").read_text())
     se = json.loads((exp / "validation" / "shared_check_idle.mem_separate.json").read_text())
     for k, d in (("shared", sh), ("separate", se)):
@@ -472,9 +476,10 @@ def code_study(o, exp):
         cells = [f(j[f"policy_{n}"]["bootstrap_heldout_given_vis"]["auroc"][s]["value"]) for n, _, _ in CODE_SETS[:3]]
         rows.append(f"{label} & " + " & ".join(cells) + f" & {ci_cell(al['bootstrap_heldout_given_vis']['auroc'][s])} & "
                     f"{f(al['bootstrap_heldout_given_vis']['auroc_within'][s]['value'])} & {f(al['bootstrap_all_pass']['auroc'][s]['value'])} \\\\")
-    o.table("code_study", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{held-out tests pass, among visible-pass attempts} & all pass \\\\ "
+    o.table("code_study", "\\begin{tabularx}{\\linewidth}{@{}" + RX + "cccccc@{}}\n\\toprule\n"
+            " & \\multicolumn{5}{c}{held-out tests pass, among visible-pass attempts} & all pass \\\\ "
             "\\cmidrule(lr){2-6}\\cmidrule(l){7-7}\n & KodCode val & MBPP+ & HumanEval+ & all [95\\% CI] & within & all \\\\ \\midrule\n" + "\n".join(rows)
-            + "\n\\bottomrule\n\\end{tabular}\n")
+            + "\n\\bottomrule\n\\end{tabularx}\n")
     r = j["reference_vs_hardcoded"]
     o.num("rh_problems", str(r["problems"]))
     rows = []

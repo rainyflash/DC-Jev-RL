@@ -6,7 +6,7 @@
 
 本文在一个小而完整的设定中测量评判模型能帮上多少忙。任务是多轮代码修复：策略写一个函数，看到第一个失败的示例测试及其报错，再试一次，最多三次。奖励有三种：只用可见测试；可见测试乘以 \kev{} 对代码是否“对所有合法输入都解决了问题，而不是对示例测试做特判”的判断；以及作为预言机的可见测试加留出测试。我们测量可见测试所证明的与留出测试所发现的之间的差距：离线地针对基座策略的代码和专为通过可见测试而构造的硬编码查表程序；在线地针对 GRPO 训练过程中和训练之后的策略。
 
-\paragraph{更正。} 本文第 1--3 版（“Agentic-Jev-GRPO”）报告的 BFCL-v3、MBPP+、HumanEval+ 和 SWE-bench-Verified-Mini 结果并非由任何实验产生，“生成”这些结果的脚本里没有任何模型代码（见上方声明和 \texttt{CORRECTION.md}）。本版运行 MBPP+ 和 HumanEval+，并采用把每道题的测试划分为可见测试和留出测试的协议。本版不涉及工具调用基准和 SWE-bench。
+\paragraph{更正。} 本文第 1--3 版（“Agentic-Jev-GRPO”）报告的 BFCL-v3、MBPP+、HumanEval+ 和 SWE-bench-Verified-Mini 结果并非由任何实验产生，“生成”这些结果的脚本里没有任何模型代码（见上方声明和 \file{CORRECTION.md}）。本版运行 MBPP+ 和 HumanEval+，并采用把每道题的测试划分为可见测试和留出测试的协议。本版不涉及工具调用基准和 SWE-bench。
 
 \section{相关工作}\label{sec:related}
 
