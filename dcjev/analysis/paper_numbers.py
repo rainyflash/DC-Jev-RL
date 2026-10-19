@@ -529,6 +529,7 @@ def part3c(o, exp):
         o.num(f"ps_prefixes_{c}", str(e["prefixes"])); o.num(f"ps_value_{c}", f(e["value_mean"])); o.num(f"ps_dead_{c}", pct(e["value_zero_frac"]))
         sel = e["selection"]
         o.num(f"ps_selproblems_{c}", str(sel["problems"])); o.num(f"ps_valueall_{c}", f(sel["value_all"]))
+        o.num(f"ps_valueallpct_{c}", pts(sel["value_all"]))   # in percent, as the training audit's leaf accuracy (III-C)
         orc = sel["oracle_split_half_gain"]
         o.num(f"gain_{c}_oracle", f(orc["mean"], 3, sign=True)); o.num(f"gainlo_{c}_oracle", f(orc["ci95"][0], 3)); o.num(f"gainhi_{c}_oracle", f(orc["ci95"][1], 3))
         for name, k, _ in PREFIX_SIGNALS:

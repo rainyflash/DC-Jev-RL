@@ -27,8 +27,8 @@ keeping the two best-ranked prefixes raised the share of continuations ending co
 points (\S\ref{sec:res-prefix}). The prefixes differ: offline they are the base policy's, in training the policy's own
 as it learns. Its roots lead to correct answers more and more often (under \texttt{tree\_random},
 \NUM{auditval_firsthalf_treerand}\% of the audited leaves were correct in the first half of training and
-\NUM{auditval_secondhalf_treerand}\% in the second, against a mean value of \NUM{ps_valueall_128} for the base policy's
-prefixes offline), and the room for a choice, the best two in hindsight, shrank from \NUM{auditbest_firsthalf_treerand}
+\NUM{auditval_secondhalf_treerand}\% in the second, against \NUM{ps_valueallpct_128}\% of the continuations of the base
+policy's prefixes offline), and the room for a choice, the best two in hindsight, shrank from \NUM{auditbest_firsthalf_treerand}
 to \NUM{auditbest_secondhalf_treerand} points.
 
 \begin{table}[t]
@@ -63,9 +63,10 @@ isolates the judge's choice of roots; \texttt{rlvr} minus \texttt{tree\_random} 
 \label{tab:tree-paired}
 \end{table}
 
-\paragraph{Cost.} A tree generates every root, kept or not, and the continuations of the kept ones:
-\NUM{gentok_treekev} thousand tokens per step under \texttt{tree\_kev} and \NUM{gentok_treerand} thousand under
-\texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the last 20 steps). Scoring the roots with
+\paragraph{Cost.} A tree samples four roots of at most 128 tokens per prompt and continues two of them four times each,
+so it generates fewer tokens than flat sampling: \NUM{gentok_treekev} thousand per step under \texttt{tree\_kev} and
+\NUM{gentok_treerand} thousand under \texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the
+last 20 steps). Scoring the roots with
 \kev{} on the shared backbone is the only extra cost of the judge's choice.
 
 \begin{figure}[t]
