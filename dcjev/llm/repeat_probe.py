@@ -13,8 +13,9 @@ Two interventions, both leaving the final answer (the last boxed one, which the 
                  policy had stopped there; kept only if its final answer is the same
 Each judge scores every text as in GRPO: the solution clipped to max_solution_tokens (dcjev.llm.prompts.clip_solution),
 Kev-4B in bf16, merged, with shared-prefix scoring, and the AR judge (Qwen3.5-4B, one forward pass) on 'correct'.
-Report: per edit and source, the mean change of each judge's P(correct) on the completions the verifier accepts and on
-those it rejects, with a 95% bootstrap interval over problems and the share of completions whose score went up.
+Report: per edit and source, the mean change of each judge's P(correct) (and Kev-4B's P(genuine), the factor of Part
+II's rlvr_kev_gate) on the completions the verifier accepts and on those it rejects, with a 95% bootstrap interval over
+problems and the share of completions whose score went up.
 -> scores.jsonl.gz, repeat_probe.json
 """
 from __future__ import annotations
@@ -124,7 +125,8 @@ def report(rows, boot=10000):
         for v in (1, 0):
             sel = [(r, o) for r, o in pairs if r["v"] == v]
             if not sel: continue
-            for judge, get in (("kev_correct", lambda x: x["kev"]["correct"]), ("ar_correct", lambda x: x["ar"])):
+            for judge, get in (("kev_correct", lambda x: x["kev"]["correct"]), ("kev_genuine", lambda x: x["kev"]["genuine"]),
+                               ("ar_correct", lambda x: x["ar"])):
                 d = np.array([get(r) - get(o) for r, o in sel])
                 by = defaultdict(list)
                 for (r, _), x in zip(sel, d): by[r["id"]].append(x)

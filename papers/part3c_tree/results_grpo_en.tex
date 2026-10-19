@@ -1,0 +1,74 @@
+% Part III-C, results of the tree GRPO runs (included by main_en.tex).
+% DRAFT, written with seed 1 of both tree conditions; every claim is to be checked against both seeds and rlvr's three.
+
+\section{Training with tree rollouts}\label{sec:res-tree}
+
+Both tree conditions ran with \NUM{seeds_treekev} seeds of 200 steps, everything else as in Part II's \texttt{rlvr},
+which is the flat reference (\NUM{seeds_rlvr} seeds). Table~\ref{tab:tree-acc} gives the final policies' accuracies,
+Table~\ref{tab:tree-paired} the paired differences, Table~\ref{tab:tree-stats} what happened inside the trees during
+training, and Figure~\ref{fig:tree-curves} the training curves. The intervals resample problems and do not include the
+variation between seeds.
+
+\paragraph{The judge's choice is close to a random one.} Every tenth step the roots that were not kept are continued
+too, so we know what keeping the chosen two gained over keeping all four. Under \texttt{tree\_kev} the leaves of the
+two roots \kev{} ranked highest were correct \NUM{auditgain_all_treekev} points more often than the leaves of all four
+roots, averaged over the \NUM{auditgain_records_treekev} audited steps. Under \texttt{tree\_random}, whose choice is
+random, the same number is \NUM{auditgain_all_treerand}; it measures the noise of the audit. Keeping the best two roots
+in hindsight would have gained \NUM{auditbest_all_treekev}. On the leaves of every step, \kev{}'s \emph{on track}
+score of the root separates correct from incorrect leaves with an AUROC of \NUM{otauc_all_treekev} pooled over prompts,
+but only \NUM{otaucw_all_treekev} within a prompt, which is the comparison that decides which roots are kept
+(Table~\ref{tab:tree-stats}). Offline, on the base policy's solutions cut at 128 tokens, the within-problem AUROC was
+\NUM{aucw_128_kevtrack}, and keeping the two best-ranked prefixes raised the share of continuations ending correct by
+\NUM{gain_128_kevtrack} (\S\ref{sec:res-prefix}). The two measurements are not on the same prefixes: offline on the base policy's
+solutions, in training on the policy's own as it improves. Its roots lead to correct answers much more often (a mean
+leaf accuracy of \NUM{auditval_all_treekev}\% over the audits, against a mean value of \NUM{ps_valueall_128} for the
+base policy's prefixes offline), which leaves less to choose.
+
+\begin{table}[t]
+\centering\small
+\input{tables/tree_stats}
+\caption{Inside the trees during training (mean over steps and seeds): share of roots that had already ended within 128
+tokens; AUROC of \kev{}'s \emph{on track} score of the root for its leaves' verdicts, pooled and within prompt; and on
+the audited steps (every tenth), the leaf accuracy of all four roots and what keeping the chosen two, or the best two in
+hindsight, gained over it, in points; tokens generated per step (thousands, last 20 steps).}
+\label{tab:tree-stats}
+\end{table}
+
+% TODO after seed 2: final accuracies; tree_kev against tree_random (selection) and tree_random against rlvr (tree
+% shape), at step 200 and at step 100; whether the seed-1 gap of tree_kev survives.
+\paragraph{Final accuracy.} Table~\ref{tab:tree-acc}.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_acc}
+\caption{Final policies: accuracy in percent, seed mean $\pm$ standard deviation over seeds. MATH-500 and GSM8K: greedy.
+AMC23, AIME24 and AIME25: mean over 16 samples per problem at temperature 0.6. \texttt{rlvr}: flat sampling (Part II).}
+\label{tab:tree-acc}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_paired_treerand}
+\caption{Paired differences to \texttt{tree\_random} in percentage points: per problem, each condition's seed mean,
+averaged over problems, with a 95\% bootstrap interval over problems. \texttt{tree\_kev} minus \texttt{tree\_random}
+isolates the judge's choice of roots; \texttt{rlvr} minus \texttt{tree\_random} the tree shape.}
+\label{tab:tree-paired}
+\end{table}
+
+\paragraph{Cost.} A tree generates every root, kept or not, and the continuations of the kept ones:
+\NUM{gentok_treekev} thousand tokens per step under \texttt{tree\_kev} and \NUM{gentok_treerand} thousand under
+\texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the last 20 steps). Scoring the roots with
+\kev{} on the shared backbone is the only extra cost of the judge's choice.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../../experiments/part3c_tree/results/training_curves.pdf}
+\caption{Training curves (seed mean): verifier accuracy, completion tokens, share of groups with no correct completion
+and \kev{}'s $\pc$ on the training completions (10-step moving averages), and greedy accuracy on MATH-500 and the
+validation set every 50 steps.}
+\label{fig:tree-curves}
+\end{figure}
+
+\paragraph{Evaluation noise.} Across the \NUM{szruns_math500} runs in this comparison, the base model's MATH-500
+accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\%, and a run's accuracy changes by
+\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200.

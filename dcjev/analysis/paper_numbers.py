@@ -443,6 +443,10 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
                           ("groups_all_wrong", "allwrong", pct), ("groups_all_right", "allright", pct), ("kev_correct", "kevc", f),
                           ("truncated", "trunc", pct), ("lp_absdiff_mean", "lpdiff", lambda x: f(x, 3)), ("tis_clip_frac", "tisclip", lambda x: pct(x, 1))):
             if k in t: o.num(f"{tag}{nk}_{ck}", fm(t[k]))
+        # Tokens generated per step, in thousands: logged by the tree conditions (all roots and the continuations of the
+        # kept ones); for flat sampling it is the completion length times the completions per step.
+        if "gen_tokens" in t: o.num(f"{tag}gentok_{ck}", f(t["gen_tokens"] / 1000, 1))
+        elif "len_mean" in t and "completions_per_step" in e: o.num(f"{tag}gentok_{ck}", f(t["len_mean"] * e["completions_per_step"] / 1000, 1))
         if "seconds_per_step" in e: o.num(f"{tag}sps_{ck}", f(e["seconds_per_step"], 0))
         if "math500_kev_correct_auroc" in e:
             o.num(f"{tag}kevauc_{ck}", f(e["math500_kev_correct_auroc"])); o.num(f"{tag}kevm_{ck}", f(e["math500_kev_correct_mean"]))

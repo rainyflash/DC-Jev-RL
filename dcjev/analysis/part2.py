@@ -135,6 +135,8 @@ def main():
             e["train_last20"] = {k: float(np.mean([np.mean([r[k] for r in st]) for st in last])) for k in keys if all(k in st[0] for st in last)}
             e["train_last20"]["kev_correct"] = float(np.mean([np.mean([r["kev"]["correct"] for r in st]) for st in last]))
             e["seconds_per_step"] = float(np.mean([np.mean([sum(r["seconds"].values()) for r in st]) for st in steps if st]))
+            cfg = [r for s in seeds.values() for r in s["log"] if r["kind"] == "config"]
+            if cfg: e["completions_per_step"] = int(cfg[0]["prompts"] * cfg[0]["group"])
             # Per-step judge statistics of the label (III-B) and tree (III-C) conditions: per seed the mean over the steps
             # of a window, then the mean over seeds. Windows are by step number, since some statistics are not logged on
             # every step (the audit of the roots not kept, every --audit_every steps; an AUROC of a step without both
