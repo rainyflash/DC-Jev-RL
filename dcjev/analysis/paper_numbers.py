@@ -496,6 +496,10 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         sk = x.replace("_", "")
         o.num(f"{tag}lecruns_{sk}", str(v["runs"])); o.num(f"{tag}lecabs_{sk}", pts(v["mean_abs"]))
         o.num(f"{tag}lecmax_{sk}", pts(v["max_abs"])); o.num(f"{tag}lecmean_{sk}", pts(v["mean"], sign=True))
+    for x, v in s.get("repeat_eval", {}).items():   # repeat noise: the same final weights evaluated twice
+        sk = x.replace("_", "")
+        o.num(f"{tag}rptruns_{sk}", str(v["runs"])); o.num(f"{tag}rptabs_{sk}", pts(v["mean_abs"]))
+        o.num(f"{tag}rptmax_{sk}", pts(v["max_abs"])); o.num(f"{tag}rptmean_{sk}", pts(v["mean"], sign=True))
 
 
 def part2(o, exp):

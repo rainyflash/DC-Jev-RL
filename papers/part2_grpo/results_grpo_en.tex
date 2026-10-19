@@ -117,8 +117,10 @@ validation set every 50 steps.}
 
 \paragraph{Evaluation noise.} Every run evaluates the base model at step 0. Across the \NUM{szruns_math500} runs, MATH-500
 accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\% (standard deviation
-\NUM{szsd_math500} points) and validation accuracy from \NUM{szmin_val}\% to \NUM{szmax_val}\%. Differences of a point
-between two final policies are within this noise.
+\NUM{szsd_math500} points) and validation accuracy from \NUM{szmin_val}\% to \NUM{szmax_val}\%. The final weights of
+each run are evaluated twice on MATH-500, both times greedily: at step 200 with the periodic evaluations, and in the
+final evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
+(\NUM{rptruns_math500} runs). Differences of a point between two final policies are within this noise.
 
 \subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
 

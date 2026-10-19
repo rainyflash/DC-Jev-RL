@@ -1,0 +1,19 @@
+% Part III-C, abstract (included by main_en.tex).
+Tree rollouts sample a few prefixes per prompt and branch from them, so that the branches share the prefix tokens. A
+judge that recognises a promising partial solution could choose where to branch. We test this with Qwen3.5-4B-Base on
+MATH. Offline, \kev{}, an autoregressive judge of the same size and the policy's own log-probability all predict
+across problems whether a 128-token prefix will end correct (AUROC \NUM{auc_128_logprob}--\NUM{auc_128_artrack}), but
+separate one problem's prefixes only weakly (\NUM{aucw_128_kevcorrect}--\NUM{aucw_128_logprob}); keeping the two of
+four prefixes \kev{} ranks highest raises the share of correct continuations by \NUM{gainpt_128_kevtrack} points,
+the policy's log-probability by \NUM{gainpt_128_logprob}. In GRPO with tree rollouts (four roots of 128 tokens, two of
+them continued four times each, 200 steps, two seeds), \kev{}'s choice of roots raised the share of correct leaves by
+\NUM{auditgain_all_treekev} points \ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}}, a random choice
+by \NUM{auditgain_all_treerand}, and the final policies are as accurate as with random roots on four of five
+benchmarks (GSM8K: \NUM{dvtreerand_treekev_gsm} \ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}}).
+Both tree conditions end above flat GRPO in the seed mean (MATH-500 \NUM{d_treerand_math} and \NUM{d_treekev_math}
+points, AIME24 \NUM{d_treerand_aime24} and \NUM{d_treekev_aime24}), but each with one seed well above flat sampling and
+one at its level, so whether the tree shape helps is open. One seed with \kev{}'s choice came to repeat its solution
+after the answer, which the verifier's reward does not penalise. The pruning rule of the withdrawn earlier versions,
+prune a prefix when the judge's $p(\text{yes})<0.3$, prunes \NUM{thrpruned_128_kevtrack} of the prefixes. This version
+replaces earlier versions whose results were not produced by experiments. Code, logs and every number in this paper
+are in the repository.

@@ -1,5 +1,5 @@
 % Part III-C, results of the tree GRPO runs (included by main_en.tex).
-% DRAFT, written with seed 1 of both tree conditions; every claim is to be checked against both seeds and rlvr's three.
+% Written with both seeds of both tree conditions and two of rlvr's three seeds; to be checked again with rlvr's third.
 
 \section{Training with tree rollouts}\label{sec:res-tree}
 
@@ -42,9 +42,24 @@ step (thousands, last 20 steps), not counting the audit's continuations.}
 \label{tab:tree-stats}
 \end{table}
 
-% TODO after seed 2: final accuracies; tree_kev against tree_random (selection) and tree_random against rlvr (tree
-% shape), at step 200 and at step 100; whether the seed-1 gap of tree_kev survives.
-\paragraph{Final accuracy.} Table~\ref{tab:tree-acc}.
+% TODO when rlvr seed 3 is in: add its accuracies (acc_rlvr_math_s3, acc_rlvr_aime24_s3) to the lists below.
+\paragraph{Final accuracy: no effect of the judge's choice; the tree shape undecided.} The two tree conditions end at
+the same accuracy. \texttt{tree\_kev} minus \texttt{tree\_random} is \NUM{dvtreerand_treekev_math}
+\ci{\NUM{dvtreerandlo_treekev_math}}{\NUM{dvtreerandhi_treekev_math}} points on MATH-500,
+\NUM{dvtreerand_treekev_amc} \ci{\NUM{dvtreerandlo_treekev_amc}}{\NUM{dvtreerandhi_treekev_amc}} on AMC23 and
+\NUM{dvtreerand_treekev_aime24} \ci{\NUM{dvtreerandlo_treekev_aime24}}{\NUM{dvtreerandhi_treekev_aime24}} on AIME24
+(Table~\ref{tab:tree-paired}); only the interval on GSM8K, \NUM{dvtreerand_treekev_gsm}
+\ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}}, excludes zero. Both tree conditions end above flat
+sampling in the seed mean (\NUM{d_treerand_math} and \NUM{d_treekev_math} points on MATH-500, \NUM{d_treerand_aime24}
+and \NUM{d_treekev_aime24} on AIME24, against \texttt{rlvr}), but not seed by seed: each has one seed that ends well
+above \texttt{rlvr} and one that ends at its level. On MATH-500 \texttt{tree\_random} ends at
+\NUM{acc_treerand_math_s1}\% and \NUM{acc_treerand_math_s2}\%, \texttt{tree\_kev} at \NUM{acc_treekev_math_s1}\% and
+\NUM{acc_treekev_math_s2}\%, and \texttt{rlvr} at \NUM{acc_rlvr_math_s1}\% and \NUM{acc_rlvr_math_s2}\%; on AIME24 at
+\NUM{acc_treerand_aime24_s1}\% and \NUM{acc_treerand_aime24_s2}\%, \NUM{acc_treekev_aime24_s1}\% and
+\NUM{acc_treekev_aime24_s2}\%, and \NUM{acc_rlvr_aime24_s1}\% and \NUM{acc_rlvr_aime24_s2}\%. The intervals over
+problems do not include this variation between seeds, so whether the tree shape itself helps, two seeds cannot tell.
+At step 100 neither tree condition was ahead on MATH-500 (\NUM{st100acc_treerand_math}\% and
+\NUM{st100acc_treekev_math}\%, against \NUM{st100acc_rlvr_math}\% for \texttt{rlvr}).
 
 \begin{table}[t]
 \centering\small
@@ -63,17 +78,22 @@ isolates the judge's choice of roots; \texttt{rlvr} minus \texttt{tree\_random} 
 \label{tab:tree-paired}
 \end{table}
 
-% TODO after seed 2: check every number of this paragraph; final MATH-500 numbers of seed 2.
-\paragraph{One seed of \texttt{tree\_kev} began to repeat itself.} From step \NUM{roonset_treekev_s2} on, the training
-completions of \texttt{tree\_kev}'s seed 2 repeat part of the solution after the first answer more and more often:
-\NUM{roansrep_treekev_s2_0} of them in steps 0--24, \NUM{roansrep_treekev_s2_100} in steps 100--124 and
-\NUM{roansrep_treekev_s2_175} in steps 175--199 (Table~\ref{tab:tree-repeat}). They grew from
-\NUM{rotok_treekev_s2_0} to \NUM{rotok_treekev_s2_175} tokens on average; in the last 25 steps
-\NUM{rotrunc_treekev_s2_175} of them were cut off at the length limit and the verifier accepted
-\NUM{roright_treekev_s2_175}. Seed 1 of \texttt{tree\_kev} and
-both seeds of \texttt{tree\_random} did not (at most \NUM{roansrepmax_treekev_s1}, \NUM{roansrepmax_treerand_s1} and
-\NUM{roansrepmax_treerand_s2} in any window after step 50). The final policy of seed 2 repeats after its first answer
-on \NUM{sansrep_treekev_s2} of the MATH-500 problems, that of seed 1 on \NUM{sansrep_treekev_s1}. This is not the
+\paragraph{One seed of \texttt{tree\_kev} began to repeat itself.} The training completions of \texttt{tree\_kev}'s
+seed 2 came to repeat part of the solution after the first answer: \NUM{roansrep_treekev_s2_0} of them did in steps
+0--24, \NUM{roansrep_treekev_s2_50} in steps 50--74, \NUM{roansrep_treekev_s2_100} in steps 100--124,
+\NUM{roansrep_treekev_s2_150} in steps 150--174 and \NUM{roansrep_treekev_s2_175} in steps 175--199
+(Table~\ref{tab:tree-repeat}; the share first exceeded a fifth in the window from step \NUM{roonset_treekev_s2}). They
+grew from \NUM{rotok_treekev_s2_0} to \NUM{rotok_treekev_s2_175} tokens on average; in the last 25 steps
+\NUM{rotrunc_treekev_s2_175} of them were cut off at the length limit of 1024 tokens and the verifier accepted
+\NUM{roright_treekev_s2_175}. Seed 1 of \texttt{tree\_kev} and both seeds of \texttt{tree\_random} did not (at most
+\NUM{roansrepmax_treekev_s1}, \NUM{roansrepmax_treerand_s1} and \NUM{roansrepmax_treerand_s2} in any window from step
+50 on). The final policy of seed 2 repeats after its first answer
+on \NUM{sansrep_treekev_s2} of the MATH-500 problems, that of seed 1 on \NUM{sansrep_treekev_s1}; it writes
+\NUM{stok_treekev_s2} tokens per solution against \NUM{stok_treekev_s1}, and its accuracy, \NUM{acc_treekev_math_s2}\%,
+is that of \texttt{rlvr}. Several boxed answers alone are not repetition: seed 2 of \texttt{tree\_random} gives more
+than one on \NUM{sboxmany_treerand_s2} of the MATH-500 problems (seed 1: \NUM{sboxmany_treerand_s1}) without
+repeating lines (\NUM{srep_treerand_s2} of its lines repeat an earlier one, against \NUM{srep_treekev_s2} for seed 2 of
+\texttt{tree\_kev}; Table~\ref{tab:tree-style}). This is not the
 judge paying for repetition, as in Part II: the reward is the verifier's alone, and \kev{} sees only a solution's first
 128 tokens. Under the verifier, which reads the last answer, a repetition that restates the answer costs nothing.
 Whether the judge's choice of roots made the policy repeat itself, one seed of two cannot tell.
@@ -87,11 +107,20 @@ final policy's greedy MATH-500 completions.}
 \label{tab:tree-repeat}
 \end{table}
 
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_style}
+\caption{What the final policies write on MATH-500 (greedy, seed mean): completion tokens, share truncated at 2048
+tokens, share of lines (of at least 20 characters) that repeat an earlier line of the same solution, share with more
+than one boxed answer or none (the verifier reads the last one), and \kev{}'s $\pc$ for right and for wrong answers.}
+\label{tab:tree-style}
+\end{table}
+
 \paragraph{Cost.} A tree samples four roots of at most 128 tokens per prompt and continues two of them four times each,
-so it generates fewer tokens than flat sampling: \NUM{gentok_treekev} thousand per step under \texttt{tree\_kev} and
-\NUM{gentok_treerand} thousand under \texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the
-last 20 steps). Scoring the roots with
-\kev{} on the shared backbone is the only extra cost of the judge's choice.
+so for the same completion length it generates fewer tokens than flat sampling: \NUM{gentok_treerand} thousand per
+step under \texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the last 20 steps).
+\texttt{tree\_kev} generated \NUM{gentok_treekev} thousand, because the completions of its seed 2 grew long (above).
+Scoring the roots with \kev{} on the shared backbone is the only extra cost of the judge's choice.
 
 \begin{figure}[t]
 \centering
@@ -104,4 +133,8 @@ validation set every 50 steps.}
 
 \paragraph{Evaluation noise.} Across the \NUM{szruns_math500} runs in this comparison, the base model's MATH-500
 accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\%, and a run's accuracy changes by
-\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200.
+\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200. The final weights of each run are
+evaluated twice on MATH-500, both times greedily: at step 200 with the periodic evaluations, and in the final
+evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
+(\NUM{rptruns_math500} runs). A difference of about a point between two single evaluations is within the noise of the
+evaluation itself.

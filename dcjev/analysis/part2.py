@@ -15,7 +15,8 @@ fraction of seeds that solve it; sampled sets: the mean over seeds x samples); t
 over problems, with a bootstrap over problems (10k resamples) for the 95% interval. Seed-level spread is reported too.
 step0_eval: the spread of the step-0 evaluations of all included runs (the same base model each time), a direct
 measure of the evaluation noise of greedy decoding on vLLM. late_eval_change: how much a run's accuracy changes between
-its last two periodic evaluations, late in training (checkpoint noise).
+its last two periodic evaluations, late in training (checkpoint noise). repeat_eval: the final evaluation minus the
+periodic one at the last step, two greedy evaluations of the same weights.
 """
 from __future__ import annotations
 
@@ -228,6 +229,19 @@ def main():
     rep["late_eval_change"] = {s: {"runs": len(v), "steps": sorted({f"{p}-{q}" for p, q, _ in v}),
                                    "mean_abs": float(np.mean([abs(d) for _, _, d in v])), "max_abs": float(max(abs(d) for _, _, d in v)),
                                    "mean": float(np.mean([d for _, _, d in v]))} for s, v in ch.items()}
+    # Repeat noise: at the last step the periodic evaluation and the final one evaluate the same weights, greedy, in
+    # different server states (final minus periodic; MATH-500 is in both).
+    if a.step is None:
+        rr = defaultdict(list)
+        for c in order:
+            for r in runs.get(c, {}).values():
+                steps = next((x["steps"] for x in r["log"] if x["kind"] == "config"), None)
+                last = [x for x in r["log"] if x["kind"] == "eval" and x["step"] == steps]
+                for s in SETS:
+                    if last and isinstance(last[0].get(s), dict) and isinstance(r["res"].get(s), dict) and r["res"][s]["samples"] == 1:
+                        rr[s].append(r["res"][s]["acc"] - last[0][s]["acc"])
+        rep["repeat_eval"] = {s: {"runs": len(v), "mean_abs": float(np.mean(np.abs(v))), "max_abs": float(np.max(np.abs(v))),
+                                  "mean": float(np.mean(v))} for s, v in rr.items()}
     for b in baselines:
         base = runs.get(b, {})
         rng = np.random.default_rng(0)

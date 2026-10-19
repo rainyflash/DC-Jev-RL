@@ -100,7 +100,10 @@ averages), and greedy accuracy on MATH-500 and the validation set every 50 steps
 
 \paragraph{Evaluation noise.} Across the \NUM{szruns_math500} runs in this comparison, the base model's MATH-500
 accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\%, and a run's accuracy changes by
-\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200.
+\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200. The final weights of each run are
+evaluated twice on MATH-500, both times greedily: at step 200 with the periodic evaluations, and in the final
+evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
+(\NUM{rptruns_math500} runs).
 
 \subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
 
