@@ -106,14 +106,15 @@ def main():
     ap.add_argument("--root", action="append", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--conds", default="", help="conditions to include, in this order (default: all found)")
-    ap.add_argument("--baseline", default="rlvr")
+    ap.add_argument("--baseline", default="rlvr", help="condition(s) for the paired differences, comma-separated; the first is the main one")
     ap.add_argument("--step", type=int, default=None)
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     conds = [c for c in a.conds.split(",") if c]
     runs = load_runs(a.root, conds, a.step)
     order = conds or [c for c in CONDS if c in runs] + sorted(c for c in runs if c not in CONDS)
-    rep = {"compared_at": "final" if a.step is None else f"step {a.step}", "conditions": {}, "paired_vs_" + a.baseline: {}}
+    baselines = a.baseline.split(",")
+    rep = {"compared_at": "final" if a.step is None else f"step {a.step}", "conditions": {}, **{"paired_vs_" + b: {} for b in baselines}}
     for c in order:
         seeds = runs.get(c)
         if not seeds: continue
@@ -176,22 +177,23 @@ def main():
     rep["late_eval_change"] = {s: {"runs": len(v), "steps": sorted({f"{p}-{q}" for p, q, _ in v}),
                                    "mean_abs": float(np.mean([abs(d) for _, _, d in v])), "max_abs": float(max(abs(d) for _, _, d in v)),
                                    "mean": float(np.mean([d for _, _, d in v]))} for s, v in ch.items()}
-    base = runs.get(a.baseline, {})
-    rng = np.random.default_rng(0)
-    for c in order:
-        seeds = runs.get(c)
-        if c == a.baseline or not base or not seeds: continue
-        rep["paired_vs_" + a.baseline][c] = {}
-        for s in SETS:
-            sets = [r["pp"].get(s, {}) for r in list(seeds.values()) + list(base.values())]
-            ids = sorted(set.intersection(*[set(x) for x in sets])) if all(sets) else []
-            if not ids: continue
-            x = np.array([np.mean([r["pp"][s][i] for r in seeds.values()]) for i in ids])
-            y = np.array([np.mean([r["pp"][s][i] for r in base.values()]) for i in ids])
-            d = x - y
-            boots = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(10000)]
-            rep["paired_vs_" + a.baseline][c][s] = {"problems": len(ids), "diff": float(d.mean()),
-                                                    "ci95": [float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))]}
+    for b in baselines:
+        base = runs.get(b, {})
+        rng = np.random.default_rng(0)
+        for c in order:
+            seeds = runs.get(c)
+            if c == b or not base or not seeds: continue
+            rep["paired_vs_" + b][c] = {}
+            for s in SETS:
+                sets = [r["pp"].get(s, {}) for r in list(seeds.values()) + list(base.values())]
+                ids = sorted(set.intersection(*[set(x) for x in sets])) if all(sets) else []
+                if not ids: continue
+                x = np.array([np.mean([r["pp"][s][i] for r in seeds.values()]) for i in ids])
+                y = np.array([np.mean([r["pp"][s][i] for r in base.values()]) for i in ids])
+                d = x - y
+                boots = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(10000)]
+                rep["paired_vs_" + b][c][s] = {"problems": len(ids), "diff": float(d.mean()),
+                                               "ci95": [float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))]}
     (out / "summary.json").write_text(json.dumps(rep, indent=1))
 
     os.environ["MPLBACKEND"] = "Agg"   # a notebook's inline backend (set by Colab) would fail outside the notebook

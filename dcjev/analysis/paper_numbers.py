@@ -396,8 +396,7 @@ def base_eval(exp):
 def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
     """Numbers and tables of a dcjev/analysis/part2.py summary: accuracy per condition (seed mean and standard deviation),
     paired per-problem differences to the baseline (percentage points, 95% bootstrap over problems), training statistics."""
-    bl = next(k for k in s if k.startswith("paired_vs_"))
-    pv, conds = s[bl], list(s["conditions"])
+    conds = list(s["conditions"])
     head = " & ".join(lab for _, _, lab in sets)
     rows = []
     if base:
@@ -419,17 +418,23 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")
     o.table(f"{tag}grpo_acc", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seeds & " + head
             + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
-    rows = []
-    for c, d in pv.items():   # two lines per condition: the differences, then their intervals in a smaller font
-        ck, cells, cis = COND_KEY[c], [], []
-        for x, sk, _ in sets:
-            if x not in d: cells.append("--"); cis.append(""); continue
-            v = d[x]
-            o.num(f"{tag}d_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"{tag}dlo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"{tag}dhi_{ck}_{sk}", pts(v["ci95"][1]))
-            cells.append(pts(v["diff"], sign=True)); cis.append(f"{{\\footnotesize \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}}}")
-        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\\n & " + " & ".join(cis) + " \\\\[2pt]")
-    o.table(f"{tag}grpo_paired", "\\begin{tabular}{@{}l" + "c" * len(sets) + "@{}}\n\\toprule\nminus " + tt(bl[len("paired_vs_"):]) + " & " + head
-            + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    # Paired differences: to the main baseline as d_<cond>_<set> (table grpo_paired), to any further baseline b as
+    # dv<b>_<cond>_<set>, dv<b>lo_... and dv<b>hi_... (table grpo_paired_<b>), e.g. dvtreerand_treekev_math.
+    for n, bk in enumerate(k for k in s if k.startswith("paired_vs_")):
+        b = bk[len("paired_vs_"):]
+        pre, name = ("d", "grpo_paired") if n == 0 else (f"dv{COND_KEY[b]}", f"grpo_paired_{COND_KEY[b]}")
+        rows = []
+        for c, d in s[bk].items():   # two lines per condition: the differences, then their intervals in a smaller font
+            ck, cells, cis = COND_KEY[c], [], []
+            for x, sk, _ in sets:
+                if x not in d: cells.append("--"); cis.append(""); continue
+                v = d[x]
+                if n == 0: o.num(f"{tag}d_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"{tag}dlo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"{tag}dhi_{ck}_{sk}", pts(v["ci95"][1]))
+                else: o.num(f"{tag}{pre}_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"{tag}{pre}lo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"{tag}{pre}hi_{ck}_{sk}", pts(v["ci95"][1]))
+                cells.append(pts(v["diff"], sign=True)); cis.append(f"{{\\footnotesize \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}}}")
+            rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\\n & " + " & ".join(cis) + " \\\\[2pt]")
+        o.table(f"{tag}{name}", "\\begin{tabular}{@{}l" + "c" * len(sets) + "@{}}\n\\toprule\nminus " + tt(b) + " & " + head
+                + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     rows = []
     for c in conds:
         e, ck = s["conditions"][c], COND_KEY[c]
