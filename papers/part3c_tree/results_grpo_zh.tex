@@ -32,6 +32,16 @@
 \label{tab:tree-paired}
 \end{table}
 
+% TODO 种子 2 之后：核对本段每个数字；种子 2 的最终 MATH-500 数字。
+\paragraph{\texttt{tree\_kev} 的一个种子开始重复自己。} 从第 \NUM{roonset_treekev_s2} 步起，\texttt{tree\_kev} 种子 2 的训练补全越来越常在第一个答案之后重复解答的一部分：第 0--24 步中有 \NUM{roansrep_treekev_s2_0}，第 100--124 步中有 \NUM{roansrep_treekev_s2_100}，第 175--199 步中有 \NUM{roansrep_treekev_s2_175}（表~\ref{tab:tree-repeat}）。补全的平均长度从 \NUM{rotok_treekev_s2_0} 增加到 \NUM{rotok_treekev_s2_175} 个词元；在最后 25 步中，\NUM{rotrunc_treekev_s2_175} 的补全在长度上限处被截断，验证器接受了 \NUM{roright_treekev_s2_175}。\texttt{tree\_kev} 的种子 1 和 \texttt{tree\_random} 的两个种子都没有出现这种情况（第 50 步以后任何一个窗口中最多分别为 \NUM{roansrepmax_treekev_s1}、\NUM{roansrepmax_treerand_s1} 和 \NUM{roansrepmax_treerand_s2}）。种子 2 的最终策略在 \NUM{sansrep_treekev_s2} 的 MATH-500 题目上于第一个答案之后重复，种子 1 为 \NUM{sansrep_treekev_s1}。这不是第二部分中那种评判模型为重复付分的情形：奖励只来自验证器，而 \kev{} 只看到解答的前 128 个词元。验证器读取最后一个答案，因此重述答案的重复在它那里没有任何代价。重复是否由评判模型选根引起，两个种子中的一个无法回答。
+
+\begin{table}[t]
+\centering\small
+\input{tables/rollout_repeat}
+\caption{在第一个 boxed 答案之后重复解答一部分（出现一行至少 20 个字符、此前已出现过的内容）的补全比例：每次运行在五个 25 步窗口中的训练补全，以及最终策略在 MATH-500 上的贪心补全。}
+\label{tab:tree-repeat}
+\end{table}
+
 \paragraph{代价。} 一棵树为每个提示采样四个最长 128 词元的根，并把其中两个各续写四次，因此生成的词元比扁平采样少：\texttt{tree\_kev} 每步生成 \NUM{gentok_treekev} 千个词元，\texttt{tree\_random} 为 \NUM{gentok_treerand} 千个，扁平采样为 \NUM{gentok_rlvr} 千个（最后 20 步）。在共享主干上用 \kev{} 给根打分，是评判模型选根唯一的额外代价。
 
 \begin{figure}[t]
