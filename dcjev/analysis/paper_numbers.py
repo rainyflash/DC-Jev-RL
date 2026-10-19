@@ -474,8 +474,14 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         o.num(f"{tag}stok_{ck}", f(st["tokens"], 0)); o.num(f"{tag}strunc_{ck}", pct(st["truncated"], 1))
         o.num(f"{tag}sboxmany_{ck}", pct(st["boxed_many"])); o.num(f"{tag}sboxnone_{ck}", pct(st["boxed_none"], 1))
         if "repeated_lines" in st: o.num(f"{tag}srep_{ck}", pct(st["repeated_lines"], 1))
+        if "repeats_after_answer" in st: o.num(f"{tag}sansrep_{ck}", pct(st["repeats_after_answer"]))
         for k in ("kev_right", "kev_wrong"):
             if k in st: o.num(f"{tag}s{k.replace('_', '')}_{ck}", f(st[k]))
+        for n, x in s["conditions"][c].get("math500_style_per_seed", {}).items():   # e.g. srep_treekev_s2
+            o.num(f"{tag}stok_{ck}_s{n}", f(x["tokens"], 0)); o.num(f"{tag}strunc_{ck}_s{n}", pct(x["truncated"], 1))
+            o.num(f"{tag}sboxmany_{ck}_s{n}", pct(x["boxed_many"]))
+            if "repeated_lines" in x: o.num(f"{tag}srep_{ck}_s{n}", pct(x["repeated_lines"], 1))
+            if "repeats_after_answer" in x: o.num(f"{tag}sansrep_{ck}_s{n}", pct(x["repeats_after_answer"]))
         rows.append(f"{tt(c)} & {f(st['tokens'], 0)} & {pct(st['truncated'], 1)} & {pct(st.get('repeated_lines'), 1)} & {pct(st['boxed_many'])} & "
                     f"{pct(st['boxed_none'], 1)} & {f(st.get('kev_right'))} & {f(st.get('kev_wrong'))} \\\\")
     if rows:
@@ -798,13 +804,39 @@ def tree_stats(o, s):
                 "per step (k) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
+RW_COLS = (0, 50, 100, 150, 175)   # the 25-step windows of training shown in table rollout_repeat
+
+
+def rollout_repeat(o, s):
+    """Part III-C: the training completions per 25-step window (part2.rollout_windows; the tree runs keep their
+    rollouts), per run. Macros ro<stat>_<cond>_s<seed>_<first step>, stat ansrep (share that repeat part of the solution
+    after the first answer), rep (repeated lines), boxmany, trunc, tok, right."""
+    rows = []
+    for c, e in s["conditions"].items():
+        ck, final = COND_KEY[c], e.get("math500_style_per_seed", {})
+        for n, ws in e.get("rollout_windows", {}).items():
+            by = {w["steps"][0]: w for w in ws}
+            for w in ws:
+                b = w["steps"][0]
+                o.num(f"roansrep_{ck}_s{n}_{b}", pct(w["repeats_after_answer"])); o.num(f"rorep_{ck}_s{n}_{b}", pct(w["repeated_lines"], 1))
+                o.num(f"roboxmany_{ck}_s{n}_{b}", pct(w["boxed_many"])); o.num(f"rotrunc_{ck}_s{n}_{b}", pct(w["truncated"]))
+                o.num(f"rotok_{ck}_s{n}_{b}", f(w["tokens"], 0)); o.num(f"roright_{ck}_s{n}_{b}", pct(w["right"]))
+            cells = [pct(by[b]["repeats_after_answer"]) if b in by else "--" for b in RW_COLS]
+            fin = final.get(n, {}).get("repeats_after_answer")
+            rows.append(f"{tt(c)} & {n} & " + " & ".join(cells) + f" & {pct(fin)} \\\\")
+    if rows:
+        o.table("rollout_repeat", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & \\multicolumn{5}{c}{training completions, steps} & final \\\\ "
+                "\\cmidrule(lr){3-7}\ncondition & seed & " + " & ".join(f"{b}--{b + 24}" for b in RW_COLS) + " & MATH-500 \\\\ \\midrule\n"
+                + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part3c_grpo(o, exp):
     for name, tag in (("summary.json", ""), ("summary_step100.json", "st100")):
         sm = exp / "part3c_tree" / "results" / name
         if not sm.exists(): continue
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, tag=tag, base=base_eval(exp) if not tag else None)
-        if not tag: tree_stats(o, s)
+        if not tag: tree_stats(o, s); rollout_repeat(o, s)
 
 
 def main():

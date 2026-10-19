@@ -61,6 +61,34 @@ def repeated_lines(text, min_len=20):
     return rep / n if n else 0.0
 
 
+def repeats_after_answer(text, min_len=20):
+    """Whether a line of at least min_len characters after the first boxed answer repeats a line before it: the solution,
+    or part of it, written again after it was answered."""
+    i = text.find("\\boxed")
+    if i < 0: return False
+    seen = {l.strip() for l in text[:i].split("\n") if len(l.strip()) >= min_len}
+    return any(len(l.strip()) >= min_len and l.strip() in seen for l in text[i:].split("\n"))
+
+
+def rollout_windows(path, width=25):
+    """A run's training completions (rollouts.jsonl.gz, kept for the tree runs of III-C) per window of `width` steps:
+    completions, mean tokens, share truncated, share the verifier accepts, mean share of repeated lines, share with more
+    than one boxed answer, share that repeat part of the solution after its first answer."""
+    w = defaultdict(list)
+    with gzip.open(path, "rt") as f:
+        for l in f:
+            r = json.loads(l); t = r["text"]
+            w[r["step"] // width].append((r["n_tok"], r["finish"] == "length", r["v"], repeated_lines(t), t.count("\\boxed") > 1,
+                                          repeats_after_answer(t)))
+    out = []
+    for k in sorted(w):
+        x = np.array(w[k], dtype=float)
+        out.append({"steps": [k * width, k * width + width - 1], "n": len(x), "tokens": float(x[:, 0].mean()),
+                    "truncated": float(x[:, 1].mean()), "right": float(x[:, 2].mean()), "repeated_lines": float(x[:, 3].mean()),
+                    "boxed_many": float(x[:, 4].mean()), "repeats_after_answer": float(x[:, 5].mean())})
+    return out
+
+
 def style(path, sname="math500"):
     """What the policy's completions on one set look like: tokens, truncation, how many give more than one boxed answer
     or none (the verifier reads the last one), the share of repeated lines, and Kev-4B's P(correct) for the right and
@@ -74,7 +102,8 @@ def style(path, sname="math500"):
     boxes = [r["text"].count("\\boxed") + r["text"].count("\\fbox") for r in recs]
     out = {"tokens": float(np.mean([r["n_tok"] for r in recs])), "truncated": float(np.mean([r["finish"] == "length" for r in recs])),
            "boxed_many": float(np.mean([b > 1 for b in boxes])), "boxed_none": float(np.mean([b == 0 for b in boxes])),
-           "repeated_lines": float(np.mean([repeated_lines(r["text"]) for r in recs]))}
+           "repeated_lines": float(np.mean([repeated_lines(r["text"]) for r in recs])),
+           "repeats_after_answer": float(np.mean([repeats_after_answer(r["text"]) for r in recs]))}
     for v, k in ((1, "kev_right"), (0, "kev_wrong")):
         xs = [r["kev"]["correct"] for r in recs if r["v"] == v and r.get("kev")]
         if xs: out[k] = float(np.mean(xs))
@@ -99,7 +128,9 @@ def load_runs(roots, conds, step=None):
                 if not ev or not comp.exists(): continue
                 res = {k: v for k, v in ev[0].items() if isinstance(v, dict)}
             if seed in runs[cond]: raise ValueError(f"{cond} s{seed} found in two roots")
-            runs[cond][seed] = {"res": res, "log": log, "pp": per_problem(comp), "style": style(comp)}
+            ro = d / "rollouts.jsonl.gz"
+            runs[cond][seed] = {"res": res, "log": log, "pp": per_problem(comp), "style": style(comp),
+                                "rollouts": rollout_windows(ro) if ro.exists() and step is None else None}
     return runs
 
 
@@ -125,7 +156,11 @@ def main():
             xs = [seeds[k]["res"][s]["acc"] for k in sorted(seeds) if s in seeds[k]["res"]]   # in the order of e["seeds"]
             if xs: e[s] = {"mean": float(np.mean(xs)), "std": float(np.std(xs, ddof=1)) if len(xs) > 1 else None, "per_seed": xs}
         st = [r["style"] for r in seeds.values() if r["style"]]
-        if st: e["math500_style"] = {k: float(np.mean([x[k] for x in st if k in x])) for k in st[0]}
+        if st:
+            e["math500_style"] = {k: float(np.mean([x[k] for x in st if k in x])) for k in st[0]}
+            e["math500_style_per_seed"] = {str(k): seeds[k]["style"] for k in sorted(seeds) if seeds[k]["style"]}
+        rw = {str(k): seeds[k]["rollouts"] for k in sorted(seeds) if seeds[k].get("rollouts")}
+        if rw: e["rollout_windows"] = rw
         m5 = [r["res"]["math500"] for r in seeds.values() if "math500" in r["res"]]
         if m5 and "kev" in m5[0]:
             e["math500_kev_correct_mean"] = float(np.mean([x["kev"]["correct"] for x in m5]))
