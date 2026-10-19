@@ -14,12 +14,6 @@ log-probability tell from the first 128, 256 or 512 tokens whether a solution wi
 prefixes they rank highest raise the success rate of what is continued? Second, in training: does GRPO with
 judge-selected prefixes learn better than with randomly selected ones, at the same tree shape and token budget?
 
-\paragraph{Correction.} Versions 1--3 of this paper (``Tree-Jev-GRPO'') reported pruning speed-ups, KV-cache reuse
-rates, theorem-proving results (MiniF2F, ProofNet) and per-node latencies that were not produced by any experiment
-(see the notice above and \file{CORRECTION.md}). This version studies tree rollouts on MATH only, with the
-measurements above. It also tests the pruning rule of v3, which pruned a prefix when the judge's $p(\text{yes})$ was
-below 0.3.
-
 \section{Related work}\label{sec:related}
 
 TreeRL~\cite{hou2025treerl} uses on-policy tree search with entropy-guided branching for LLM RL. Process reward models

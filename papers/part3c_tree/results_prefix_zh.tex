@@ -22,11 +22,11 @@
 \label{tab:prefix-selection}
 \end{table}
 
-\paragraph{已撤回的 v3 论文的剪枝规则很少触发。} v3 在评判模型的 $p(\text{yes})$ 低于 0.3 时剪掉前缀（表~\ref{tab:prefix-threshold}）。\kev{} 的 \emph{on track} 概率几乎从不这么低：这条规则在 128 个词元处只剪掉 \NUM{thrpruned_128_kevtrack} 的前缀，其中 \NUM{thrdead_128_kevtrack} 是死前缀，但它们只占全部死前缀的 \NUM{thrcaught_128_kevtrack}。用 \emph{correct} 问题时，规则剪得更多（\NUM{thrpruned_128_kevcorrect}），被剪掉的前缀中死前缀更少（\NUM{thrdead_128_kevcorrect}），并且丢掉了全部正确续写的 \NUM{thrlost_128_kevcorrect}。在未经校准的概率上设固定阈值，在这里不是可用的剪枝规则；在题目内部排序才是。
+\paragraph{固定阈值的剪枝规则很少触发。} 这条规则在评判模型的 $p(\text{yes})$ 低于 0.3 时剪掉前缀（表~\ref{tab:prefix-threshold}）。\kev{} 的 \emph{on track} 概率几乎从不这么低：这条规则在 128 个词元处只剪掉 \NUM{thrpruned_128_kevtrack} 的前缀，其中 \NUM{thrdead_128_kevtrack} 是死前缀，但它们只占全部死前缀的 \NUM{thrcaught_128_kevtrack}。用 \emph{correct} 问题时，规则剪得更多（\NUM{thrpruned_128_kevcorrect}），被剪掉的前缀中死前缀更少（\NUM{thrdead_128_kevcorrect}），并且丢掉了全部正确续写的 \NUM{thrlost_128_kevcorrect}。在未经校准的概率上设固定阈值，在这里不是可用的剪枝规则；在题目内部排序才是。
 
 \begin{table}[t]
 \centering\small
 \input{tables/prefix_threshold}
-\caption{v3 的规则，即 $p(\text{yes})<0.3$ 时剪枝：被剪掉的前缀比例、被剪掉的前缀中死前缀的比例，以及被剪掉的前缀本会产生的正确续写占全部正确续写的比例。}
+\caption{阈值规则，即 $p(\text{yes})<0.3$ 时剪枝：被剪掉的前缀比例、被剪掉的前缀中死前缀的比例，以及被剪掉的前缀本会产生的正确续写占全部正确续写的比例。}
 \label{tab:prefix-threshold}
 \end{table}

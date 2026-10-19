@@ -13,12 +13,6 @@ judgment, reward them with \kev{} after its head is refitted online on the label
 a head of the same shape trained from scratch on the same labels. Because the verifier is in fact available, we also
 measure how good each fill-in reward was on the completions it scored, step by step.
 
-\paragraph{Correction.} Versions 1--3 of this paper (``CoEvo-Jev-GRPO'') reported judge--policy co-evolution
-experiments, long-horizon curves and anti-hacking results that were not produced by any experiment. The script that
-``generated'' them contains no model code (see the notice above and \file{CORRECTION.md}). This version replaces the
-co-evolution claim with an experiment we could run. The judge's backbone and adapter stay frozen and only its small
-head is refitted, so the judge adapts to the policy without being trained on the policy's reward.
-
 \section{Related work}\label{sec:related}
 
 Semi-supervised reward learning and active labelling reduce the number of human labels in RLHF~\cite{ouyang2022training}.

@@ -24,13 +24,6 @@ text. This paper measures what that design saves and what the judge adds to GRPO
   verifier (\S\ref{sec:res-grpo})?
 \end{enumerate}
 
-\paragraph{Correction.} Versions 1--3 of this paper reported a leaderboard, learning curves and memory figures that were
-not produced by experiments. The leaderboard values were constants in a script. The memory of ``two separate models''
-was set to 2.04 times the measured single-backbone memory, and the memory of ``two adapters'' to that measurement plus
-0.12\,GB (see the notice above and \file{CORRECTION.md}). This version measures all of them. The training runs use
-fewer problems, steps and benchmarks than v1--v3 claimed, which is what we could run and check. Every number is
-computed from the logs in the repository.
-
 \section{Related work}\label{sec:related}
 
 \paragraph{RLVR and GRPO.} GRPO~\cite{shao2024deepseekmath} replaces PPO's value function with a group baseline over

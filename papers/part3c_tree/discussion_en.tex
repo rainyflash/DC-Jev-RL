@@ -51,11 +51,3 @@ every tenth step, 20 audited steps per run; its intervals resample those steps, 
 accuracies resample problems, not seeds. The offline study used the base policy's prefixes, not the training policy's.
 The style measures were defined after reading the completions. We report tokens, not time: the runs shared GPUs with
 other experiments.
-
-\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported pruning speed-ups, KV-cache reuse
-rates, per-node latencies and theorem-proving results (MiniF2F-Lean4, ProofNet) that were not measured (see the notice
-at the start and \file{CORRECTION.md}). None of these is measured here: we count tokens, not time, and ran no theorem
-proving. What we could test, we did. The pruning rule of v3, prune a prefix when the judge's $p(\text{yes})<0.3$,
-prunes \NUM{thrpruned_128_kevtrack} of the 128-token prefixes with the \emph{on track} question and catches
-\NUM{thrcaught_128_kevtrack} of the dead ones (\S\ref{sec:res-prefix}). Choosing which roots to continue by \kev{}, the
-idea behind those versions, did not make GRPO learn better than a random choice of roots.

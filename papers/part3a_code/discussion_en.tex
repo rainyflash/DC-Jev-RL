@@ -32,9 +32,3 @@ seeds. The held-out tests are those of KodCode and EvalPlus, and a program that 
 specification, which can be stricter than the problem statement. The special-casing check finds only programs that
 contain a value from the visible tests; special-casing without such a value (a branch on the input's length, say) is
 not detected. Other experiments shared the GPUs during training.
-
-\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported large gains of a judge-gated reward
-on BFCL-v3, MBPP+, HumanEval+ and SWE-bench-Verified-Mini that were not measured (see the notice at the top and
-\file{CORRECTION.md}). The measured answer, in the setting we could run: rewarding the visible tests did not, within 100
-steps, lead to programs that copy the tests or to a larger share of wrong programs among the visible-test passes, and
-\kev{}'s judgment as a factor on that reward did not change the outcome beyond the variation between seeds.

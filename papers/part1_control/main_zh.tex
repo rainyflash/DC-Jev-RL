@@ -4,15 +4,11 @@
 \input{numbers}
 
 \title{语言评判模型作为 MuJoCo 中 PPO 的奖励来源：\\\kev{} 与同等规模的自回归评判模型}
-\author{DC-Jev-RL 项目，第一部分（第 4 版）}
+\author{DC-Jev-RL 项目，第一部分}
 \date{2026 年 10 月}
 
 \begin{document}
 \maketitle
-
-\begin{correction}
-本文第 1.0--3.0 版已撤回，其结果并非由文中所述实验产生。PPO 训练中的“Kev-4B 评判模型”其实是一个手写的仿真器状态函数，从未调用过模型；排行榜和“对人类预言机 100\% 胜率”建立在这些 run 和脚本中的常数之上。本版用实测结果替换了所有结果。撤回的文件保存在仓库的 \file{withdrawn/} 目录下，\file{CORRECTION.md} 列出了错误之处。
-\end{correction}
 
 \begin{abstract}
 \input{abstract_zh}

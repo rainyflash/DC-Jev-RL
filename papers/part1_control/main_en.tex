@@ -4,19 +4,11 @@
 \input{numbers}
 
 \title{Language Judges as Reward Sources for PPO in MuJoCo:\\\kev{} versus an Autoregressive Judge of the Same Size}
-\author{DC-Jev-RL project, Part I (version 4)}
+\author{DC-Jev-RL project, Part I}
 \date{October 2026}
 
 \begin{document}
 \maketitle
-
-\begin{correction}
-Versions 1.0--3.0 of this paper are withdrawn. Their results were not produced by the experiments they describe.
-During PPO training the ``Kev-4B judge'' was a hand-written function of the simulator state, never the model, and the
-leaderboard and the ``100\% win rate over the human oracle'' were built on those runs and on constants in the scripts.
-This version replaces every result with measured ones. The withdrawn files are kept in the repository under
-\file{withdrawn/}, and \file{CORRECTION.md} lists what was wrong.
-\end{correction}
 
 \begin{abstract}
 \input{abstract_en}

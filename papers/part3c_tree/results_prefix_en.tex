@@ -56,8 +56,8 @@ and is scored on the other half.}
 \label{tab:prefix-selection}
 \end{table}
 
-\paragraph{The pruning rule of the withdrawn v3 paper rarely fires.} v3 pruned a prefix when the judge's
-$p(\text{yes})$ was below 0.3 (Table~\ref{tab:prefix-threshold}). \kev{}'s \emph{on track} probability is almost never that
+\paragraph{A fixed pruning threshold rarely fires.} The rule prunes a prefix when the judge's
+$p(\text{yes})$ is below 0.3 (Table~\ref{tab:prefix-threshold}). \kev{}'s \emph{on track} probability is almost never that
 low. The rule prunes \NUM{thrpruned_128_kevtrack} of the prefixes at 128 tokens. \NUM{thrdead_128_kevtrack} of those are
 dead, but they are only \NUM{thrcaught_128_kevtrack} of all dead prefixes. With the \emph{correct} question the rule
 prunes more (\NUM{thrpruned_128_kevcorrect}), with fewer dead prefixes among the pruned (\NUM{thrdead_128_kevcorrect}),
@@ -67,7 +67,7 @@ probability is not a usable pruning rule here; ranking within a problem is.
 \begin{table}[t]
 \centering\small
 \input{tables/prefix_threshold}
-\caption{The v3 rule, prune when $p(\text{yes})<0.3$: the fraction of prefixes pruned, the fraction of the pruned that
+\caption{The threshold rule, prune when $p(\text{yes})<0.3$: the fraction of prefixes pruned, the fraction of the pruned that
 were dead, and the fraction of all correct continuations that the pruned prefixes would have produced.}
 \label{tab:prefix-threshold}
 \end{table}

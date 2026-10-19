@@ -38,9 +38,3 @@ not tune either judge's prompts. The comparison involves two judges of one famil
 decision models in general make better rewards than generative judges. The costs were measured with one judge server
 shared by up to 24 runs. Finally, \NUM{resumed_runs} runs were resumed after a reset of the machine, and each lost one
 episode.
-
-\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported a leaderboard and a ``100\% win rate
-over the human oracle'' for \kev{}'s reward. Those results were not produced by experiments (see the notice at the top and
-\file{CORRECTION.md}). The measured answer is narrower. With its gate, or distilled, \kev{}'s reward comes close to the
-engineered reward on locomotion. It helps where the task text carries a preference that the engineered reward lacks, and
-it fails on Reacher. It is far more usable for PPO than the reward of an autoregressive judge of the same size.

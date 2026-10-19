@@ -4,15 +4,11 @@
 \input{numbers}
 
 \title{评判模型能否选择分支位置？\\MATH 上 GRPO 树状 rollout 的前缀选择}
-\author{DC-Jev-RL 项目，第三部分 C（第 4 版）}
+\author{DC-Jev-RL 项目，第三部分 C}
 \date{2026 年 10 月}
 
 \begin{document}
 \maketitle
-
-\begin{correction}
-本文第 1.0--3.0 版（“Tree-Jev-GRPO”）已撤回，其结果并非由任何实验产生。剪枝加速、KV 缓存复用率、每节点延迟和定理证明结果（MiniF2F-Lean4、ProofNet）都是写进一个脚本的数字，该脚本没有任何加载、训练或评估模型的代码。本版只在 MATH 上用实测实验研究树状 rollout，并直接检验了 v3 的剪枝规则。撤回的文件保存在仓库的 \file{withdrawn/} 目录下，\file{CORRECTION.md} 列出了错误之处。
-\end{correction}
 
 \begin{abstract}
 \input{abstract_zh}

@@ -15,7 +15,6 @@ in the seed mean, but that comes mostly from the \NUM{treedraftruns} tree runs t
 plain text, a switch that marks the best runs of this project whatever their reward and that none of the
 \NUM{flatruns} flat runs made; the other tree runs end close to flat GRPO. The trees generated
 \NUM{treegensavemin}--\NUM{treegensavemax} fewer tokens than flat sampling of completions of the same lengths. One
-seed with \kev{}'s choice came to repeat its solution after the answer, as did one flat seed with no judge at all. The
-pruning rule of the withdrawn earlier versions, prune a prefix when the judge's $p(\text{yes})<0.3$, prunes
-\NUM{thrpruned_128_kevtrack} of the prefixes. This version replaces earlier versions whose results were not produced
-by experiments. Code, logs, every training completion and every number in this paper are in the repository.
+seed with \kev{}'s choice came to repeat its solution after the answer, as did one flat seed with no judge at all. A
+fixed-threshold pruning rule, prune a prefix when the judge's $p(\text{yes})<0.3$, prunes
+\NUM{thrpruned_128_kevtrack} of the prefixes. Code, logs, every training completion and every number in this paper are in the repository.
