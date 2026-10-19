@@ -687,10 +687,30 @@ def part3b(o, exp):
     if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=base_eval(exp))
 
 
+def tree_stats(o, s):
+    """Part III-C: what the tree rollouts looked like during training (dcjev/llm/tree.py tree_log, seed mean over steps)."""
+    rows = []
+    for c, e in s["conditions"].items():
+        tj, t = e.get("train_judge", {}), e.get("train_last20", {})
+        if "audit_selection_gain" not in tj: continue
+        g = lambda k: tj.get(k, {}).get("all")
+        rows.append(f"{tt(c)} & {len(e['seeds'])} & {pct(g('roots_finished'), 1)} & {f(g('on_track_auroc_leaves'))} & "
+                    f"{f(g('on_track_auroc_leaves_within_prompt'))} & {pts(g('audit_value_all_roots'))} & {pts(g('audit_selection_gain'), sign=True)} & "
+                    f"{pts(g('audit_best_possible_gain'), sign=True)} & {f(t['gen_tokens'] / 1000, 1) if 'gen_tokens' in t else '--'} \\\\")
+    if rows:
+        o.table("tree_stats", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & roots & \\multicolumn{2}{c}{\\emph{on track}, AUROC} & "
+                "\\multicolumn{3}{c}{audit, every 10th step} & tokens \\\\ \\cmidrule(lr){4-5}\\cmidrule(lr){6-8}\ncondition & seeds & ended & "
+                "leaves & within prompt & value, 4 roots & gain, kept 2 & gain, best 2 & per step (k) \\\\ \\midrule\n" + "\n".join(rows)
+                + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part3c_grpo(o, exp):
     for name, tag in (("summary.json", ""), ("summary_step100.json", "st100")):
         sm = exp / "part3c_tree" / "results" / name
-        if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), tag=tag, base=base_eval(exp) if not tag else None)
+        if not sm.exists(): continue
+        s = json.loads(sm.read_text())
+        grpo_numbers(o, s, tag=tag, base=base_eval(exp) if not tag else None)
+        if not tag: tree_stats(o, s)
 
 
 def main():
