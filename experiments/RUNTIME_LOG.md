@@ -44,3 +44,8 @@ rollout server loads.
 | session 1 | 2026-10-19 ~02:25 | 02:33 to 02:41 | 02:42 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
 | session 2 | 2026-10-19 ~04:12 | 04:14 to 04:22 | 04:22 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
 | session 3 | 2026-10-19 ~06:35 | 06:37 to 06:45 | 06:46 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
+| session 1, third round | 2026-10-19 ~14:42 | 14:45 to 14:54 | 14:54 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
+
+The third round runs one job, the third seed of `tree_random` (`scripts/make_jobs.sh`; the third seed of `tree_kev` was
+added to session 3's second-round queue), on a new runtime of session 1's notebook. The runtime type was G4 throughout,
+and each runtime of the second and third rounds was planned for about 13 hours.

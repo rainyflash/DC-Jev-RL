@@ -3,7 +3,8 @@
 `runs/<condition>/s<seed>/` holds one GRPO run (`dcjev/llm/grpo.py` via `scripts/run_part3.sh b`), with Part II's setup
 (200 steps of 16 problems with 8 completions each, learning rate 1e-5) except that the verifier labels only 2 of each
 group's 8 completions, chosen at random (`--label_frac 0.25`). The files are those of a Part II run
-(`../part2_llm/README.md`): `final.json`, `log.jsonl.gz`, `final_completions.jsonl.gz` and `evals/step<N>.jsonl.gz`.
+(`../part2_llm/README.md`): `final.json`, `log.jsonl.gz`, `final_completions.jsonl.gz`, `evals/step<N>.jsonl.gz` and
+`rollouts.jsonl.gz`, whose records also say whether a completion was labelled and whether it was used in the update.
 The verifier still checks the unlabelled completions, for the log only. In the three conditions that fill in a reward
 for them, every step's log record says how good the fill-in was: its AUROC and calibration error for the verifier's
 verdict, and the frozen Kev-4B's AUROC on the same completions.

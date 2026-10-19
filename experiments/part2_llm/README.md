@@ -10,9 +10,11 @@ problems with 8 completions each, learning rate 1e-5):
   periodic greedy evaluations (validation set, MATH-500, a 500-problem GSM8K subset, every 50 steps);
 - `final_completions.jsonl.gz`: every completion of the final evaluation, with the verifier's verdict and, on MATH-500,
   Kev-4B's scores;
-- `evals/step<N>.jsonl.gz`: every completion of the periodic evaluation at step N.
-
-The training rollouts (`rollouts.jsonl.gz`, about 10 MB per run) are not in the repository.
+- `evals/step<N>.jsonl.gz`: every completion of the periodic evaluation at step N;
+- `rollouts.jsonl.gz` (about 10 MB): every training completion, 128 per step, with its step, problem id, verdict,
+  reward, advantage, and the judges' scores where they were computed (Kev-4B for every completion when it is in the
+  reward, otherwise for the 64 the log samples; the AR judge for every completion of `rlvr_ar_add`). The papers'
+  analyses of the writing style during training read it.
 
 Conditions: `rlvr` (verifier), `rlvr_kev_add` (verifier + 0.2 Kev-4B P(correct)), `rlvr_kev_gate` (verifier x Kev-4B
 P(genuine)), `kev_only` (Kev-4B P(correct), no verifier), `rlvr_ar_add` (verifier + 0.2 AR-judge P(correct)). Seeds:
