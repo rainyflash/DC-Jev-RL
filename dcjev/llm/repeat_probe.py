@@ -143,7 +143,7 @@ def report(rows, boot=10000):
                 e[f"{judge}_v{v}"] = {"n": len(sel), "problems": len(pm), "orig": float(np.mean([get(o) for _, o in sel])),
                                       "edited": float(np.mean([get(r) for r, _ in sel])), "shift": float(d.mean()),
                                       "ci95": [float(np.quantile(bs, 0.025)), float(np.quantile(bs, 0.975))],
-                                      "frac_up": float(np.mean(d > 0))}
+                                      "frac_up": float(np.mean(d > 0)), "frac_down": float(np.mean(d < 0))}
         rep[f"{kind}/{edit}/{src}"] = e
     return rep
 

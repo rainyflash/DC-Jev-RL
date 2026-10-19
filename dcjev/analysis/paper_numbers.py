@@ -26,6 +26,7 @@ def tt(name):
 def f(x, nd=2, sign=False):
     """Formatted number for LaTeX; None -> an en dash."""
     if x is None or (isinstance(x, float) and math.isnan(x)): return "--"
+    if round(x, nd) == 0: x = 0.0   # no "-0.00"
     s = f"{x:+.{nd}f}" if sign else f"{x:.{nd}f}"
     return s.replace("-", "$-$").replace("+", "$+$")
 
@@ -508,6 +509,7 @@ def part2(o, exp):
         o.num(f"base_{x.replace('_', '')}", pts(np.mean(v))); o.num(f"basesd_{x.replace('_', '')}", pts(np.std(v, ddof=1)) if len(v) > 1 else "--")
     sm = exp / "part2_llm" / "results" / "summary.json"
     if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=be)
+    repeat_probe(o, exp)
 
 
 PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
@@ -728,6 +730,54 @@ def part3b(o, exp):
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, base=base_eval(exp))
         fill_stats(o, s)
+    repeat_probe(o, exp)
+
+
+def repeat_probe(o, exp):
+    """Judges and repetition (Parts II and III-B; dcjev/llm/repeat_probe.py -> experiments/part2_llm/repeat_probe/): the
+    change of each judge's probability when a solution repeats itself, P(with the repetition) - P(without), on the base
+    policy's solutions with repetition added and on GRPO runs' repeating final solutions with it cut off, separately for
+    the solutions the verifier accepts (1) and rejects (0). Macros rp<judge>[lo|hi|up|with|without]_<row>_<v>, judge kevc
+    (Kev-4B P(correct)), kevg (P(genuine)) or arc (the AR judge's P(correct)); rows end3, twice, cut<condition>."""
+    p = exp / "part2_llm" / "repeat_probe" / "repeat_probe.json"
+    if not p.exists(): return
+    r = json.loads(p.read_text())
+    add = [("add/end3/base", "end3", "last two paragraphs twice more"), ("add/twice/base", "twice", "written twice")]
+    cut = []
+    for k in sorted(x for x in r if x.startswith("remove/cut/")):
+        cond, seed = k.split("/")[2:4]
+        cut.append((k, "cut" + COND_KEY[cond], f"{tt(cond)}, seed {seed[1:]}"))
+    for src, n in r.get("cut_changes_or_loses_answer", {}).items(): o.num(f"rpskip_{COND_KEY[src.split('/')[0]]}", str(n))
+    judges = (("kevc", "kev_correct"), ("kevg", "kev_genuine"), ("arc", "ar_correct"))
+
+    def row(k, rk, label):
+        e = r.get(k)
+        if not e: return None
+        sgn = 1 if k.startswith("add/") else -1   # the remove rows: P(as written) - P(cut)
+        o.num(f"rppairs_{rk}", str(e["pairs"])); o.num(f"rpclip_{rk}", pct(e["clipped_after_edit"], 1))
+        rl = e["repeated_lines"]; w, wo = (rl["edited"], rl["orig"]) if sgn > 0 else (rl["orig"], rl["edited"])
+        o.num(f"rprepwith_{rk}", pct(w)); o.num(f"rprepwithout_{rk}", pct(wo))
+        cells = []
+        for jk, judge in judges:
+            for v in (1, 0):
+                x = e.get(f"{judge}_v{v}")
+                if not x: cells.append("--"); continue
+                eff = sgn * x["shift"]
+                lo, hi = x["ci95"] if sgn > 0 else (-x["ci95"][1], -x["ci95"][0])
+                up = x["frac_up"] if sgn > 0 else x["frac_down"]
+                wi, wo = (x["edited"], x["orig"]) if sgn > 0 else (x["orig"], x["edited"])
+                o.num(f"rp{jk}_{rk}_{v}", f(eff, 3, sign=True)); o.num(f"rp{jk}lo_{rk}_{v}", f(lo, 3)); o.num(f"rp{jk}hi_{rk}_{v}", f(hi, 3))
+                o.num(f"rp{jk}up_{rk}_{v}", pct(up)); o.num(f"rp{jk}with_{rk}_{v}", f(wi)); o.num(f"rp{jk}without_{rk}_{v}", f(wo))
+                o.num(f"rpn_{rk}_{v}", str(x["n"])); o.num(f"rpprob_{rk}_{v}", str(x["problems"]))
+                cells.append(f(eff, 3, sign=True))
+        n = [str(e.get(f"kev_correct_v{v}", {}).get("n", 0)) for v in (1, 0)]
+        return f"\\quad {label} & {n[0]} / {n[1]} & " + " & ".join(cells) + " \\\\"
+
+    rows = ["\\multicolumn{8}{@{}l}{\\emph{base policy's solutions, repetition added}} \\\\"] + [x for x in (row(*d) for d in add) if x]
+    rows += ["\\multicolumn{8}{@{}l}{\\emph{repeating final solutions of GRPO runs, as written against cut after the first answer}} \\\\"] + [x for x in (row(*d) for d in cut) if x]
+    o.table("repeat_probe", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & solutions & \\multicolumn{2}{c}{\\kev{} $\\pc$} & "
+            "\\multicolumn{2}{c}{\\kev{} $\\pg$} & \\multicolumn{2}{c}{AR $P_{\\mathrm{a}}$} \\\\ \\cmidrule(lr){3-4}\\cmidrule(lr){5-6}\\cmidrule(l){7-8}\n"
+            " & right / wrong & right & wrong & right & wrong & right & wrong \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 def tree_stats(o, s):
