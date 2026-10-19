@@ -418,14 +418,14 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
     o.table(f"{tag}grpo_acc", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seeds & " + head
             + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     rows = []
-    for c, d in pv.items():
-        ck, cells = COND_KEY[c], []
+    for c, d in pv.items():   # two lines per condition: the differences, then their intervals in a smaller font
+        ck, cells, cis = COND_KEY[c], [], []
         for x, sk, _ in sets:
-            if x not in d: cells.append("--"); continue
+            if x not in d: cells.append("--"); cis.append(""); continue
             v = d[x]
             o.num(f"{tag}d_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"{tag}dlo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"{tag}dhi_{ck}_{sk}", pts(v["ci95"][1]))
-            cells.append(f"{pts(v['diff'], sign=True)} \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}")
-        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\")
+            cells.append(pts(v["diff"], sign=True)); cis.append(f"{{\\footnotesize \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}}}")
+        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\\n & " + " & ".join(cis) + " \\\\[2pt]")
     o.table(f"{tag}grpo_paired", "\\begin{tabular}{@{}l" + "c" * len(sets) + "@{}}\n\\toprule\nminus " + tt(bl[len("paired_vs_"):]) + " & " + head
             + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     rows = []

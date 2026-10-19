@@ -61,7 +61,7 @@ def main():
     for r in (r for c in runs for r in runs[c].values()):
         for ev in (x for x in r["log"] if x["kind"] == "eval" and x["step"] == 0):
             for s in SETS:
-                for m in ("vis_pass", "all_pass", "hack"):
+                for m in ("vis_pass", "all_pass", "hack", "hack_among_vis_pass", "first_attempt_all_pass"):
                     if isinstance(ev.get(s), dict) and ev[s].get(m) is not None: s0[(s, m)].append(ev[s][m])
     rep["step0_eval"] = {f"{s}/{m}": {"runs": len(v), "mean": float(np.mean(v)), "std": float(np.std(v, ddof=1)) if len(v) > 1 else None,
                                       "min": float(min(v)), "max": float(max(v))} for (s, m), v in s0.items()}
@@ -83,7 +83,7 @@ def main():
     import matplotlib.pyplot as plt
     keys = [("vis_pass", "visible tests pass (train)"), ("all_pass", "all tests pass (train)"), ("hack", "visible pass, held-out fail (train)"),
             ("attempts_mean", "attempts per episode")]
-    fig, axes = plt.subplots(1, len(keys), figsize=(4 * len(keys), 3.2))
+    fig, axes = plt.subplots(2, 2, figsize=(9, 6)); axes = axes.ravel()   # readable at text width
     for c in [c for c in CONDS if c in runs]:
         for ax, (k, title) in zip(axes, keys):
             ys = [[r[k] for r in s["log"] if r["kind"] == "step"] for s in runs[c].values()]
@@ -91,7 +91,7 @@ def main():
             if n < w: continue
             sm = np.array([np.convolve(y[:n], np.ones(w) / w, mode="valid") for y in ys])
             ax.plot(np.arange(sm.shape[1]) + w - 1, sm.mean(0), label=c); ax.set_title(title); ax.set_xlabel("GRPO step")
-    axes[-1].legend(fontsize=7); fig.tight_layout(); fig.savefig(out / "training_curves.png", dpi=150)
+    axes[-1].legend(fontsize=8); fig.tight_layout(); fig.savefig(out / "training_curves.png", dpi=150); fig.savefig(out / "training_curves.pdf")
     print(json.dumps(rep, indent=1))
 
 

@@ -157,7 +157,7 @@ def main():
     import matplotlib.pyplot as plt
     keys = [("acc", "train accuracy (verifier)"), ("len_mean", "completion tokens"), ("groups_all_wrong", "groups with no correct sample"),
             ("kev_correct", "Kev P(correct)")]
-    fig, axes = plt.subplots(1, len(keys) + 2, figsize=(4 * (len(keys) + 2), 3.2))
+    fig, axes = plt.subplots(2, 3, figsize=(11, 6.4)); axes = axes.ravel()   # readable at text width
     for c in order:
         seeds = runs.get(c)
         if not seeds: continue
@@ -172,7 +172,7 @@ def main():
             n = min(map(len, ev))
             if n: ax.plot([x for x, _ in ev[0][:n]], np.mean([[y for _, y in e[:n]] for e in ev], 0), marker="o", label=c)
             ax.set_title(f"{sname} accuracy (greedy)"); ax.set_xlabel("GRPO step")
-    axes[-1].legend(fontsize=7); fig.tight_layout(); fig.savefig(out / "training_curves.png", dpi=150)
+    axes[-1].legend(fontsize=8); fig.tight_layout(); fig.savefig(out / "training_curves.png", dpi=150); fig.savefig(out / "training_curves.pdf")
     print(json.dumps(rep, indent=1))
 
 
