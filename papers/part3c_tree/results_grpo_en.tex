@@ -63,6 +63,30 @@ isolates the judge's choice of roots; \texttt{rlvr} minus \texttt{tree\_random} 
 \label{tab:tree-paired}
 \end{table}
 
+% TODO after seed 2: check every number of this paragraph; final MATH-500 numbers of seed 2.
+\paragraph{One seed of \texttt{tree\_kev} began to repeat itself.} From step \NUM{roonset_treekev_s2} on, the training
+completions of \texttt{tree\_kev}'s seed 2 repeat part of the solution after the first answer more and more often:
+\NUM{roansrep_treekev_s2_0} of them in steps 0--24, \NUM{roansrep_treekev_s2_100} in steps 100--124 and
+\NUM{roansrep_treekev_s2_175} in steps 175--199 (Table~\ref{tab:tree-repeat}). They grew from
+\NUM{rotok_treekev_s2_0} to \NUM{rotok_treekev_s2_175} tokens on average; in the last 25 steps
+\NUM{rotrunc_treekev_s2_175} of them were cut off at the length limit and the verifier accepted
+\NUM{roright_treekev_s2_175}. Seed 1 of \texttt{tree\_kev} and
+both seeds of \texttt{tree\_random} did not (at most \NUM{roansrepmax_treekev_s1}, \NUM{roansrepmax_treerand_s1} and
+\NUM{roansrepmax_treerand_s2} in any window after step 50). The final policy of seed 2 repeats after its first answer
+on \NUM{sansrep_treekev_s2} of the MATH-500 problems, that of seed 1 on \NUM{sansrep_treekev_s1}. This is not the
+judge paying for repetition, as in Part II: the reward is the verifier's alone, and \kev{} sees only a solution's first
+128 tokens. Under the verifier, which reads the last answer, a repetition that restates the answer costs nothing.
+Whether the judge's choice of roots made the policy repeat itself, one seed of two cannot tell.
+
+\begin{table}[t]
+\centering\small
+\input{tables/rollout_repeat}
+\caption{Share of completions that repeat part of the solution after the first boxed answer (a line of at least 20
+characters that already occurred before it): the training completions of each run in five 25-step windows, and the
+final policy's greedy MATH-500 completions.}
+\label{tab:tree-repeat}
+\end{table}
+
 \paragraph{Cost.} A tree samples four roots of at most 128 tokens per prompt and continues two of them four times each,
 so it generates fewer tokens than flat sampling: \NUM{gentok_treekev} thousand per step under \texttt{tree\_kev} and
 \NUM{gentok_treerand} thousand under \texttt{tree\_random}, against \NUM{gentok_rlvr} thousand for flat sampling (the

@@ -821,6 +821,10 @@ def rollout_repeat(o, s):
                 o.num(f"roansrep_{ck}_s{n}_{b}", pct(w["repeats_after_answer"])); o.num(f"rorep_{ck}_s{n}_{b}", pct(w["repeated_lines"], 1))
                 o.num(f"roboxmany_{ck}_s{n}_{b}", pct(w["boxed_many"])); o.num(f"rotrunc_{ck}_s{n}_{b}", pct(w["truncated"]))
                 o.num(f"rotok_{ck}_s{n}_{b}", f(w["tokens"], 0)); o.num(f"roright_{ck}_s{n}_{b}", pct(w["right"]))
+            late = [w["repeats_after_answer"] for w in ws if w["steps"][0] >= 50]   # after the first 50 steps
+            if late: o.num(f"roansrepmax_{ck}_s{n}", pct(max(late)))
+            on = [w["steps"][0] for w in ws if w["repeats_after_answer"] > 0.2]   # the first window above 20%
+            o.num(f"roonset_{ck}_s{n}", str(on[0]) if on else "--")
             cells = [pct(by[b]["repeats_after_answer"]) if b in by else "--" for b in RW_COLS]
             fin = final.get(n, {}).get("repeats_after_answer")
             rows.append(f"{tt(c)} & {n} & " + " & ".join(cells) + f" & {pct(fin)} \\\\")
