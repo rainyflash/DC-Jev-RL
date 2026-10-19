@@ -43,3 +43,4 @@ rollout server loads.
 |---|---|---|---|---|
 | session 1 | 2026-10-19 ~02:25 | 02:33 to 02:41 | 02:42 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
 | session 2 | 2026-10-19 ~04:12 | 04:14 to 04:22 | 04:22 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
+| session 3 | 2026-10-19 ~06:35 | 06:37 to 06:45 | 06:46 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
