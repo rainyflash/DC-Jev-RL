@@ -3,27 +3,28 @@
 
 \section{Discussion}\label{sec:discussion}
 
-\paragraph{The visible tests were not exploited.} The concern behind this paper is that a policy rewarded by the
-tests it can see learns to satisfy those tests rather than to solve the problem. In our setting that did not happen
-within 100 steps. Training raised the share of problems solved on all three sets, including the two the policy never
-trained on. The share of visible-test passes that are wrong fell by about half on KodCode validation and HumanEval+ and
-barely moved on MBPP+. Programs that copy values from the visible tests stayed as rare as they were in the base
-policy. The wrong programs that pass the visible tests are, before and after training, mostly incomplete solutions:
-they handle the cases the examples show and miss others. A visible-test reward pays for them, but so does the
-base policy's prior, and training did not add to them.
+\paragraph{No sign that the visible tests were exploited.} The concern behind this paper is that a policy rewarded by
+the tests it can see learns to satisfy those tests rather than to solve the problem. In our setting we saw no sign of
+it within 100 steps. Training raised the share of problems solved on all three sets, including the two the policy
+never trained on. The share of visible-test passes that are wrong fell by about half on KodCode validation and
+HumanEval+ and barely moved on MBPP+. Programs that copy values from the visible tests stayed as rare as they were in
+the base policy. The wrong programs that pass the visible tests are, before and after training, almost never copies of
+the tests: they handle the cases the examples show and get others wrong. A visible-test reward pays for them, but the
+base policy already wrote them, and on two of the three sets training made them a smaller share of the passes.
 
 \paragraph{What the judge could do, and did.} Offline, both judges rank a problem's visible-test passes by whether
 they also pass the held-out tests better than chance (\S\ref{sec:res-study}), and both catch hard-coded lookups. In
 training, the judge factor did not change the outcome beyond the variation between seeds: no difference on KodCode
-validation and HumanEval+, and on MBPP+ a gain in one seed and none in the other. With little special-casing to
-suppress, a judge of special-casing has little to do. Whether a judge factor helps where a policy does learn to
-special-case, with weaker tests, harder problems or longer training, these runs cannot say.
+validation and HumanEval+, and on MBPP+ a gain in one seed and none in the other. What was left to suppress were not
+copies of the tests but solutions that are wrong on cases the examples do not show. Whether a judge factor helps where
+a policy does learn to special-case, with weaker tests, harder problems or longer training, these runs cannot say.
 
 \paragraph{Better tests remove false passes, not unsolved problems.} The oracle reward, which pays only for programs
-that pass every test, ended with fewer wrong programs passing the visible tests than \texttt{vis}, and with the same
-share of problems solved. Within 100 steps, knowing which visible-test passes are wrong did not teach the policy to
-solve more problems; it taught it to pass the visible tests less often when it could not solve them. This bounds what
-any judge factor could achieve here: a perfect judge of correctness would give the oracle's reward.
+that pass every test, ended with fewer wrong programs passing the visible tests than \texttt{vis} on all three sets (by
+an interval that excludes zero on MBPP+ only), and with the same share of problems solved. % TODO hidden/s2: recheck.
+Within 100 steps, knowing which visible-test passes are wrong did not teach the policy to solve more problems; it
+taught it to pass the visible tests less often when it could not solve them. A perfect judge of correctness, used as
+the factor, would give exactly this reward.
 
 \paragraph{Limitations.} One policy size (4B), one task format (a single function, up to three attempts with the
 first failing test as feedback), 100 steps, one learning rate taken from Part II, and two seeds per reward, which
@@ -35,6 +36,6 @@ not detected. Other experiments shared the GPUs during training.
 
 \paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported large gains of a judge-gated reward
 on BFCL-v3, MBPP+, HumanEval+ and SWE-bench-Verified-Mini that were not measured (see the notice at the top and
-\file{CORRECTION.md}). The measured answer, in the setting we could run: rewarding the visible tests did not lead to
-special-casing within 100 steps, and \kev{}'s judgment as a factor on that reward did not change the outcome beyond the
-variation between seeds.
+\file{CORRECTION.md}). The measured answer, in the setting we could run: rewarding the visible tests did not, within 100
+steps, lead to programs that copy the tests or to a larger share of wrong programs among the visible-test passes, and
+\kev{}'s judgment as a factor on that reward did not change the outcome beyond the variation between seeds.

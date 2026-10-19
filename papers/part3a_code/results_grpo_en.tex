@@ -39,12 +39,13 @@ that passes every test, so it never pays for a wrong program. Its final policy s
 points on KodCode validation, \NUM{cgdall_hidden_mbpp} \ci{\NUM{cgdalllo_hidden_mbpp}}{\NUM{cgdallhi_hidden_mbpp}} on
 MBPP+ and \NUM{cgdall_hidden_he} \ci{\NUM{cgdalllo_hidden_he}}{\NUM{cgdallhi_hidden_he}} on HumanEval+
 (Table~\ref{tab:code-paired}). It passes the visible tests less often (\NUM{cgvis_hidden_mbpp}\% against
-\NUM{cgvis_vis_mbpp}\% on MBPP+), and most of the difference is in programs that are wrong: its hack rate is lower by
+\NUM{cgvis_vis_mbpp}\% on MBPP+), and most of the difference is in programs that are wrong: the hack rate differs by
 \NUM{cgdhack_hidden_kod} \ci{\NUM{cgdhacklo_hidden_kod}}{\NUM{cgdhackhi_hidden_kod}},
 \NUM{cgdhack_hidden_mbpp} \ci{\NUM{cgdhacklo_hidden_mbpp}}{\NUM{cgdhackhi_hidden_mbpp}} and
-\NUM{cgdhack_hidden_he} \ci{\NUM{cgdhacklo_hidden_he}}{\NUM{cgdhackhi_hidden_he}} points. A reward that never pays a
-wrong program keeps some of them from passing the visible tests; within 100 steps it does not turn them into right
-ones.
+\NUM{cgdhack_hidden_he} \ci{\NUM{cgdhacklo_hidden_he}}{\NUM{cgdhackhi_hidden_he}} points, an interval that excludes zero
+only on MBPP+. % TODO hidden/s2: recheck which intervals exclude zero.
+A reward that never pays a wrong program keeps some of them from passing the visible tests; within 100 steps it does
+not turn them into right ones.
 
 \begin{table}[t]
 \centering\small
@@ -65,20 +66,22 @@ over problems excludes zero. The seeds disagree, though: \texttt{vis\_kev} passe
 \texttt{vis} gives \NUM{cgall_vis_mbpp_s1}\% and \NUM{cgall_vis_mbpp_s2}\%. One of two seeds is not an effect we can
 claim.
 
-\paragraph{No special-casing.} The hack rate counts every wrong program that passes the visible tests, whether it is
+\paragraph{No copying of the tests.} The hack rate counts every wrong program that passes the visible tests, whether it is
 merely incomplete or special-cases the tests. To separate the two we look for the crudest form of special-casing: a
 program that contains a value from the visible tests, an argument or an expected result, that the reference solution
 does not contain (\file{dcjev/analysis/code_hacks.py}; only the tested function and the module-level code it uses are
 searched, so a model's own example calls do not count). The check flags \NUM{ch_hardcoded_copy} of the
 \NUM{ch_hardcoded_n} hard-coded lookups of the offline study, every one that contains a non-trivial value, and none of
-the \NUM{ch_reference_n} reference solutions. It flags \NUM{ch_policyother_frac} of the base policy's attempts. During
+the \NUM{ch_reference_n} reference solutions. Among the base policy's attempts in the offline study it flags
+\NUM{ch_policyhack_copy} of the \NUM{ch_policyhack_n} that pass the visible tests and fail a held-out one, and
+\NUM{ch_policyother_frac} of the others. During
 training it flags at most \NUM{ch_max_vis} of the episodes in any ten-step window of \texttt{vis}
 (\NUM{ch_max_viskev} for \texttt{vis\_kev}, \NUM{ch_max_hidden} for \texttt{hidden}), with no upward trend
 (Table~\ref{tab:code-copies}). In the final evaluation it flags \NUM{ch_finhack_vis} of \texttt{vis}'s
 \NUM{ch_finhackn_vis} hack episodes, \NUM{ch_finhack_viskev} of \texttt{vis\_kev}'s \NUM{ch_finhackn_viskev} and
 \NUM{ch_finhack_hidden} of \texttt{hidden}'s \NUM{ch_finhackn_hidden}. The wrong programs that pass the visible tests
-are incomplete solutions, as they were before training; the visible-test reward did not teach the policy to copy the
-tests.
+almost never contain a value from the tests, before or after training; the visible-test reward did not teach the
+policy to copy them. Special-casing that copies no value is not detected by this check.
 
 \begin{table}[t]
 \centering\small
