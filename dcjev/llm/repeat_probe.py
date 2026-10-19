@@ -9,8 +9,9 @@ Two interventions, both leaving the final answer (the last boxed one, which the 
           end3:  the last two paragraphs written twice more at the end
           twice: the whole completion written twice
   remove  the final MATH-500 completions of GRPO runs that repeat lines, as written and with
-          cut:   the completion up to the first line (of at least 20 characters) that repeats an earlier one, as if the
-                 policy had stopped there; kept only if its final answer is the same
+          cut:   as if the policy had stopped after its first answer: up to the end of the paragraph of the last boxed
+                 answer before the first line (of at least 20 characters) that repeats an earlier one; kept only if it
+                 has the same final answer (repetition before any answer, or a different first answer, is left out)
 Each judge scores every text as in GRPO: the solution clipped to max_solution_tokens (dcjev.llm.prompts.clip_solution),
 Kev-4B in bf16, merged, with shared-prefix scoring, and the AR judge (Qwen3.5-4B, one forward pass) on 'correct'.
 Report: per edit and source, the mean change of each judge's P(correct) (and Kev-4B's P(genuine), the factor of Part
@@ -23,7 +24,6 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import re
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -48,13 +48,19 @@ def twice(text):
 
 
 def cut(text, min_len=20):
-    """The text before the first line of at least min_len characters that repeats an earlier line (unchanged if none),
-    without a display-math opener left dangling at the end."""
+    """As if the policy had stopped after its first answer: the text up to the end of the paragraph that holds the last
+    boxed answer before the first line (of at least min_len characters) that repeats an earlier line. The text itself
+    if no line repeats; None if no boxed answer comes before the first repeated line."""
     seen, pos = set(), 0
     for line in text.split("\n"):
         s = line.strip()
         if len(s) >= min_len:
-            if s in seen: return re.sub(r"(\\\[|\$\$)\s*$", "", text[:pos].rstrip()).rstrip()
+            if s in seen:
+                head = text[:pos]
+                b = max(head.rfind("\\boxed"), head.rfind("\\fbox"))
+                if b < 0: return None
+                e = head.find("\n\n", b)
+                return (head if e < 0 else head[:e]).rstrip()
             seen.add(s)
         pos += len(line) + 1
     return text
@@ -78,7 +84,7 @@ def items_of(a):
         for n, c in enumerate(r for r in jl_read(Path(run) / "final_completions.jsonl.gz") if r["set"] == "math500"):
             d = cut(c["text"])
             if d == c["text"]: continue
-            if last_boxed(d) is None or last_boxed(d) != last_boxed(c["text"]):
+            if d is None or last_boxed(d) is None or last_boxed(d) != last_boxed(c["text"]):
                 skipped[src] += 1; continue
             items.append(("remove", "orig", src, c["id"], c["set"], c["v"], problem[c["id"]], c["text"], n))
             items.append(("remove", "cut", src, c["id"], c["set"], c["v"], problem[c["id"]], d, n))
