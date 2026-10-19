@@ -46,9 +46,23 @@ def per_problem(path):
     return {s: {i: float(np.mean(v)) for i, v in d.items()} for s, d in acc.items()}
 
 
+def repeated_lines(text, min_len=20):
+    """Share of a completion's lines of at least min_len characters (stripped) that already occurred earlier in it: 0 for
+    a solution written once, about 1/2 for one written twice. Restating the final answer does not count, since such a
+    line is rarely repeated verbatim; repeating whole steps or paragraphs does."""
+    seen, n, rep = set(), 0, 0
+    for l in (x.strip() for x in text.split("\n")):
+        if len(l) < min_len: continue
+        n += 1
+        if l in seen: rep += 1
+        else: seen.add(l)
+    return rep / n if n else 0.0
+
+
 def style(path, sname="math500"):
     """What the policy's completions on one set look like: tokens, truncation, how many give more than one boxed answer
-    or none (the verifier reads the last one), and Kev-4B's P(correct) for the right and for the wrong ones."""
+    or none (the verifier reads the last one), the share of repeated lines, and Kev-4B's P(correct) for the right and
+    for the wrong ones."""
     recs = []
     with gzip.open(path, "rt") as f:
         for l in f:
@@ -57,7 +71,8 @@ def style(path, sname="math500"):
     if not recs: return {}
     boxes = [r["text"].count("\\boxed") + r["text"].count("\\fbox") for r in recs]
     out = {"tokens": float(np.mean([r["n_tok"] for r in recs])), "truncated": float(np.mean([r["finish"] == "length" for r in recs])),
-           "boxed_many": float(np.mean([b > 1 for b in boxes])), "boxed_none": float(np.mean([b == 0 for b in boxes]))}
+           "boxed_many": float(np.mean([b > 1 for b in boxes])), "boxed_none": float(np.mean([b == 0 for b in boxes])),
+           "repeated_lines": float(np.mean([repeated_lines(r["text"]) for r in recs]))}
     for v, k in ((1, "kev_right"), (0, "kev_wrong")):
         xs = [r["kev"]["correct"] for r in recs if r["v"] == v and r.get("kev")]
         if xs: out[k] = float(np.mean(xs))

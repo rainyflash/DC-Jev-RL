@@ -458,14 +458,15 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         if not st: continue
         o.num(f"{tag}stok_{ck}", f(st["tokens"], 0)); o.num(f"{tag}strunc_{ck}", pct(st["truncated"], 1))
         o.num(f"{tag}sboxmany_{ck}", pct(st["boxed_many"])); o.num(f"{tag}sboxnone_{ck}", pct(st["boxed_none"], 1))
+        if "repeated_lines" in st: o.num(f"{tag}srep_{ck}", pct(st["repeated_lines"], 1))
         for k in ("kev_right", "kev_wrong"):
             if k in st: o.num(f"{tag}s{k.replace('_', '')}_{ck}", f(st[k]))
-        rows.append(f"{tt(c)} & {f(st['tokens'], 0)} & {pct(st['truncated'], 1)} & {pct(st['boxed_many'])} & {pct(st['boxed_none'], 1)} & "
-                    f"{f(st.get('kev_right'))} & {f(st.get('kev_wrong'))} \\\\")
+        rows.append(f"{tt(c)} & {f(st['tokens'], 0)} & {pct(st['truncated'], 1)} & {pct(st.get('repeated_lines'), 1)} & {pct(st['boxed_many'])} & "
+                    f"{pct(st['boxed_none'], 1)} & {f(st.get('kev_right'))} & {f(st.get('kev_wrong'))} \\\\")
     if rows:
-        o.table(f"{tag}grpo_style", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & & & \\multicolumn{2}{c}{boxed answers} & \\multicolumn{2}{c}{\\kev{} $\\pc$} \\\\ "
-                "\\cmidrule(lr){4-5}\\cmidrule(l){6-7}\ncondition & tokens & truncated & several & none & right & wrong \\\\ \\midrule\n"
-                + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+        o.table(f"{tag}grpo_style", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & & & repeated & \\multicolumn{2}{c}{boxed answers} & "
+                "\\multicolumn{2}{c}{\\kev{} $\\pc$} \\\\ \\cmidrule(lr){5-6}\\cmidrule(l){7-8}\ncondition & tokens & truncated & lines & several & none & "
+                "right & wrong \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     for x, v in s.get("step0_eval", {}).items():   # evaluation noise: the base model at step 0 of every run
         sk = x.replace("_", "")
         o.num(f"{tag}szruns_{sk}", str(v["runs"])); o.num(f"{tag}szmean_{sk}", pts(v["mean"])); o.num(f"{tag}szsd_{sk}", pts(v["std"]))
@@ -687,9 +688,29 @@ def part3a(o, exp):
     if ch.exists(): code_hacks(o, json.loads(ch.read_text()))
 
 
+def fill_stats(o, s):
+    """Part III-B: how good each fill-in reward was on the unlabelled completions it scored, against the verifier's
+    withheld labels (per step, then the mean over steps and seeds)."""
+    rows = []
+    for c, e in s["conditions"].items():
+        tj = e.get("train_judge", {})
+        if "fill_auroc_unlabelled" not in tj: continue
+        g = lambda k, w="all": tj.get(k, {}).get(w)
+        rows.append(f"{tt(c)} & {len(e['seeds'])} & {f(g('fill_auroc_unlabelled', 'first20'))} & {f(g('fill_auroc_unlabelled', 'firsthalf'))} & "
+                    f"{f(g('fill_auroc_unlabelled', 'secondhalf'))} & {f(g('frozen_kev_auroc_unlabelled'))} & {f(g('fill_ece_unlabelled'))} & "
+                    f"{f(g('fill_mean_unlabelled'))} & {f(g('acc_unlabelled'))} \\\\")
+    if rows:
+        o.table("fill_stats", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & \\multicolumn{3}{c}{fill-in AUROC} & frozen \\kev{} & & "
+                "\\multicolumn{2}{c}{mean} \\\\ \\cmidrule(lr){3-5}\\cmidrule(l){8-9}\ncondition & seeds & steps 0--19 & first half & second half & "
+                "AUROC & ECE & fill-in & label \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 def part3b(o, exp):
     sm = exp / "part3b_labels" / "results" / "summary.json"
-    if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=base_eval(exp))
+    if sm.exists():
+        s = json.loads(sm.read_text())
+        grpo_numbers(o, s, base=base_eval(exp))
+        fill_stats(o, s)
 
 
 def tree_stats(o, s):

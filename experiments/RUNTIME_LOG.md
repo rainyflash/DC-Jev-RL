@@ -29,3 +29,16 @@ The three new runtimes were rebuilt with `scripts/setup_colab.sh` and checked ag
   `edd7d4a4b0d6316e8d152f504be23ea62174a173760548104062cc31bf49271b`, 8170 problems), the one every Part III-A run uses.
   The evaluation sets (KodCode validation, MBPP+, HumanEval+) came out byte-identical on the three runtimes and hold
   the same problems (298, 376 and 161) as the offline judge study's.
+
+## Runtimes replaced for the second round
+
+A Colab runtime lasts at most about 24 hours. When a runtime's queue had finished, every file of its runs except the
+GRPO checkpoints and LoRA weights was copied off and checked (it exists locally with the same size), and the runtime
+was deleted and replaced by a new one on the same notebook. No run was in progress on a runtime when it was deleted. Each new runtime was set up with
+`scripts/setup_colab.sh` and checked before its queue started: the GPU model, the math data's sha256 sums against
+session 1's, both package lists against `scripts/env/`, and the base-model revision the rollout server loads.
+
+| runtime | old runtime deleted (UTC) | new runtime checked | queue started | checks |
+|---|---|---|---|---|
+| session 1 | 2026-10-19 ~02:25 | 02:33 to 02:41 | 02:42 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
+| session 2 | 2026-10-19 ~04:12 | 04:14 to 04:22 | 04:22 | RTX PRO 6000 (96 GB); math data and both package lists identical; Qwen3.5-4B-Base at `1001bb4d` |
