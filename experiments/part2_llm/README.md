@@ -24,6 +24,20 @@ Other directories:
   1e-5 on the validation set, and what was known when it was written;
 - `base_eval/`: two greedy evaluations of the base model on the final evaluation's sets;
 - `judge_study/`: the offline judge study (its own README);
+- `repeat_probe/`: a test added after the GRPO runs, when the final policies of `kev_only`, `rlvr_kev_gate` and Part
+  III-B's `sub_kev` and `sub_kev_recal` turned out to repeat parts of their solutions: does repetition itself raise the
+  judges' scores? `dcjev/llm/repeat_probe.py` scores the judge study's base-policy completions as written and with
+  repetition added (the last two paragraphs twice more; the whole completion twice), and those four runs' repeating
+  MATH-500 final completions (seed 1) as written and cut after the first answer, with both judges as in GRPO.
+  `scores.jsonl.gz`: every score; `repeat_probe.json`: the mean change per edit, with bootstrap intervals over
+  problems. It ran on 2026-10-19 on a Colab RTX PRO 6000 shared with two GRPO runs (Kev-4B 33 minutes, the AR judge
+  14, model loading included). Command:
+
+      python -m dcjev.llm.repeat_probe --study experiments/part2_llm/judge_study \
+          --runs experiments/part2_llm/runs/kev_only/s1 experiments/part2_llm/runs/rlvr_kev_gate/s1 \
+                 experiments/part3b_labels/runs/sub_kev/s1 experiments/part3b_labels/runs/sub_kev_recal/s1 \
+          --out experiments/part2_llm/repeat_probe
+
 - `prompts/judge_prompts.json`: the judges' questions, fixed before any GRPO run.
 
 `results/` is produced from `runs/` by

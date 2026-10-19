@@ -14,9 +14,9 @@ and with $\lambda<1$ the judge can only reorder completions with the same verdic
 help: among wrong completions, by preferring the ones closer to right, and in groups where every completion is wrong,
 where the verifier gives no signal at all. After the first steps few groups are all wrong
 (\NUM{allwrong_rlvr} over the last 20 steps of \texttt{rlvr}), and among same-verdict completions a judge's preference
-can be about style as much as about correctness: under the gate the policy wrote longer solutions that repeat
-themselves, without becoming more accurate (\S\ref{sec:res-repeat} tests whether the judge's score rises with
-repetition). % TODO: rewrite with the probe's result. Our runs do not rule out a
+can be about style as much as about correctness: under the gate the policy learned to solve each problem again after
+its first answer, which raises the judge's score (\S\ref{sec:res-repeat}), without becoming more accurate. Our runs do
+not rule out a
 gain with another weight $\lambda$, harder problems with more all-wrong groups, a stronger judge, or longer training;
 they show that at this scale the gain, if any, is below the resolution of 2--3 seeds and the evaluation noise.
 

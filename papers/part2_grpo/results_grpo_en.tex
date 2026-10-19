@@ -62,8 +62,8 @@ accuracy either (\NUM{d_kevgate_math} \ci{\NUM{dlo_kevgate_math}}{\NUM{dhi_kevga
 what the policy writes. Its MATH-500 solutions are \NUM{stok_kevgate} tokens long on average against \NUM{stok_rlvr}
 for \texttt{rlvr}, and \NUM{srep_kevgate} of their lines repeat an earlier line of the same solution, against
 \NUM{srep_rlvr} (Table~\ref{tab:grpo-style}). Among completions with the same verdict, the judge term decides which is
-better, as designed, and under it the policy learns to repeat itself without becoming more accurate; whether the
-judge's score itself rises with repetition is tested in \S\ref{sec:res-repeat}. % TODO: rewrite with the probe's result.
+better, as designed. Under it the policy learns to solve the problem again after its first answer, which the judge pays
+for (\S\ref{sec:res-repeat}), without becoming more accurate.
 
 \begin{table}[t]
 \centering\small
@@ -124,4 +124,45 @@ final evaluation. The two results differ by \NUM{rptabs_math500} points on avera
 
 \subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
 
-% TODO: results of dcjev/llm/repeat_probe.py (experiments/part2_llm/repeat_probe/), added after the GRPO runs.
+The policies trained with \kev{} in their reward came to write a solution, give its answer, and then solve the problem
+again from the start in nearly the same words, often more than once, ending with the same answer. After the GRPO runs
+we tested whether the judges pay for this (\file{dcjev/llm/repeat_probe.py}; Table~\ref{tab:repeat-probe}). No edit
+changes the last boxed answer, the one the verifier reads, and each judge scores the texts as in training.
+
+\paragraph{Repetition as such is worth little to \kev{}.} Writing the last two paragraphs of the base policy's solutions
+from the judge study twice more raises \kev{}'s $\pc$ by \NUM{rpkevc_end3_1}
+\ci{\NUM{rpkevclo_end3_1}}{\NUM{rpkevchi_end3_1}} on the \NUM{rpn_end3_1} solutions the verifier accepts and changes it
+by \NUM{rpkevc_end3_0} \ci{\NUM{rpkevclo_end3_0}}{\NUM{rpkevchi_end3_0}} on the \NUM{rpn_end3_0} it rejects. Writing the
+whole solution twice gives \NUM{rpkevc_twice_1} and \NUM{rpkevc_twice_0}. The AR judge moves more, by
+\NUM{rparc_end3_1} on right answers and \NUM{rparc_end3_0} on wrong ones.
+
+\paragraph{The repetition the policies learned is paid for.} We took the final MATH-500 solutions of \texttt{kev\_only}
+and \texttt{rlvr\_kev\_gate} (seed 1 of each) that repeat lines, and cut each one after its first answer, as if the
+policy had stopped there. Solutions that repeat before their first answer, or whose first answer differs from their
+last, were left out (\NUM{rpskip_kevonly} and \NUM{rpskip_kevgate}). \kev{} rates the solutions as written higher than the cut ones. For
+\texttt{kev\_only}, whose reward is \kev{}'s $\pc$, the part after the first answer raises it by
+\NUM{rpkevc_cutkevonly_1} \ci{\NUM{rpkevclo_cutkevonly_1}}{\NUM{rpkevchi_cutkevonly_1}} on right answers and by
+\NUM{rpkevc_cutkevonly_0} \ci{\NUM{rpkevclo_cutkevonly_0}}{\NUM{rpkevchi_cutkevonly_0}} on wrong ones, for
+\NUM{rpkevcup_cutkevonly_0} of the wrong ones: from \NUM{rpkevcwithout_cutkevonly_0} to \NUM{rpkevcwith_cutkevonly_0}.
+\texttt{rlvr\_kev\_gate} multiplies the verifier's reward by \kev{}'s $\pg$, so among the completions the verifier
+accepts this factor alone decides which are paid more. On those, the part after the first answer raises $\pg$ by
+\NUM{rpkevg_cutkevgate_1} \ci{\NUM{rpkevglo_cutkevgate_1}}{\NUM{rpkevghi_cutkevgate_1}}, for
+\NUM{rpkevgup_cutkevgate_1} of them: the gate pays right answers that repeat themselves more than right answers that
+stop. The AR judge, in neither reward, also rates these solutions higher with the part after the first answer (by
+\NUM{rparc_cutkevonly_1} and \NUM{rparc_cutkevgate_1} on right answers), though less consistently.
+
+The repetition we added is a verbatim copy, while the policies solve the problem again in slightly different words.
+Which property of their repetition the judge pays for, the probe does not tell. It does show that what these policies
+learned to write after their first answer raises the judge's score, most of all on wrong answers, so the reward paid
+for it.
+
+\begin{table}[t]
+\centering\small
+\input{tables/repeat_probe}
+\caption{What repetition is worth to the judges: P(with the repetition) minus P(without), on the solutions the
+verifier accepts (right) and rejects (wrong), with the number of each. Top: the base policy's solutions of the judge
+study (MATH-500 and the GSM8K subset), with repetition added. Bottom: the final MATH-500 solutions of GRPO runs that
+repeat lines, as written against cut after their first answer. \kev{}'s $\pc$ and $\pg$ and the AR judge's
+$P_{\mathrm{a}}$, each scoring the solution as in training; intervals in the text resample problems.}
+\label{tab:repeat-probe}
+\end{table}

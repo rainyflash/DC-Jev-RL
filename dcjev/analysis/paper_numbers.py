@@ -420,6 +420,14 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")
     o.table(f"{tag}grpo_acc", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seeds & " + head
             + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    blocks = []   # each seed's accuracy (table grpo_seeds): the seeds of a condition can differ more than the conditions
+    for c in conds:
+        e = s["conditions"][c]
+        ok = {x for x, _, _ in sets if x in e and len(e[x]["per_seed"]) == len(e["seeds"])}
+        blocks.append("\n".join(f"{tt(c) if i == 0 else ''} & {n} & " + " & ".join(pts(e[x]["per_seed"][i]) if x in ok else "--" for x, _, _ in sets)
+                                + " \\\\" for i, n in enumerate(e["seeds"])))
+    o.table(f"{tag}grpo_seeds", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seed & " + head
+            + " \\\\ \\midrule\n" + "\n\\addlinespace\n".join(blocks) + "\n\\bottomrule\n\\end{tabular}\n")
     # Paired differences: to the main baseline as d_<cond>_<set> (table grpo_paired), to any further baseline b as
     # dv<b>_<cond>_<set>, dv<b>lo_... and dv<b>hi_... (table grpo_paired_<b>), e.g. dvtreerand_treekev_math.
     for n, bk in enumerate(k for k in s if k.startswith("paired_vs_")):
@@ -519,7 +527,7 @@ def part2(o, exp):
         o.num(f"base_{x.replace('_', '')}", pts(np.mean(v))); o.num(f"basesd_{x.replace('_', '')}", pts(np.std(v, ddof=1)) if len(v) > 1 else "--")
     sm = exp / "part2_llm" / "results" / "summary.json"
     if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=be)
-    repeat_probe(o, exp)
+    repeat_probe(o, exp, ("kev_only", "rlvr_kev_gate"))
 
 
 PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
@@ -740,23 +748,26 @@ def part3b(o, exp):
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, base=base_eval(exp))
         fill_stats(o, s)
-    repeat_probe(o, exp)
+    repeat_probe(o, exp, ("sub_kev", "sub_kev_recal"))
 
 
-def repeat_probe(o, exp):
+def repeat_probe(o, exp, table_conds):
     """Judges and repetition (Parts II and III-B; dcjev/llm/repeat_probe.py -> experiments/part2_llm/repeat_probe/): the
     change of each judge's probability when a solution repeats itself, P(with the repetition) - P(without), on the base
     policy's solutions with repetition added and on GRPO runs' repeating final solutions with it cut off, separately for
     the solutions the verifier accepts (1) and rejects (0). Macros rp<judge>[lo|hi|up|with|without]_<row>_<v>, judge kevc
-    (Kev-4B P(correct)), kevg (P(genuine)) or arc (the AR judge's P(correct)); rows end3, twice, cut<condition>."""
+    (Kev-4B P(correct)), kevg (P(genuine)) or arc (the AR judge's P(correct)); rows end3, twice, cut<condition>. The
+    table (repeat_probe) shows the cut rows of table_conds only, the runs of the paper it is in."""
     p = exp / "part2_llm" / "repeat_probe" / "repeat_probe.json"
     if not p.exists(): return
     r = json.loads(p.read_text())
     add = [("add/end3/base", "end3", "last two paragraphs twice more"), ("add/twice/base", "twice", "written twice")]
     cut = []
+    shown = set()
     for k in sorted(x for x in r if x.startswith("remove/cut/")):
         cond, seed = k.split("/")[2:4]
         cut.append((k, "cut" + COND_KEY[cond], f"{tt(cond)}, seed {seed[1:]}"))
+        if cond in table_conds: shown.add(k)
     for src, n in r.get("cut_changes_or_loses_answer", {}).items(): o.num(f"rpskip_{COND_KEY[src.split('/')[0]]}", str(n))
     judges = (("kevc", "kev_correct"), ("kevg", "kev_genuine"), ("arc", "ar_correct"))
 
@@ -784,7 +795,9 @@ def repeat_probe(o, exp):
         return f"\\quad {label} & {n[0]} / {n[1]} & " + " & ".join(cells) + " \\\\"
 
     rows = ["\\multicolumn{8}{@{}l}{\\emph{base policy's solutions, repetition added}} \\\\"] + [x for x in (row(*d) for d in add) if x]
-    rows += ["\\multicolumn{8}{@{}l}{\\emph{repeating final solutions of GRPO runs, as written against cut after the first answer}} \\\\"] + [x for x in (row(*d) for d in cut) if x]
+    rows += ["\\multicolumn{8}{@{}l}{\\emph{repeating final solutions of GRPO runs, as written against cut after the first answer}} \\\\"]
+    built = [(d[0], row(*d)) for d in cut]   # row() writes the macros of every run; the table has this paper's runs
+    rows += [x for k, x in built if x and k in shown]
     o.table("repeat_probe", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & solutions & \\multicolumn{2}{c}{\\kev{} $\\pc$} & "
             "\\multicolumn{2}{c}{\\kev{} $\\pg$} & \\multicolumn{2}{c}{AR $P_{\\mathrm{a}}$} \\\\ \\cmidrule(lr){3-4}\\cmidrule(lr){5-6}\\cmidrule(l){7-8}\n"
             " & right / wrong & right & wrong & right & wrong & right & wrong \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
