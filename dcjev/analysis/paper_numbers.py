@@ -468,6 +468,10 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         sk = x.replace("_", "")
         o.num(f"{tag}szruns_{sk}", str(v["runs"])); o.num(f"{tag}szmean_{sk}", pts(v["mean"])); o.num(f"{tag}szsd_{sk}", pts(v["std"]))
         o.num(f"{tag}szmin_{sk}", pts(v["min"])); o.num(f"{tag}szmax_{sk}", pts(v["max"]))
+    for x, v in s.get("late_eval_change", {}).items():   # checkpoint noise: change between a run's last two evaluations
+        sk = x.replace("_", "")
+        o.num(f"{tag}lecruns_{sk}", str(v["runs"])); o.num(f"{tag}lecabs_{sk}", pts(v["mean_abs"]))
+        o.num(f"{tag}lecmax_{sk}", pts(v["max_abs"])); o.num(f"{tag}lecmean_{sk}", pts(v["mean"], sign=True))
 
 
 def part2(o, exp):

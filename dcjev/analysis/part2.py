@@ -14,7 +14,8 @@ Paired differences: for each benchmark, per-problem accuracy is averaged over th
 fraction of seeds that solve it; sampled sets: the mean over seeds x samples); the difference to the baseline is averaged
 over problems, with a bootstrap over problems (10k resamples) for the 95% interval. Seed-level spread is reported too.
 step0_eval: the spread of the step-0 evaluations of all included runs (the same base model each time), a direct
-measure of the evaluation noise of greedy decoding on vLLM.
+measure of the evaluation noise of greedy decoding on vLLM. late_eval_change: how much a run's accuracy changes between
+its last two periodic evaluations, late in training (checkpoint noise).
 """
 from __future__ import annotations
 
@@ -147,6 +148,19 @@ def main():
                     if isinstance(ev.get(s), dict): s0[s].append(ev[s]["acc"])
     rep["step0_eval"] = {s: {"runs": len(v), "mean": float(np.mean(v)), "std": float(np.std(v, ddof=1)) if len(v) > 1 else None,
                              "min": float(min(v)), "max": float(max(v))} for s, v in s0.items()}
+    # Checkpoint noise: how much a run's greedy accuracy changes between its last two periodic evaluations (steps 150
+    # and 200 of a 200-step run; with --step N, the last two up to N).
+    ch = defaultdict(list)
+    for c in order:
+        for r in runs.get(c, {}).values():
+            ev = sorted((x for x in r["log"] if x["kind"] == "eval" and (a.step is None or x["step"] <= a.step)), key=lambda x: x["step"])
+            if len(ev) < 2: continue
+            for s in SETS:
+                if isinstance(ev[-1].get(s), dict) and isinstance(ev[-2].get(s), dict):
+                    ch[s].append((ev[-2]["step"], ev[-1]["step"], ev[-1][s]["acc"] - ev[-2][s]["acc"]))
+    rep["late_eval_change"] = {s: {"runs": len(v), "steps": sorted({f"{p}-{q}" for p, q, _ in v}),
+                                   "mean_abs": float(np.mean([abs(d) for _, _, d in v])), "max_abs": float(max(abs(d) for _, _, d in v)),
+                                   "mean": float(np.mean([d for _, _, d in v]))} for s, v in ch.items()}
     base = runs.get(a.baseline, {})
     rng = np.random.default_rng(0)
     for c in order:
