@@ -61,6 +61,13 @@ training completion are.
    `bash scripts/make_jobs.sh 1e-5`, run with `python -m dcjev.queue`.
 5. Papers: `python -m dcjev.analysis.paper_numbers <part> --out papers/<paper>`, then `bash scripts/build_papers.sh papers`.
 
+## License
+
+This repository is licensed under the [Apache License 2.0](LICENSE). Two files adapt code released under the MIT
+licence: `dcjev/control/ppo.py` (from CleanRL) and the sandbox guard in `dcjev/code/sandbox.py` (from OpenAI's
+human-eval); their notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Benchmark problems and tests that
+appear in `experiments/` keep the licences of their datasets.
+
 ---
 
 # DC-Jev-RL，第 4 版
@@ -105,3 +112,7 @@ training completion are.
 3. 第一部分：`bash scripts/run_part1.sh baselines`，然后是 `server` 和 `judges`。
 4. 第二、三部分：先启动 rollout 服务（`bash scripts/run_part2.sh rollout`），再用 `python -m dcjev.queue` 运行 `bash scripts/make_jobs.sh 1e-5` 生成的任务列表。
 5. 论文：`python -m dcjev.analysis.paper_numbers <part> --out papers/<paper>`，然后 `bash scripts/build_papers.sh papers`。
+
+## 许可证
+
+本仓库采用 [Apache License 2.0](LICENSE) 许可。有两个文件改编自以 MIT 许可发布的代码：`dcjev/control/ppo.py`（来自 CleanRL）和 `dcjev/code/sandbox.py` 中的沙箱防护（来自 OpenAI 的 human-eval），其许可声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。`experiments/` 中出现的基准题目和测试仍遵循各自数据集的许可。
