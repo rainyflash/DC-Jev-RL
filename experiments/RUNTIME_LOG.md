@@ -34,9 +34,10 @@ The three new runtimes were rebuilt with `scripts/setup_colab.sh` and checked ag
 
 A Colab runtime lasts at most about 24 hours. When a runtime's queue had finished, every file of its runs except the
 GRPO checkpoints and LoRA weights was copied off and checked (it exists locally with the same size), and the runtime
-was deleted and replaced by a new one on the same notebook. No run was in progress on a runtime when it was deleted. Each new runtime was set up with
-`scripts/setup_colab.sh` and checked before its queue started: the GPU model, the math data's sha256 sums against
-session 1's, both package lists against `scripts/env/`, and the base-model revision the rollout server loads.
+was deleted and replaced by a new one on the same notebook. No run was in progress on a runtime when it was deleted.
+Each new runtime was set up with `scripts/setup_colab.sh` and checked before its queue started: the GPU model, the math
+data's sha256 sums against session 1's, both package lists against `scripts/env/`, and the base-model revision the
+rollout server loads.
 
 | runtime | old runtime deleted (UTC) | new runtime checked | queue started | checks |
 |---|---|---|---|---|
