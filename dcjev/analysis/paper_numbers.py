@@ -440,7 +440,11 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         if "math500_kev_correct_auroc" in e:
             o.num(f"{tag}kevauc_{ck}", f(e["math500_kev_correct_auroc"])); o.num(f"{tag}kevm_{ck}", f(e["math500_kev_correct_mean"]))
         for k, v in e.get("train_judge", {}).items():
-            for w in ("all", "first20", "last20"): o.num(f"{tag}{JUDGE_KEY[k]}_{w}_{ck}", f(v[w]))
+            fm = {"audit_selection_gain": lambda x: pts(x, sign=True), "audit_best_possible_gain": lambda x: pts(x, sign=True),
+                  "audit_value_all_roots": pts, "acc_unlabelled": pts, "roots_finished": lambda x: pct(x, 1)}.get(k, f)
+            for w in ("all", "first20", "last20", "firsthalf", "secondhalf"):
+                if w in v: o.num(f"{tag}{JUDGE_KEY[k]}_{w}_{ck}", fm(v[w]) if v[w] is not None else "--")
+            if "records" in v: o.num(f"{tag}{JUDGE_KEY[k]}_records_{ck}", str(v["records"]))
         rows.append(f"{tt(c)} & {pts(t.get('acc'))} & {f(t.get('kev_correct'))} & {f(t.get('len_mean'), 0)} & {pct(t.get('groups_all_wrong'))} & "
                     f"{pct(t.get('groups_all_right'))} & {f(e.get('math500_kev_correct_mean'))} & {f(e.get('math500_kev_correct_auroc'))} \\\\")
     o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "

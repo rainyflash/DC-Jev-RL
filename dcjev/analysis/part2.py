@@ -118,12 +118,24 @@ def main():
             e["train_last20"] = {k: float(np.mean([np.mean([r[k] for r in st]) for st in last])) for k in keys if all(k in st[0] for st in last)}
             e["train_last20"]["kev_correct"] = float(np.mean([np.mean([r["kev"]["correct"] for r in st]) for st in last]))
             e["seconds_per_step"] = float(np.mean([np.mean([sum(r["seconds"].values()) for r in st]) for st in steps if st]))
-            ex = {}   # per-step judge statistics of the label (III-B) and tree (III-C) conditions: seed mean over steps
+            # Per-step judge statistics of the label (III-B) and tree (III-C) conditions: per seed the mean over the steps
+            # of a window, then the mean over seeds. Windows are by step number, since some statistics are not logged on
+            # every step (the audit of the roots not kept, every --audit_every steps; an AUROC of a step without both
+            # outcomes).
+            ex = {}
             for k in EXTRA:
-                xs = [[r[k] for r in st if r.get(k) is not None] for st in steps]
-                xs = [x for x in xs if x]
-                if xs: ex[k] = {w: float(np.mean([np.mean(sl(x)) for x in xs])) for w, sl in
-                                (("all", lambda x: x), ("first20", lambda x: x[:20]), ("last20", lambda x: x[-20:]))}
+                wins = {"all": [], "first20": [], "last20": [], "firsthalf": [], "secondhalf": []}
+                for st in steps:
+                    xs = [(r["step"], r[k]) for r in st if r.get(k) is not None]
+                    if not xs: continue
+                    n = st[-1]["step"] + 1
+                    for w, keep in (("all", lambda t: True), ("first20", lambda t: t < 20), ("last20", lambda t: t >= n - 20),
+                                    ("firsthalf", lambda t: t < n / 2), ("secondhalf", lambda t: t >= n / 2)):
+                        v = [x for t, x in xs if keep(t)]
+                        if v: wins[w].append(float(np.mean(v)))
+                if wins["all"]:
+                    ex[k] = {w: float(np.mean(v)) if v else None for w, v in wins.items()}
+                    ex[k]["records"] = sum(1 for st in steps for r in st if r.get(k) is not None)
             if ex: e["train_judge"] = ex
         rep["conditions"][c] = e
     # Evaluation noise: every run's step-0 evaluation is the same base model, evaluated in a different server state.
