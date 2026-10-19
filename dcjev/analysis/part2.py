@@ -13,6 +13,8 @@ evaluation at step N (the log's eval record, evals/stepN.jsonl.gz), so runs of d
 Paired differences: for each benchmark, per-problem accuracy is averaged over the seeds of a condition (greedy sets: the
 fraction of seeds that solve it; sampled sets: the mean over seeds x samples); the difference to the baseline is averaged
 over problems, with a bootstrap over problems (10k resamples) for the 95% interval. Seed-level spread is reported too.
+step0_eval: the spread of the step-0 evaluations of all included runs (the same base model each time), a direct
+measure of the evaluation noise of greedy decoding on vLLM.
 """
 from __future__ import annotations
 
@@ -102,6 +104,15 @@ def main():
                                 (("all", lambda x: x), ("first20", lambda x: x[:20]), ("last20", lambda x: x[-20:]))}
             if ex: e["train_judge"] = ex
         rep["conditions"][c] = e
+    # Evaluation noise: every run's step-0 evaluation is the same base model, evaluated in a different server state.
+    s0 = defaultdict(list)
+    for c in order:
+        for r in runs.get(c, {}).values():
+            for ev in (x for x in r["log"] if x["kind"] == "eval" and x["step"] == 0):
+                for s in SETS:
+                    if isinstance(ev.get(s), dict): s0[s].append(ev[s]["acc"])
+    rep["step0_eval"] = {s: {"runs": len(v), "mean": float(np.mean(v)), "std": float(np.std(v, ddof=1)) if len(v) > 1 else None,
+                             "min": float(min(v)), "max": float(max(v))} for s, v in s0.items()}
     base = runs.get(a.baseline, {})
     rng = np.random.default_rng(0)
     for c in order:

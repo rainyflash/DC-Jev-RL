@@ -10,9 +10,10 @@ block run after the solution's code (dcjev.code.sandbox.run_tests).
 kodcode_train / kodcode_val  KodCode/KodCode-Light-RL-10K (cc-by-nc-4.0) problems whose pytest file tests one function
             imported from `solution`, uses no fixtures or third-party packages, and has at least 3 test functions; the
             first test function is visible, the others are held out. 300 problems (seed 0) are held out for validation.
-mbppplus    evalplus/mbppplus (apache-2.0): the 3 original MBPP asserts are visible; the EvalPlus harness is held out.
+mbppplus    evalplus/mbppplus (apache-2.0): the original MBPP asserts (`test_list`: 3 for most problems, up to 7) are visible;
+            the EvalPlus harness is held out.
 humanevalplus  evalplus/humanevalplus (apache-2.0): the first 3 asserts of the original HumanEval test (openai/openai_humaneval,
-            MIT) are visible; the EvalPlus `check` harness is held out. The problem's own code (signature,
+            MIT; fewer where it has fewer) are visible; the EvalPlus `check` harness is held out. The problem's own code (signature,
             docstring, helper functions) runs before the solution (`exec_prefix`), so the helpers the harness calls exist;
             the solution's definition replaces the stub.
 """

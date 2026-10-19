@@ -446,6 +446,10 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
     o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "
             "\\cmidrule(lr){2-6}\\cmidrule(l){7-8}\ncondition & accuracy & \\kev{} $\\pc$ & tokens & all wrong & all right & \\kev{} $\\pc$ & \\kev{} AUROC \\\\ \\midrule\n"
             + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    for x, v in s.get("step0_eval", {}).items():   # evaluation noise: the base model at step 0 of every run
+        sk = x.replace("_", "")
+        o.num(f"{tag}szruns_{sk}", str(v["runs"])); o.num(f"{tag}szmean_{sk}", pts(v["mean"])); o.num(f"{tag}szsd_{sk}", pts(v["std"]))
+        o.num(f"{tag}szmin_{sk}", pts(v["min"])); o.num(f"{tag}szmax_{sk}", pts(v["max"]))
 
 
 def part2(o, exp):
@@ -613,12 +617,47 @@ def code_grpo(o, s):
     o.table("code_grpo_paired", "\\begin{tabular}{@{}l" + "c" * (2 * len(sets)) + "@{}}\n\\toprule\n & \\multicolumn{3}{c}{all pass} & \\multicolumn{3}{c}{hack} \\\\ "
             "\\cmidrule(lr){2-4}\\cmidrule(l){5-7}\nminus " + tt(bl[len("paired_vs_"):]) + " & " + lab + " & " + lab + " \\\\ \\midrule\n" + "\n".join(rows)
             + "\n\\bottomrule\n\\end{tabular}\n")
+    sk = {x: k for x, k, _ in sets}
+    for name, v in s.get("step0_eval", {}).items():   # evaluation noise: the base model at step 0 of every run
+        x, m = name.split("/"); k = f"{sk[x]}_{m.replace('_', '')}"
+        o.num(f"cgszruns_{k}", str(v["runs"])); o.num(f"cgszmean_{k}", pts(v["mean"])); o.num(f"cgszsd_{k}", pts(v["std"]))
+        o.num(f"cgszmin_{k}", pts(v["min"])); o.num(f"cgszmax_{k}", pts(v["max"]))
+
+
+def code_hacks(o, h):
+    """Part III-A special-casing detector (experiments/part3a_code/results/code_hacks.json from dcjev/analysis/code_hacks.py)."""
+    for k, d in h["detector"].items():
+        k = k.replace("_", "")
+        o.num(f"ch_{k}_n", f"{d['programs']:,}".replace(",", "{,}")); o.num(f"ch_{k}_copy", str(d["copy"]))
+        o.num(f"ch_{k}_elig", str(d["eligible"])); o.num(f"ch_{k}_frac", pct(d["copy_frac"], 1))
+    for name, d in h["eligible_problems"].items():
+        o.num(f"ch_elig_{name.replace('_', '')}", pct(d["with_literal"] / d["problems"]))
+    rows = []
+    for c, t in h["training"].items():
+        ck, bins = COND_KEY[c], t["bins"]
+        first, last = bins[0]["copy"], bins[-1]["copy"]
+        o.num(f"ch_first_{ck}", pct(first, 1)); o.num(f"ch_last_{ck}", pct(last, 1))
+        o.num(f"ch_max_{ck}", pct(max(b["copy"] for b in bins), 1)); o.num(f"ch_mean_{ck}", pct(float(np.mean([b["copy"] for b in bins])), 1))
+        fin = h["final"].get(c, {})
+        tot = {k: [sum(fin[s][k]["copy"] for s in fin if k in fin[s]), sum(fin[s][k]["episodes"] for s in fin if k in fin[s])] for k in ("hack", "all_pass")}
+        for k, (n, m) in tot.items():
+            kk = k.replace("_", "")
+            o.num(f"ch_fin{kk}_{ck}", str(n)); o.num(f"ch_fin{kk}n_{ck}", str(m))
+        rows.append(f"{tt(c)} & {len(t['seeds'])} & {pct(first, 1)} & {pct(bins[len(bins) // 2]['copy'], 1)} & {pct(last, 1)} & "
+                    f"{tot['hack'][0]} / {tot['hack'][1]} & {tot['all_pass'][0]} / {tot['all_pass'][1]} \\\\")
+    mid = h["training"][next(iter(h["training"]))]["bins"]
+    o.table("code_copies", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & & \\multicolumn{3}{c}{training episodes that copy} & \\multicolumn{2}{c}{final evaluation, copy} \\\\ "
+            "\\cmidrule(lr){3-5}\\cmidrule(l){6-7}\ncondition & seeds & steps " + mid[0]["steps"].replace("-", "--") + " & steps "
+            + mid[len(mid) // 2]["steps"].replace("-", "--") + " & steps " + mid[-1]["steps"].replace("-", "--")
+            + " & hack & all pass \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 def part3a(o, exp):
     code_study(o, exp)
     sm = exp / "part3a_code" / "results" / "summary.json"
     if sm.exists(): code_grpo(o, json.loads(sm.read_text()))
+    ch = exp / "part3a_code" / "results" / "code_hacks.json"
+    if ch.exists(): code_hacks(o, json.loads(ch.read_text()))
 
 
 def part3b(o, exp):

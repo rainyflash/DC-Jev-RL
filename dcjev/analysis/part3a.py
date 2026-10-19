@@ -4,7 +4,8 @@
 
 Per condition and evaluation set (final greedy evaluation; seed mean and spread): visible-test pass, all-tests pass
 (visible and held-out), hack rate (visible passed, held-out failed), single-turn all-tests pass, attempts used; paired
-per-problem differences of all-tests pass and hack against `vis` (bootstrap over problems); training curves.
+per-problem differences of all-tests pass and hack against `vis` (bootstrap over problems); training curves; the spread
+of the step-0 evaluations (the same base model in every run), which measures the evaluation noise.
 """
 from __future__ import annotations
 
@@ -55,6 +56,15 @@ def main():
         e["train_last20"] = {k: float(np.mean([np.mean([r[k] for r in st]) for st in last])) for k in ("vis_pass", "all_pass", "hack", "attempts_mean", "reward_mean")}
         e["seconds_per_step"] = float(np.mean([np.mean([sum(r["seconds"].values()) for r in st]) for st in steps]))
         rep["conditions"][c] = e
+    # Evaluation noise: every run's step-0 evaluation is the same base model (greedy decoding, different server states).
+    s0 = defaultdict(list)
+    for r in (r for c in runs for r in runs[c].values()):
+        for ev in (x for x in r["log"] if x["kind"] == "eval" and x["step"] == 0):
+            for s in SETS:
+                for m in ("vis_pass", "all_pass", "hack"):
+                    if isinstance(ev.get(s), dict) and ev[s].get(m) is not None: s0[(s, m)].append(ev[s][m])
+    rep["step0_eval"] = {f"{s}/{m}": {"runs": len(v), "mean": float(np.mean(v)), "std": float(np.std(v, ddof=1)) if len(v) > 1 else None,
+                                      "min": float(min(v)), "max": float(max(v))} for (s, m), v in s0.items()}
     base, rng = runs.get(a.baseline, {}), np.random.default_rng(0)
     for c in [c for c in CONDS if c in runs and c != a.baseline]:
         rep["paired_vs_" + a.baseline][c] = {}

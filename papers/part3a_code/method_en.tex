@@ -6,8 +6,9 @@
 \texttt{pytest} unit tests. We keep the problems whose test file tests one function, uses no fixtures or third-party
 packages, and has at least three test functions. The first test function is shown to the policy (\emph{visible}); the
 others are \emph{held out}. 300 problems (seed 0) are held out as the validation set (\texttt{kodcode\_val}). The test
-sets are MBPP+ and HumanEval+~\cite{austin2021program,chen2021codex,liu2023evalplus}. For MBPP+ the three original MBPP
-asserts are visible. For HumanEval+ the first three asserts of the original HumanEval test are visible. In both, the
+sets are MBPP+ and HumanEval+~\cite{austin2021program,chen2021codex,liu2023evalplus}. For MBPP+ the original MBPP
+asserts are visible (three for most problems, up to seven). For HumanEval+ the first three asserts of the original
+HumanEval test are visible (fewer where it has fewer). In both, the
 EvalPlus harness with its added tests is held out. A problem is dropped if its reference solution fails any of its own
 tests under our harness, and we report how many were dropped. Each program runs in its own \texttt{python -I}
 subprocess in an empty temporary directory. It has CPU-time, address-space and file-size limits and a wall-clock
