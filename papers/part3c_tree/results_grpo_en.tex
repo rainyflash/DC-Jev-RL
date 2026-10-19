@@ -9,28 +9,36 @@ Table~\ref{tab:tree-paired} the paired differences, Table~\ref{tab:tree-stats} w
 training, and Figure~\ref{fig:tree-curves} the training curves. The intervals resample problems and do not include the
 variation between seeds.
 
-\paragraph{The judge's choice is close to a random one.} Every tenth step the roots that were not kept are continued
-too, so we know what keeping the chosen two gained over keeping all four. Under \texttt{tree\_kev} the leaves of the
-two roots \kev{} ranked highest were correct \NUM{auditgain_all_treekev} points more often than the leaves of all four
-roots, averaged over the \NUM{auditgain_records_treekev} audited steps. Under \texttt{tree\_random}, whose choice is
-random, the same number is \NUM{auditgain_all_treerand}; it measures the noise of the audit. Keeping the best two roots
-in hindsight would have gained \NUM{auditbest_all_treekev}. On the leaves of every step, \kev{}'s \emph{on track}
-score of the root separates correct from incorrect leaves with an AUROC of \NUM{otauc_all_treekev} pooled over prompts,
-but only \NUM{otaucw_all_treekev} within a prompt, which is the comparison that decides which roots are kept
-(Table~\ref{tab:tree-stats}). Offline, on the base policy's solutions cut at 128 tokens, the within-problem AUROC was
-\NUM{aucw_128_kevtrack}, and keeping the two best-ranked prefixes raised the share of continuations ending correct by
-\NUM{gain_128_kevtrack} (\S\ref{sec:res-prefix}). The two measurements are not on the same prefixes: offline on the base policy's
-solutions, in training on the policy's own as it improves. Its roots lead to correct answers much more often (a mean
-leaf accuracy of \NUM{auditval_all_treekev}\% over the audits, against a mean value of \NUM{ps_valueall_128} for the
-base policy's prefixes offline), which leaves less to choose.
+\paragraph{The judge's choice gained little over a random one.} Every tenth step the roots that were not kept are
+continued too, so we know what keeping the chosen two gained over keeping all four (Table~\ref{tab:tree-stats}). Under
+\texttt{tree\_kev} the leaves of the two roots \kev{} ranked highest were correct \NUM{auditgain_all_treekev}
+\ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}} points more often than the leaves of all four roots,
+over \NUM{auditgain_records_treekev} audited steps. Under \texttt{tree\_random}, whose choice gains nothing in
+expectation, the same number is \NUM{auditgain_all_treerand}
+\ci{\NUM{auditgainlo_all_treerand}}{\NUM{auditgainhi_all_treerand}}; these intervals resample the audited steps.
+Keeping the two roots whose leaves turned out best would have gained \NUM{auditbest_all_treekev} points, more than any
+ranking made before the leaves exist could, since the same four leaves per root both rank the roots and score them. On
+the audited steps \kev{}'s \emph{on track} score of a root separates its correct from its incorrect leaves with an AUROC
+of \NUM{auditotauc_all_treekev} pooled over prompts, but only \NUM{auditotaucw_all_treekev}
+\ci{\NUM{auditotaucwlo_all_treekev}}{\NUM{auditotaucwhi_all_treekev}} within a prompt, the comparison that decides which
+roots are kept (\NUM{auditotaucw_all_treerand} under \texttt{tree\_random}). Offline, with the same structure (four
+prefixes of 128 tokens per problem, four continuations each), the within-problem AUROC was \NUM{aucw_128_kevtrack}, and
+keeping the two best-ranked prefixes raised the share of continuations ending correct by \NUM{gainpt_128_kevtrack}
+points (\S\ref{sec:res-prefix}). The prefixes differ: offline they are the base policy's, in training the policy's own
+as it learns. Its roots lead to correct answers more and more often (under \texttt{tree\_random},
+\NUM{auditval_firsthalf_treerand}\% of the audited leaves were correct in the first half of training and
+\NUM{auditval_secondhalf_treerand}\% in the second, against a mean value of \NUM{ps_valueall_128} for the base policy's
+prefixes offline), and the room for a choice, the best two in hindsight, shrank from \NUM{auditbest_firsthalf_treerand}
+to \NUM{auditbest_secondhalf_treerand} points.
 
 \begin{table}[t]
 \centering\small
 \input{tables/tree_stats}
 \caption{Inside the trees during training (mean over steps and seeds): share of roots that had already ended within 128
-tokens; AUROC of \kev{}'s \emph{on track} score of the root for its leaves' verdicts, pooled and within prompt; and on
-the audited steps (every tenth), the leaf accuracy of all four roots and what keeping the chosen two, or the best two in
-hindsight, gained over it, in points; tokens generated per step (thousands, last 20 steps).}
+tokens; on the audited steps (every tenth), where all four roots of a prompt are continued, the AUROC of \kev{}'s
+\emph{on track} score of a root for its leaves' verdicts, pooled and within prompt, the leaf accuracy of all four roots
+(percent), and what keeping the chosen two, or the best two in hindsight, gained over it (points); tokens generated per
+step (thousands, last 20 steps), not counting the audit's continuations.}
 \label{tab:tree-stats}
 \end{table}
 

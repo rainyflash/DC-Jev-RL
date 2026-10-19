@@ -379,7 +379,8 @@ JUDGE_KEY = {"kev_correct_auroc": "kevauctr", "kev_correct_auroc_within_group": 
              "ar_correct_auroc_within_group": "araucwtr", "fill_auroc_unlabelled": "fillauc", "fill_ece_unlabelled": "fillece",
              "fill_mean_unlabelled": "fillmean", "acc_unlabelled": "unlacc", "frozen_kev_auroc_unlabelled": "frozenauc",
              "roots_finished": "rootsdone", "on_track_auroc_leaves": "otauc", "on_track_auroc_leaves_within_prompt": "otaucw",
-             "audit_value_all_roots": "auditval", "audit_selection_gain": "auditgain", "audit_best_possible_gain": "auditbest"}
+             "audit_value_all_roots": "auditval", "audit_selection_gain": "auditgain", "audit_best_possible_gain": "auditbest",
+             "audit_on_track_auroc_leaves": "auditotauc", "audit_on_track_auroc_leaves_within_prompt": "auditotaucw"}
 
 
 def pts(x, sign=False):
@@ -456,6 +457,10 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
             for w in ("all", "first20", "last20", "firsthalf", "secondhalf"):
                 if w in v: o.num(f"{tag}{JUDGE_KEY[k]}_{w}_{ck}", fm(v[w]) if v[w] is not None else "--")
             if "records" in v: o.num(f"{tag}{JUDGE_KEY[k]}_records_{ck}", str(v["records"]))
+            for n, x1 in zip(e["seeds"], v.get("per_seed", [])): o.num(f"{tag}{JUDGE_KEY[k]}_all_{ck}_s{n}", fm(x1))   # e.g. auditgain_all_treekev_s2
+            if "ci95" in v:   # e.g. auditgainlo_all_treekev; unsigned, as the other interval ends
+                lo, hi = v["ci95"]; fl = (lambda x: pts(x)) if fm is not f else f
+                o.num(f"{tag}{JUDGE_KEY[k]}lo_all_{ck}", fl(lo)); o.num(f"{tag}{JUDGE_KEY[k]}hi_all_{ck}", fl(hi))
         rows.append(f"{tt(c)} & {pts(t.get('acc'))} & {f(t.get('kev_correct'))} & {f(t.get('len_mean'), 0)} & {pct(t.get('groups_all_wrong'))} & "
                     f"{pct(t.get('groups_all_right'))} & {f(e.get('math500_kev_correct_mean'))} & {f(e.get('math500_kev_correct_auroc'))} \\\\")
     o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "
@@ -531,6 +536,8 @@ def part3c(o, exp):
             o.num(f"auc_{c}_{k}", f(s["auroc"])); o.num(f"aucw_{c}_{k}", f(s["auroc_within_problem"])); o.num(f"rho_{c}_{k}", f(s["spearman_value"]))
             gs = s["selection_gain"]
             o.num(f"gain_{c}_{k}", f(gs["mean"], 3, sign=True)); o.num(f"gainlo_{c}_{k}", f(gs["ci95"][0], 3)); o.num(f"gainhi_{c}_{k}", f(gs["ci95"][1], 3))
+            # the same gain in percentage points of continuations ending correct, as the training audit gives it (III-C)
+            o.num(f"gainpt_{c}_{k}", pts(gs["mean"], sign=True)); o.num(f"gainptlo_{c}_{k}", pts(gs["ci95"][0])); o.num(f"gainpthi_{c}_{k}", pts(gs["ci95"][1]))
             bw = e["bootstrap"]["auroc_within"][name]
             o.num(f"aucwlo_{c}_{k}", f(bw["ci95"][0])); o.num(f"aucwhi_{c}_{k}", f(bw["ci95"][1]))
             t = s.get("threshold_0.3")
@@ -729,14 +736,15 @@ def tree_stats(o, s):
         tj, t = e.get("train_judge", {}), e.get("train_last20", {})
         if "audit_selection_gain" not in tj: continue
         g = lambda k: tj.get(k, {}).get("all")
-        rows.append(f"{tt(c)} & {len(e['seeds'])} & {pct(g('roots_finished'), 1)} & {f(g('on_track_auroc_leaves'))} & "
-                    f"{f(g('on_track_auroc_leaves_within_prompt'))} & {pts(g('audit_value_all_roots'))} & {pts(g('audit_selection_gain'), sign=True)} & "
+        # The AUROCs are those of the audited steps, where all four roots have leaves (outside the audit only the kept two
+        # do, which under tree_kev are the two the judge ranked highest).
+        rows.append(f"{tt(c)} & {len(e['seeds'])} & {pct(g('roots_finished'), 1)} & {f(g('audit_on_track_auroc_leaves'))} & "
+                    f"{f(g('audit_on_track_auroc_leaves_within_prompt'))} & {pts(g('audit_value_all_roots'))} & {pts(g('audit_selection_gain'), sign=True)} & "
                     f"{pts(g('audit_best_possible_gain'), sign=True)} & {f(t['gen_tokens'] / 1000, 1) if 'gen_tokens' in t else '--'} \\\\")
     if rows:
-        o.table("tree_stats", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & roots & \\multicolumn{2}{c}{\\emph{on track}, AUROC} & "
-                "\\multicolumn{3}{c}{audit, every 10th step} & tokens \\\\ \\cmidrule(lr){4-5}\\cmidrule(lr){6-8}\ncondition & seeds & ended & "
-                "leaves & within prompt & value, 4 roots & gain, kept 2 & gain, best 2 & per step (k) \\\\ \\midrule\n" + "\n".join(rows)
-                + "\n\\bottomrule\n\\end{tabular}\n")
+        o.table("tree_stats", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & roots & \\multicolumn{5}{c}{audit, every 10th step: all four roots continued} & "
+                "tokens \\\\ \\cmidrule(lr){4-8}\ncondition & seeds & ended & AUROC & within prompt & value & gain, kept 2 & gain, best 2 & "
+                "per step (k) \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 def part3c_grpo(o, exp):

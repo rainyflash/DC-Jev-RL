@@ -35,7 +35,9 @@ SETS = ["gsm8k_test", "math500", "amc23", "aime24", "aime25", "val", "gsm8k500"]
 EXTRA = ("kev_correct_auroc", "kev_correct_auroc_within_group", "ar_correct_auroc", "ar_correct_auroc_within_group",
          "fill_auroc_unlabelled", "fill_ece_unlabelled", "fill_mean_unlabelled", "acc_unlabelled", "frozen_kev_auroc_unlabelled",
          "roots_finished", "on_track_auroc_leaves", "on_track_auroc_leaves_within_prompt", "audit_value_all_roots",
-         "audit_selection_gain", "audit_best_possible_gain")
+         "audit_selection_gain", "audit_best_possible_gain", "audit_on_track_auroc_leaves", "audit_on_track_auroc_leaves_within_prompt")
+# Statistics whose 95% interval is also given: a bootstrap over the steps that logged them, pooled over seeds.
+CI_KEYS = ("audit_selection_gain", "audit_on_track_auroc_leaves_within_prompt")
 
 
 def per_problem(path):
@@ -128,7 +130,7 @@ def main():
         if m5 and "kev" in m5[0]:
             e["math500_kev_correct_mean"] = float(np.mean([x["kev"]["correct"] for x in m5]))
             e["math500_kev_correct_auroc"] = float(np.mean([x["kev_correct_auroc"] for x in m5 if x["kev_correct_auroc"] is not None]))
-        steps = [[r for r in s["log"] if r["kind"] == "step" and (a.step is None or r["step"] < a.step)] for s in seeds.values()]
+        steps = [[r for r in seeds[k]["log"] if r["kind"] == "step" and (a.step is None or r["step"] < a.step)] for k in sorted(seeds)]
         last = [st[-20:] for st in steps if st]
         if last:
             keys = ("acc", "reward_mean", "len_mean", "truncated", "groups_all_wrong", "groups_all_right", "lp_absdiff_mean", "tis_clip_frac", "gen_tokens")
@@ -140,7 +142,14 @@ def main():
             # Per-step judge statistics of the label (III-B) and tree (III-C) conditions: per seed the mean over the steps
             # of a window, then the mean over seeds. Windows are by step number, since some statistics are not logged on
             # every step (the audit of the roots not kept, every --audit_every steps; an AUROC of a step without both
-            # outcomes).
+            # outcomes). The tree conditions log the AUROC of the root's on-track score on the leaves of every step, which
+            # outside the audit are the leaves of the two kept roots only; on the audited steps every root has leaves, as
+            # in the offline prefix study (four prefixes, four continuations each), so those steps are also kept apart.
+            for st in steps:
+                for r in st:
+                    if "audit_selection_gain" in r:
+                        r["audit_on_track_auroc_leaves"] = r.get("on_track_auroc_leaves")
+                        r["audit_on_track_auroc_leaves_within_prompt"] = r.get("on_track_auroc_leaves_within_prompt")
             ex = {}
             for k in EXTRA:
                 wins = {"all": [], "first20": [], "last20": [], "firsthalf": [], "secondhalf": []}
@@ -155,6 +164,11 @@ def main():
                 if wins["all"]:
                     ex[k] = {w: float(np.mean(v)) if v else None for w, v in wins.items()}
                     ex[k]["records"] = sum(1 for st in steps for r in st if r.get(k) is not None)
+                    if len(wins["all"]) == len(steps): ex[k]["per_seed"] = wins["all"]   # in the order of e["seeds"]
+                    if k in CI_KEYS:
+                        xs = np.array([r[k] for st in steps for r in st if r.get(k) is not None])
+                        bs = np.random.default_rng(0).choice(xs, (10000, len(xs))).mean(1)
+                        ex[k]["ci95"] = [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
             if ex: e["train_judge"] = ex
         rep["conditions"][c] = e
     # Evaluation noise: every run's step-0 evaluation is the same base model, evaluated in a different server state.
