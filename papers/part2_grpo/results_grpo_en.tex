@@ -29,4 +29,97 @@ $10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NU
 \label{tab:sweep}
 \end{table}
 
-% The GRPO comparison of the reward conditions follows when all runs have finished.
+\subsection{Reward conditions}\label{sec:res-cond}
+
+% DRAFT, written with 8 of the 12 runs; every claim is to be checked against the final numbers.
+\texttt{rlvr} and \texttt{rlvr\_kev\_add} ran with \NUM{seeds_rlvr} seeds, the other conditions with
+\NUM{seeds_kevgate}. Table~\ref{tab:grpo-acc} gives the final policies' accuracies, Table~\ref{tab:grpo-paired} the
+paired differences to \texttt{rlvr}, and Figure~\ref{fig:grpo-curves} the training curves. The intervals resample
+problems. They do not include the variation between seeds, which the standard deviations in
+Table~\ref{tab:grpo-acc} show.
+
+\paragraph{The verifier alone.} 200 steps of \texttt{rlvr} raise MATH-500 from \NUM{acc_base_math}\% (the base model)
+to \NUM{acc_rlvr_math}\%, GSM8K from \NUM{acc_base_gsm}\% to \NUM{acc_rlvr_gsm}\%, AMC23 from \NUM{acc_base_amc}\% to
+\NUM{acc_rlvr_amc}\%, and AIME24 and AIME25 from \NUM{acc_base_aime24}\% and \NUM{acc_base_aime25}\% to
+\NUM{acc_rlvr_aime24}\% and \NUM{acc_rlvr_aime25}\%.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_acc}
+\caption{Final policies: accuracy in percent, seed mean $\pm$ standard deviation over seeds. MATH-500 and GSM8K
+(1319 problems): greedy. AMC23, AIME24 and AIME25: mean over 16 samples per problem at temperature 0.6. Base model: the
+mean of two evaluations.}
+\label{tab:grpo-acc}
+\end{table}
+
+\paragraph{Adding a judge to the verifier changes nothing we can measure.} With \kev{}'s $\pc$ added to the verifier's
+reward, the final policy differs from \texttt{rlvr} by \NUM{d_kevadd_math} \ci{\NUM{dlo_kevadd_math}}{\NUM{dhi_kevadd_math}}
+points on MATH-500 and \NUM{d_kevadd_gsm} \ci{\NUM{dlo_kevadd_gsm}}{\NUM{dhi_kevadd_gsm}} on GSM8K. With the AR judge's
+$P_{\mathrm{a}}$ the differences are \NUM{d_aradd_math} \ci{\NUM{dlo_aradd_math}}{\NUM{dhi_aradd_math}} and
+\NUM{d_aradd_gsm} \ci{\NUM{dlo_aradd_gsm}}{\NUM{dhi_aradd_gsm}}. On the competition sets the intervals are a few points
+wide either way. Gating the verifier by \kev{}'s \emph{genuine} score (\texttt{rlvr\_kev\_gate}) does not change the
+accuracy either (\NUM{d_kevgate_math} \ci{\NUM{dlo_kevgate_math}}{\NUM{dhi_kevgate_math}} on MATH-500), but it changes
+what the policy writes. Its MATH-500 solutions are \NUM{stok_kevgate} tokens long on average against \NUM{stok_rlvr}
+for \texttt{rlvr}, and \NUM{srep_kevgate} of their lines repeat an earlier line of the same solution, against
+\NUM{srep_rlvr} (Table~\ref{tab:grpo-style}). Among completions with the same verdict, the judge term decides which is
+better, as designed, and the policy follows the judge's taste there: it learns to repeat itself
+(\S\ref{sec:res-repeat}), without becoming more accurate.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_paired}
+\caption{Paired differences to \texttt{rlvr}, in percentage points: per problem, each condition's seed mean, averaged
+over problems, with a 95\% bootstrap interval over problems.}
+\label{tab:grpo-paired}
+\end{table}
+
+\paragraph{The judge alone is exploited.} Without the verifier (\texttt{kev\_only}), the policy maximises \kev{}'s
+$\pc$, which rises to \NUM{kevc_kevonly} on the training completions over the last 20 steps (\texttt{rlvr}:
+\NUM{kevc_rlvr}). The verifier's accuracy on the same completions stays at \NUM{trainacc_kevonly}\%
+(\texttt{rlvr}: \NUM{trainacc_rlvr}\%). Against \texttt{rlvr}, the final policy's accuracy differs by
+\NUM{d_kevonly_math} \ci{\NUM{dlo_kevonly_math}}{\NUM{dhi_kevonly_math}} points on MATH-500 and by
+\NUM{d_kevonly_aime24} on AIME24, and it ends below the base model it started from on MATH-500 (\NUM{acc_kevonly_math}\% against
+\NUM{acc_base_math}\%) and on all three competition sets. What it learned is to write solutions that \kev{} rates
+as correct: \kev{} gives its wrong MATH-500 answers \NUM{skevwrong_kevonly} on average, against \NUM{skevwrong_rlvr} for
+the wrong answers of \texttt{rlvr}'s policy. The within-group AUROC of \kev{} on the training completions, which is
+what GRPO's advantage uses, falls from \NUM{kevaucwtr_first20_kevonly} in the first 20 steps to
+\NUM{kevaucwtr_last20_kevonly} in the last 20. Its solutions repeat themselves too: \NUM{srep_kevonly} of their lines
+repeat an earlier one. A 4B judge is a usable signal for a policy that is not optimised against it
+(\S\ref{sec:res-study}); it is not a usable reward on its own.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_style}
+\caption{What the final policies write on MATH-500 (greedy, seed mean): completion tokens, share truncated at 2048
+tokens, share of lines (of at least 20 characters) that repeat an earlier line of the same solution, share with more
+than one boxed answer or none (the verifier reads the last one), and \kev{}'s $\pc$ for right and for wrong answers.}
+\label{tab:grpo-style}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_train}
+\caption{Training statistics over the last 20 steps (seed mean): verifier accuracy of the training completions,
+\kev{}'s mean $\pc$ on 64 of them per step, completion tokens, and the share of groups in which every completion is
+wrong or every one is right (no learning signal from the verifier). Final policy: \kev{}'s mean $\pc$ and its AUROC
+for the verifier's verdict on the MATH-500 completions.}
+\label{tab:grpo-train}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../../experiments/part2_llm/results/training_curves.pdf}
+\caption{Training curves (seed mean): verifier accuracy, completion tokens, share of groups with no correct completion
+and \kev{}'s $\pc$ on the training completions (10-step moving averages), and greedy accuracy on MATH-500 and the
+validation set every 50 steps.}
+\label{fig:grpo-curves}
+\end{figure}
+
+\paragraph{Evaluation noise.} Every run evaluates the base model at step 0. Across the \NUM{szruns_math500} runs, MATH-500
+accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\% (standard deviation
+\NUM{szsd_math500} points) and validation accuracy from \NUM{szmin_val}\% to \NUM{szmax_val}\%. Differences of a point
+between two final policies are within this noise.
+
+\subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
+
+% TODO: results of dcjev/llm/repeat_probe.py (experiments/part2_llm/repeat_probe/), added after the GRPO runs.

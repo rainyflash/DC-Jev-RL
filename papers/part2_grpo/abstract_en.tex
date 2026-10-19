@@ -1,0 +1,15 @@
+% Part II, abstract (included by main_en.tex).
+% DRAFT, written with 8 of the 12 GRPO runs; to be checked against the final numbers.
+\kev{} is a judge built as a LoRA adapter and a pointer head on Qwen3.5-4B-Base, so a GRPO policy trained as another
+LoRA adapter on the same base can share one copy of the backbone with it. We measure what that saves and what the judge
+adds to GRPO on MATH. On the shared backbone the judge's probabilities stay within \NUM{shared_parity_max} of its fp32
+reference, and the trainer needs \NUM{mem_saving_load} less GPU memory after loading than with the judge loaded
+separately. Offline, on \NUM{js_completions} solutions of the base policy, \kev{} tells correct from incorrect about as
+well as an autoregressive judge of the same size (AUROC \NUM{js_auc_all_kevc} against \NUM{js_auc_all_arc}); the same
+model reasoning before it answers is better, at about \NUM{ratio_gen_kevbb} times the cost. In GRPO (200 steps, 2--3
+seeds per condition), the verifier alone raises MATH-500 accuracy from \NUM{acc_base_math}\% to \NUM{acc_rlvr_math}\%.
+Adding either judge's probability of correctness to the verifier's reward, or gating the verifier with \kev{}'s score,
+changes the final accuracy on MATH-500, GSM8K, AMC23, AIME24 and AIME25 by no more than the evaluation noise. Trained on
+\kev{}'s score alone, the policy learns to write solutions that \kev{} rates as correct when they are not. Its
+MATH-500 accuracy ends at \NUM{acc_kevonly_math}\%, a difference of \NUM{d_kevonly_math} points to the verifier-trained
+policy. Code, logs and every number in this paper are in the repository.
