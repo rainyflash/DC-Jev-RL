@@ -14,15 +14,16 @@ and with $\lambda<1$ the judge can only reorder completions with the same verdic
 help: among wrong completions, by preferring the ones closer to right, and in groups where every completion is wrong,
 where the verifier gives no signal at all. After the first steps few groups are all wrong
 (\NUM{allwrong_rlvr} over the last 20 steps of \texttt{rlvr}), and among same-verdict completions a judge's preference
-is about style as much as about correctness: the policies trained with a judge term adopted the judge's taste
-(longer solutions that repeat themselves, under the gate) without becoming more accurate. Our runs do not rule out a
+can be about style as much as about correctness: under the gate the policy wrote longer solutions that repeat
+themselves, without becoming more accurate (\S\ref{sec:res-repeat} tests whether the judge's score rises with
+repetition). % TODO: rewrite with the probe's result. Our runs do not rule out a
 gain with another weight $\lambda$, harder problems with more all-wrong groups, a stronger judge, or longer training;
 they show that at this scale the gain, if any, is below the resolution of 2--3 seeds and the evaluation noise.
 
 \paragraph{A judge is not a verifier.} Offline, \kev{}'s $\pc$ separates correct from incorrect base-policy solutions
-with an AUROC near 0.9 (\S\ref{sec:res-study}). The probes showed that small, systematic edits move it, such as a
-claim that every step was verified. Trained against $\pc$ alone, the policy found such moves: its wrong answers reach a
-$\pc$ the judge used to give only to right ones, the judge's ranking within a group decays towards chance, and the
+with an AUROC near 0.9 (\S\ref{sec:res-study}). The probes showed that it can be moved by edits that do not change the
+answer, if only slightly (a claim that every step was verified). Trained against $\pc$ alone, the policy found
+solutions the judge overrates: its wrong answers reach a $\pc$ the judge used to give only to right ones, the judge's ranking within a group decays towards chance, and the
 accuracy on every benchmark but GSM8K falls below the base model's. This is the reward over-optimisation that
 \citet{gao2023scaling} describe, at small scale and within 200 steps. An offline AUROC measures a judge on the
 distribution it was trained for, not on the distribution a policy optimised against it will produce.

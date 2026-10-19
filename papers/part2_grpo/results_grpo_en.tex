@@ -62,8 +62,8 @@ accuracy either (\NUM{d_kevgate_math} \ci{\NUM{dlo_kevgate_math}}{\NUM{dhi_kevga
 what the policy writes. Its MATH-500 solutions are \NUM{stok_kevgate} tokens long on average against \NUM{stok_rlvr}
 for \texttt{rlvr}, and \NUM{srep_kevgate} of their lines repeat an earlier line of the same solution, against
 \NUM{srep_rlvr} (Table~\ref{tab:grpo-style}). Among completions with the same verdict, the judge term decides which is
-better, as designed, and the policy follows the judge's taste there: it learns to repeat itself
-(\S\ref{sec:res-repeat}), without becoming more accurate.
+better, as designed, and under it the policy learns to repeat itself without becoming more accurate; whether the
+judge's score itself rises with repetition is tested in \S\ref{sec:res-repeat}. % TODO: rewrite with the probe's result.
 
 \begin{table}[t]
 \centering\small

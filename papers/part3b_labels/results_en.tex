@@ -41,13 +41,14 @@ well: its AUROC for the withheld labels was \NUM{fillauc_all_subkev} over the ru
 too generous from the start, though. Its mean $\pc$ on the unlabelled completions was \NUM{fillmean_first20_subkev} in
 the first 20 steps, when \NUM{unlacc_first20_subkev}\% of them were correct, and \NUM{fillmean_last20_subkev} in the
 last 20, when \NUM{unlacc_last20_subkev}\% were. Which completions are labelled is random, so a constant offset raises
-the expected reward of every behaviour by the same amount and does not change what the policy learns. A judge that pays
-more for some behaviour than its correctness warrants does. By the end the policy repeats itself:
+the expected reward of every behaviour by the same amount, which the group baseline removes in expectation. A judge
+that pays more for some behaviour than its correctness warrants changes what the policy learns. By the end the policy repeats itself:
 \NUM{srep_subkev} of the lines of its MATH-500 solutions repeat an
 earlier line, against
 \NUM{srep_sub} for \texttt{rlvr\_sub}, and \NUM{strunc_subkev} of the solutions run into the 2048-token limit
 (Table~\ref{tab:sub-style}). Repeating a solution's conclusion does not change the answer the verifier reads, so the
-labelled completions do not punish it, and the judge pays for it on the unlabelled ones (\S\ref{sec:res-repeat}).
+labelled completions do not punish it; whether the judge pays for it on the unlabelled ones is tested in
+\S\ref{sec:res-repeat}. % TODO: rewrite with the repeat probe's result.
 
 \begin{table}[t]
 \centering\small
