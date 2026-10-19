@@ -26,5 +26,8 @@ R=/content/work/runs
     for c in tree_kev tree_random; do echo "$R/part3c/$c/s$s 20 h=7 bash scripts/run_part3.sh c $c $s $G"; done
     echo "$R/part3b/sub_probe/s$s 20 h=7 bash scripts/run_part3.sh b sub_probe $s $G"
   done
+  # A third seed of each tree condition, added on 2026-10-19 after both seeds of each had finished: with two seeds
+  # each, one of them far above rlvr and one at its level, the effect of the tree shape was undecided.
+  for c in tree_kev tree_random; do echo "$R/part3c/$c/s3 20 h=7 bash scripts/run_part3.sh c $c 3 $G"; done
 } > $D/part3.txt
 wc -l $D/part2_main.txt $D/part3.txt
