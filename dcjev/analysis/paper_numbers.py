@@ -8,8 +8,10 @@ writes <out>/numbers.tex (\\defnum{key}{value}, read by \\NUM{key}; papers/commo
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import math
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -475,27 +477,38 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
     o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "
             "\\cmidrule(lr){2-6}\\cmidrule(l){7-8}\ncondition & accuracy & \\kev{} $\\pc$ & tokens & all wrong & all right & \\kev{} $\\pc$ & \\kev{} AUROC \\\\ \\midrule\n"
             + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
-    rows = []   # what the final policies write on MATH-500
+    blocks = []   # what each final policy writes on MATH-500, per seed: the seeds of a condition can write very differently
     for c in conds:
-        st, ck = s["conditions"][c].get("math500_style"), COND_KEY[c]
+        e, ck = s["conditions"][c], COND_KEY[c]
+        st = e.get("math500_style")
         if not st: continue
         o.num(f"{tag}stok_{ck}", f(st["tokens"], 0)); o.num(f"{tag}strunc_{ck}", pct(st["truncated"], 1))
         o.num(f"{tag}sboxmany_{ck}", pct(st["boxed_many"])); o.num(f"{tag}sboxnone_{ck}", pct(st["boxed_none"], 1))
         if "repeated_lines" in st: o.num(f"{tag}srep_{ck}", pct(st["repeated_lines"], 1))
         if "repeats_after_answer" in st: o.num(f"{tag}sansrep_{ck}", pct(st["repeats_after_answer"]))
+        if "draft_opening" in st: o.num(f"{tag}sdraft_{ck}", pct(st["draft_opening"]))
         for k in ("kev_right", "kev_wrong"):
             if k in st: o.num(f"{tag}s{k.replace('_', '')}_{ck}", f(st[k]))
-        for n, x in s["conditions"][c].get("math500_style_per_seed", {}).items():   # e.g. srep_treekev_s2
+        rows, modes = [], defaultdict(int)
+        for n, x in e.get("math500_style_per_seed", {}).items():   # e.g. srep_treekev_s2
             o.num(f"{tag}stok_{ck}_s{n}", f(x["tokens"], 0)); o.num(f"{tag}strunc_{ck}_s{n}", pct(x["truncated"], 1))
             o.num(f"{tag}sboxmany_{ck}_s{n}", pct(x["boxed_many"]))
             if "repeated_lines" in x: o.num(f"{tag}srep_{ck}_s{n}", pct(x["repeated_lines"], 1))
             if "repeats_after_answer" in x: o.num(f"{tag}sansrep_{ck}_s{n}", pct(x["repeats_after_answer"]))
-        rows.append(f"{tt(c)} & {f(st['tokens'], 0)} & {pct(st['truncated'], 1)} & {pct(st.get('repeated_lines'), 1)} & {pct(st['boxed_many'])} & "
-                    f"{pct(st['boxed_none'], 1)} & {f(st.get('kev_right'))} & {f(st.get('kev_wrong'))} \\\\")
-    if rows:
-        o.table(f"{tag}grpo_style", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & & & repeated & \\multicolumn{2}{c}{boxed answers} & "
-                "\\multicolumn{2}{c}{\\kev{} $\\pc$} \\\\ \\cmidrule(lr){5-6}\\cmidrule(l){7-8}\ncondition & tokens & truncated & lines & several & none & "
-                "right & wrong \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+            if "draft_opening" in x: o.num(f"{tag}sdraft_{ck}_s{n}", pct(x["draft_opening"]))
+            for k in ("kev_right", "kev_wrong"):
+                if k in x: o.num(f"{tag}s{k.replace('_', '')}_{ck}_s{n}", f(x[k]))
+            modes[style_mode(x)] += 1
+            rows.append(f"{tt(c) if not rows else ''} & {n} & {f(x['tokens'], 0)} & {pct(x['truncated'])} & {pct(x.get('repeated_lines'))} & "
+                        f"{pct(x.get('repeats_after_answer'))} & {pct(x['boxed_many'])} & {pct(x.get('draft_opening'))} & "
+                        f"{f(x.get('kev_right'))} & {f(x.get('kev_wrong'))} \\\\")
+        for m in MODES: o.num(f"{tag}n{m}_{ck}", str(modes[m]))   # seeds per style, e.g. nrepeat_kevgate
+        if rows: blocks.append("\n".join(rows))
+    if blocks:
+        o.table(f"{tag}grpo_style", "\\begin{tabular}{@{}lccccccccc@{}}\n\\toprule\n & & & & \\multicolumn{2}{c}{repeated lines} & several & "
+                "draft & \\multicolumn{2}{c}{\\kev{} $\\pc$} \\\\ \\cmidrule(lr){5-6}\\cmidrule(l){9-10}\ncondition & seed & tokens & truncated & "
+                "share & after answer & answers & opening & right & wrong \\\\ \\midrule\n" + "\n\\addlinespace\n".join(blocks)
+                + "\n\\bottomrule\n\\end{tabular}\n")
     for x, v in s.get("step0_eval", {}).items():   # evaluation noise: the base model at step 0 of every run
         sk = x.replace("_", "")
         o.num(f"{tag}szruns_{sk}", str(v["runs"])); o.num(f"{tag}szmean_{sk}", pts(v["mean"])); o.num(f"{tag}szsd_{sk}", pts(v["std"]))
@@ -508,6 +521,251 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         sk = x.replace("_", "")
         o.num(f"{tag}rptruns_{sk}", str(v["runs"])); o.num(f"{tag}rptabs_{sk}", pts(v["mean_abs"]))
         o.num(f"{tag}rptmax_{sk}", pts(v["max_abs"])); o.num(f"{tag}rptmean_{sk}", pts(v["mean"], sign=True))
+
+
+SWITCH = 0.5   # a run switched to drafting when at least half its final MATH-500 completions open with an informal draft
+DRAFT_STEPS = (0, 50, 100, 150, 200)   # the periodic evaluations
+DG_WINDOWS = (0, 50, 100, 150)         # the 50-step windows of training (part2.draft_windows)
+GRPO_PARTS = (("part2_llm", "II"), ("part3b_labels", "III-B"), ("part3c_tree", "III-C"))
+REPEAT = 0.05   # a run repeats itself when on average at least 5% of the lines of its final MATH-500 completions repeat an earlier one
+MODES = ("draft", "plain", "repeat")
+# Conditions whose reward contains Kev-4B's score: added to the verifier's, as a gate, alone, or for unlabelled completions.
+KEV_REWARD = ("rlvr_kev_add", "rlvr_kev_gate", "kev_only", "sub_kev", "sub_kev_recal")
+
+
+def style_mode(st):
+    """A final policy's writing style on MATH-500 (part2.style): "draft" when at least SWITCH of its completions open with
+    an informal draft, "repeat" when on average at least REPEAT of their lines repeat an earlier line, "plain" otherwise.
+    In the runs of this project both shares are bimodal, so any thresholds in the gaps give the same classes."""
+    if st.get("draft_opening", 0) >= SWITCH: return "draft"
+    return "repeat" if st.get("repeated_lines", 0) >= REPEAT else "plain"
+
+
+def draft_runs(s):
+    """Per run of a dcjev/analysis/part2.py summary: condition, seed, final accuracies, the share of its final MATH-500
+    completions that open with an informal draft (part2.informal_opening), the share at each periodic evaluation, and
+    its training completions' 50-step windows."""
+    out = []
+    for c, e in s["conditions"].items():
+        for i, n in enumerate(e["seeds"]):
+            fin = e.get("math500_style_per_seed", {}).get(str(n), {}).get("draft_opening")
+            if fin is None: continue
+            acc = {x: e[x]["per_seed"][i] for x, _, _ in TEST_SETS if x in e and len(e[x]["per_seed"]) == len(e["seeds"])}
+            out.append({"cond": c, "seed": n, "acc": acc, "final": fin, "style": e["math500_style_per_seed"][str(n)],
+                        "by_step": {int(k): v for k, v in e.get("math500_draft_by_step", {}).get(str(n), {}).items()},
+                        "windows": {w["steps"][0]: w for w in e.get("draft_windows", {}).get(str(n), [])}})
+    return out
+
+
+def draft_row(r, part=None):
+    acc = lambda x: pts(r["acc"].get(x))
+    return (f"{tt(r['cond'])} & {r['seed']} & " + (f"{part} & " if part else "") + f"{acc('math500')} & {acc('aime24')} & "
+            + " & ".join(pct(r["by_step"].get(k)) for k in DRAFT_STEPS) + f" & {pct(r['final'])} \\\\")
+
+
+DRAFT_HEAD = ("& & & & \\multicolumn{5}{c}{share of drafts, step} & \\\\ \\cmidrule(lr){%d-%d}\n"
+              "condition & seed & %sMATH-500 & AIME24 & " + " & ".join(map(str, DRAFT_STEPS)) + " & final \\\\ \\midrule\n")
+
+
+def drafts(o, s, tag=""):
+    """Informal drafts in a part's GRPO runs. Table grpo_drafts: per run, the final accuracies and the share of MATH-500
+    completions that open with a draft at every periodic evaluation and at the end. Macros sdraft_<cond>_s<seed> (final
+    share), draftat_<cond>_s<seed>_<step>, draftsw_<cond> (seeds that switched: final share at least SWITCH),
+    draftswat_<cond>_s<seed> (the first evaluation at which a run that switched drafted in at least SWITCH of its
+    completions). Table grpo_draftgroups: per run with training completions and per 50-step window, the share of drafts
+    and the mean difference in verdict between the drafts and the other completions of the same group; macros
+    dg<stat>_<cond>_s<seed>_<first step>, stat share, groups (groups with both kinds), verdict, adv, kevright, kevwrong,
+    fillright, fillwrong (draft minus other; verdicts, Kev-4B's P(correct) and fill-in rewards in percentage points)."""
+    runs = draft_runs(s)
+    if not runs: return
+    blocks, gblocks = defaultdict(list), defaultdict(list)
+    for r in runs:
+        ck, n = COND_KEY[r["cond"]], r["seed"]
+        o.num(f"{tag}sdraft_{ck}_s{n}", pct(r["final"]))
+        for k, v in r["by_step"].items(): o.num(f"{tag}draftat_{ck}_s{n}_{k}", pct(v))
+        if r["final"] >= SWITCH:
+            at = [k for k, v in sorted(r["by_step"].items()) if v >= SWITCH]
+            o.num(f"{tag}draftswat_{ck}_s{n}", str(at[0]) if at else "--")
+        blocks[r["cond"]].append(draft_row(r))
+        for b, w in r["windows"].items():
+            o.num(f"{tag}dgshare_{ck}_s{n}_{b}", pct(w["draft"])); o.num(f"{tag}dggroups_{ck}_s{n}_{b}", str(w.get("verdict", {}).get("groups", 0)))
+            for k, nk in (("verdict", "verdict"), ("advantage", "adv"), ("kev_right", "kevright"), ("kev_wrong", "kevwrong"),
+                          ("fill_right", "fillright"), ("fill_wrong", "fillwrong")):
+                if k in w: o.num(f"{tag}dg{nk}_{ck}_s{n}_{b}", f(w[k]["diff"], 3, sign=True) if k == "advantage" else pts(w[k]["diff"], sign=True))
+        if r["windows"]:
+            cells = []
+            for b in DG_WINDOWS:
+                w = r["windows"].get(b, {})
+                cells += [pct(w.get("draft")), pts(w["verdict"]["diff"], sign=True) if "verdict" in w else "--"]
+            gblocks[r["cond"]].append(f"{tt(r['cond'])} & {n} & " + " & ".join(cells) + " \\\\")
+    for c in s["conditions"]:
+        rs = [r for r in runs if r["cond"] == c]
+        if rs: o.num(f"{tag}draftsw_{COND_KEY[c]}", str(sum(r["final"] >= SWITCH for r in rs)))
+    # this part's runs by style (style_mode): p<m>runs, p<m><set>min/max/mean, m also other (every style but draft)
+    pgrp = {m: [r for r in runs if style_mode(r["style"]) == m] for m in MODES}
+    pgrp["other"] = [r for r in runs if style_mode(r["style"]) != "draft"]
+    for m, rs in pgrp.items():
+        o.num(f"{tag}p{m}runs", str(len(rs)))
+        for x, sk, _ in TEST_SETS:
+            v = [r["acc"][x] for r in rs if x in r["acc"]]
+            if v: o.num(f"{tag}p{m}{sk}min", pts(min(v))); o.num(f"{tag}p{m}{sk}max", pts(max(v))); o.num(f"{tag}p{m}{sk}mean", pts(np.mean(v)))
+    if pgrp["other"]: o.num(f"{tag}pdraftmax_other", pct(max(r["final"] for r in pgrp["other"])))
+    if pgrp["draft"]: o.num(f"{tag}pdraftmin_draft", pct(min(r["final"] for r in pgrp["draft"])))
+    rep = [r["style"]["repeated_lines"] for r in pgrp["repeat"]]; norep = [r["style"]["repeated_lines"] for r in runs if r not in pgrp["repeat"]]
+    if rep: o.num(f"{tag}prepmin_repeat", pct(min(rep)))
+    if norep: o.num(f"{tag}prepmax_other", pct(max(norep), 1))
+    for k in DRAFT_STEPS:   # the share of drafts at each evaluation over this part's runs, and over those that did not switch
+        v = [r["by_step"][k] for r in runs if k in r["by_step"]]; w = [r["by_step"][k] for r in pgrp["other"] if k in r["by_step"]]
+        if v: o.num(f"{tag}pdraftat_{k}_min", pct(min(v))); o.num(f"{tag}pdraftat_{k}_max", pct(max(v)))
+        if w: o.num(f"{tag}pdraftatother_{k}_max", pct(max(w)))
+    for b in DG_WINDOWS:   # the verdict difference of drafts per window over this part's runs: pdgverdict_<first step>_min/max/mean
+        v = [r["windows"][b]["verdict"]["diff"] for r in runs if b in r["windows"] and "verdict" in r["windows"][b]]
+        if v:
+            o.num(f"{tag}pdgverdict_{b}_min", pts(min(v), sign=True)); o.num(f"{tag}pdgverdict_{b}_max", pts(max(v), sign=True))
+            o.num(f"{tag}pdgverdict_{b}_mean", pts(np.mean(v), sign=True)); o.num(f"{tag}pdgneg_{b}", str(sum(x < 0 for x in v))); o.num(f"{tag}pdgn_{b}", str(len(v)))
+    for g in ("draft", "other"):   # and over the windows after the first, per style: pdglate_<draft|other>_min/max
+        v = [w["verdict"]["diff"] for r in pgrp[g] for b, w in r["windows"].items() if b >= DG_WINDOWS[1] and "verdict" in w]
+        if v: o.num(f"{tag}pdglate_{g}_min", pts(min(v), sign=True)); o.num(f"{tag}pdglate_{g}_max", pts(max(v), sign=True))
+    strip = lambda rows: [rows[0]] + [" & ".join([""] + x.split(" & ")[1:]) for x in rows[1:]]   # condition on its first row only
+    o.table(f"{tag}grpo_drafts", "\\begin{tabular}{@{}lccccccccc@{}}\n\\toprule\n" + DRAFT_HEAD % (5, 9, "")
+            + "\n\\addlinespace\n".join("\n".join(strip(v)) for v in blocks.values()) + "\n\\bottomrule\n\\end{tabular}\n")
+    fblocks = defaultdict(list)   # the label-budget conditions: the fill-in reward of drafts against the others, same verdict
+    for r in runs:
+        if not any(k in w for w in r["windows"].values() for k in ("fill_right", "fill_wrong")): continue
+        cells = []
+        for b in DG_WINDOWS:
+            w = r["windows"].get(b, {})
+            cells += [pts(w[k]["diff"], sign=True) if k in w else "--" for k in ("fill_right", "fill_wrong")]
+        fblocks[r["cond"]].append(f"{tt(r['cond'])} & {r['seed']} & " + " & ".join(cells) + " \\\\")
+    if fblocks:
+        o.table(f"{tag}grpo_draftfill", "\\begin{tabular}{@{}lccccccccc@{}}\n\\toprule\n & & "
+                + " & ".join(f"\\multicolumn{{2}}{{c}}{{steps {b}--{b + 49}}}" for b in DG_WINDOWS) + " \\\\ "
+                + "".join(f"\\cmidrule(l{{2pt}}r{{2pt}}){{{3 + 2 * i}-{4 + 2 * i}}}" for i in range(len(DG_WINDOWS)))
+                + "\ncondition & seed & " + " & ".join(["right & wrong"] * len(DG_WINDOWS)) + " \\\\ \\midrule\n"
+                + "\n\\addlinespace\n".join("\n".join(strip(v)) for v in fblocks.values()) + "\n\\bottomrule\n\\end{tabular}\n")
+    if gblocks:
+        o.table(f"{tag}grpo_draftgroups", "\\begin{tabular}{@{}lccccccccc@{}}\n\\toprule\n & & "
+                + " & ".join(f"\\multicolumn{{2}}{{c}}{{steps {b}--{b + 49}}}" for b in DG_WINDOWS) + " \\\\ "
+                + "".join(f"\\cmidrule(l{{2pt}}r{{2pt}}){{{3 + 2 * i}-{4 + 2 * i}}}" for i in range(len(DG_WINDOWS)))
+                + "\ncondition & seed & " + " & ".join(["drafts & $\\Delta$ right"] * len(DG_WINDOWS)) + " \\\\ \\midrule\n"
+                + "\n\\addlinespace\n".join("\n".join(strip(v)) for v in gblocks.values()) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+# The three styles on one problem, for illustration: a MATH-500 problem with short ASCII-only final completions that all
+# three runs answer right (rlvr seed 1 writes one solution, rlvr_kev_gate seed 2 drafts first, rlvr seed 3 repeats).
+STYLE_EXAMPLE = ("test/prealgebra/307.json", (("part2_llm", "rlvr", 1), ("part2_llm", "rlvr_kev_gate", 2), ("part2_llm", "rlvr", 3)))
+
+
+def tex_text(t):
+    """A completion as LaTeX text, character for character (special characters escaped; line breaks kept, runs of blank
+    lines shortened to one)."""
+    rep = {"\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", "$": "\\$", "&": "\\&", "#": "\\#", "^": "\\textasciicircum{}",
+           "_": "\\_", "%": "\\%", "~": "\\textasciitilde{}"}
+    lines, out = [l.rstrip() for l in t.strip("\n").split("\n")], []
+    for l in lines:
+        if not l.strip() and out and out[-1] == "\\mbox{}": continue
+        out.append("".join(rep.get(ch, ch) for ch in l) if l.strip() else "\\mbox{}")
+    return "\\\\\n".join(out)
+
+
+def style_example(o, exp):
+    """Table style_example: the final MATH-500 completions of STYLE_EXAMPLE's runs on its problem, verbatim, side by side;
+    macros exmtok_<cond>_s<seed> (tokens) and exmv_... (the verifier's verdict)."""
+    pid, runs = STYLE_EXAMPLE
+    cols = []
+    for d, c, n in runs:
+        p = exp / d / "runs" / c / f"s{n}" / "final_completions.jsonl.gz"
+        if not p.exists(): return
+        with gzip.open(p, "rt", encoding="utf-8") as g:
+            r = next((x for x in map(json.loads, g) if x["set"] == "math500" and x["id"] == pid), None)
+        if r is None: return
+        o.num(f"exmtok_{COND_KEY[c]}_s{n}", str(r["n_tok"])); o.num(f"exmv_{COND_KEY[c]}_s{n}", str(r["v"]))
+        cols.append(f"\\begin{{minipage}}[t]{{0.31\\linewidth}}\\raggedright\\fontsize{{6.5}}{{7.6}}\\selectfont\\ttfamily\n{tex_text(r['text'])}\n\\end{{minipage}}")
+    o.table("style_example", "\n\\hfill\n".join(cols) + "\n")
+
+
+def modes_all(o, exp):
+    """The writing styles of the final policies across the GRPO runs of the three papers (the final summaries of Parts
+    II, III-B and III-C, as committed; Part II's rlvr is in all three and counted once). Every run is put in one of
+    MODES by style_mode. Macros, for each mode m: all<m>runs, all<m>conds (conditions with such a run), all<m><set>min,
+    ...max, ...mean (final accuracy; repeatv: the repeating runs without kev_only, the one condition without the
+    verifier); allkev<m> and allnokev<m> out of allkevruns and allnokevruns (KEV_REWARD conditions or not); the
+    separation of the draft runs from the others: alldraft<stat>min_draft and alldraft<stat>max_other for the final
+    share of informal openings (stat empty) and its variants (w150 and w600: other opening windows; tex: LaTeX delimiters
+    only), and allrepmin_repeat / allrepmax_other for the share of repeated lines; the shares at each evaluation over all
+    runs (alldraftat_<step>_min/max/mean) and the first evaluation at which a draft run drafted in at least SWITCH of
+    its completions (alldraftfirstmin/max); per 50-step window of training, the verdict difference between drafts and
+    the other completions of a group, its mean over runs alldgverdict_<grp>_<first step> with range ...min/...max, and
+    the runs where it is below zero, alldgneg_<grp>_<step> out of alldgn_<grp>_<step> (grp draft or other). Table
+    modes_all: every run, by mode, each block by MATH-500."""
+    seen = {}
+    for d, part in GRPO_PARTS:
+        p = exp / d / "results" / "summary.json"
+        if not p.exists(): continue
+        for r in draft_runs(json.loads(p.read_text())):
+            key = (r["cond"], r["seed"])
+            if key in seen:   # the same run in two summaries: the same files, so the same numbers
+                if seen[key]["style"] != r["style"] or seen[key]["acc"] != r["acc"]: raise ValueError(f"{key} differs between summaries")
+                continue
+            r["part"], r["mode"] = part, style_mode(r["style"]); seen[key] = r
+    runs = list(seen.values())
+    if not runs: return
+    grp = {m: [r for r in runs if r["mode"] == m] for m in MODES}
+    grp["repeatv"] = [r for r in grp["repeat"] if r["cond"] != "kev_only"]
+    grp["other"] = [r for r in runs if r["mode"] != "draft"]
+    o.num("allruns", str(len(runs))); o.num("allconds", str(len({r["cond"] for r in runs})))
+    for m, rs in grp.items():
+        o.num(f"all{m}runs", str(len(rs))); o.num(f"all{m}conds", str(len({r["cond"] for r in rs})))
+        for x, sk, _ in TEST_SETS:
+            v = [r["acc"][x] for r in rs if x in r["acc"]]
+            if v: o.num(f"all{m}{sk}min", pts(min(v))); o.num(f"all{m}{sk}max", pts(max(v))); o.num(f"all{m}{sk}mean", pts(np.mean(v)))
+    kev = [r for r in runs if r["cond"] in KEV_REWARD]; nokev = [r for r in runs if r["cond"] not in KEV_REWARD]
+    o.num("allkevruns", str(len(kev))); o.num("allnokevruns", str(len(nokev)))
+    for m in MODES:
+        o.num(f"allkev{m}", str(sum(r["mode"] == m for r in kev))); o.num(f"allnokev{m}", str(sum(r["mode"] == m for r in nokev)))
+    other, va, vb = grp["other"], [], []
+    for k, nk in (("draft_opening", ""), ("draft_opening_w150", "w150"), ("draft_opening_w600", "w600"), ("draft_opening_tex", "tex")):
+        a, b = [r["style"][k] for r in grp["draft"] if k in r["style"]], [r["style"][k] for r in other if k in r["style"]]
+        if a: o.num(f"alldraft{nk}min_draft", pct(min(a)))
+        if b: o.num(f"alldraft{nk}max_other", pct(max(b)))
+        if nk: va += a; vb += b
+    a = [r["style"]["repeated_lines"] for r in grp["repeat"]]; b = [r["style"]["repeated_lines"] for r in runs if r["mode"] != "repeat"]
+    if a: o.num("allrepmin_repeat", pct(min(a)))
+    if b: o.num("allrepmax_other", pct(max(b), 1))
+    for k in DRAFT_STEPS:
+        v = [r["by_step"][k] for r in runs if k in r["by_step"]]
+        if v: o.num(f"alldraftat_{k}_min", pct(min(v))); o.num(f"alldraftat_{k}_max", pct(max(v))); o.num(f"alldraftat_{k}_mean", pct(np.mean(v)))
+    first = [min((k for k, v in r["by_step"].items() if v >= SWITCH), default=None) for r in grp["draft"]]
+    first = [x for x in first if x is not None]
+    if first: o.num("alldraftfirstmin", str(min(first))); o.num("alldraftfirstmax", str(max(first)))
+    jumps = []   # each draft run's largest rise between two consecutive evaluations: (share before, share after, step before)
+    for r in grp["draft"]:
+        ks = sorted(r["by_step"])
+        if len(ks) > 1: jumps.append(max(((r["by_step"][a], r["by_step"][b], a) for a, b in zip(ks, ks[1:])), key=lambda x: x[1] - x[0]))
+    if jumps:
+        o.num("alldraftjumpbeforemax", pct(max(j[0] for j in jumps))); o.num("alldraftjumpaftermin", pct(min(j[1] for j in jumps)))
+        o.num("alldraftjumpfrommin", str(min(j[2] for j in jumps))); o.num("alldraftjumpfrommax", str(max(j[2] for j in jumps)))
+    if va: o.num("alldraftvarmin_draft", pct(min(va)))   # over the three variants
+    if vb: o.num("alldraftvarmax_other", pct(max(vb)))
+    for g, rs in (("draft", grp["draft"]), ("other", other), ("all", runs)):
+        for b in DG_WINDOWS:
+            v = [r["windows"][b]["verdict"]["diff"] for r in rs if b in r["windows"] and "verdict" in r["windows"][b]]
+            if not v: continue
+            o.num(f"alldgverdict_{g}_{b}", pts(np.mean(v), sign=True))
+            o.num(f"alldgverdictmin_{g}_{b}", pts(min(v), sign=True)); o.num(f"alldgverdictmax_{g}_{b}", pts(max(v), sign=True))
+            o.num(f"alldgneg_{g}_{b}", str(sum(x < 0 for x in v))); o.num(f"alldgn_{g}_{b}", str(len(v)))
+    key = lambda r: (-r["acc"].get("math500", 0), -r["acc"].get("aime24", 0))
+    label = {"draft": "informal draft first", "plain": "neither", "repeat": "repeats itself"}
+    body = []
+    for m in MODES:
+        if not grp[m]: continue
+        body.append(f"\\multicolumn{{8}}{{@{{}}l}}{{\\emph{{{label[m]}}}}} \\\\")
+        for r in sorted(grp[m], key=key):
+            st = r["style"]
+            body.append(f"\\quad {tt(r['cond'])} & {r['seed']} & {r['part']} & {pts(r['acc'].get('math500'))} & {pts(r['acc'].get('aime24'))} & "
+                        f"{f(st['tokens'], 0)} & {pct(st.get('repeated_lines'))} & {pct(st.get('draft_opening'))} \\\\")
+    o.table("modes_all", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & & & & & & repeated & draft \\\\\ncondition & seed & paper & "
+            "MATH-500 & AIME24 & tokens & lines & opening \\\\ \\midrule\n" + "\n".join(body) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 def part2(o, exp):
@@ -526,8 +784,13 @@ def part2(o, exp):
     for x, v in be.items():
         o.num(f"base_{x.replace('_', '')}", pts(np.mean(v))); o.num(f"basesd_{x.replace('_', '')}", pts(np.std(v, ddof=1)) if len(v) > 1 else "--")
     sm = exp / "part2_llm" / "results" / "summary.json"
-    if sm.exists(): grpo_numbers(o, json.loads(sm.read_text()), base=be)
-    repeat_probe(o, exp, ("kev_only", "rlvr_kev_gate"))
+    if sm.exists():
+        s = json.loads(sm.read_text())
+        grpo_numbers(o, s, base=be)
+        drafts(o, s)
+    modes_all(o, exp)
+    style_example(o, exp)
+    repeat_probe(o, exp, ("kev_only", "rlvr_kev_gate", "rlvr"))
 
 
 PREFIX_SIGNALS = [("kev_on_track", "kevtrack", "\\kev{} \\emph{on track}"), ("kev_correct", "kevcorrect", "\\kev{} \\emph{correct}"),
@@ -747,8 +1010,11 @@ def part3b(o, exp):
     if sm.exists():
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, base=base_eval(exp))
+        drafts(o, s)
         fill_stats(o, s)
     repeat_probe(o, exp, ("sub_kev", "sub_kev_recal"))
+    modes_all(o, exp)
+    style_example(o, exp)
 
 
 def repeat_probe(o, exp, table_conds):
@@ -857,7 +1123,10 @@ def part3c_grpo(o, exp):
         if not sm.exists(): continue
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, tag=tag, base=base_eval(exp) if not tag else None)
-        if not tag: tree_stats(o, s); rollout_repeat(o, s)
+        if not tag: tree_stats(o, s); rollout_repeat(o, s); drafts(o, s)
+    repeat_probe(o, exp, ("tree_kev",))
+    modes_all(o, exp)
+    style_example(o, exp)
 
 
 def main():

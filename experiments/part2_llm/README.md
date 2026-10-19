@@ -29,15 +29,20 @@ Other directories:
 - `repeat_probe/`: a test added after the GRPO runs, when the final policies of `kev_only`, `rlvr_kev_gate` and Part
   III-B's `sub_kev` and `sub_kev_recal` turned out to repeat parts of their solutions: does repetition itself raise the
   judges' scores? `dcjev/llm/repeat_probe.py` scores the judge study's base-policy completions as written and with
-  repetition added (the last two paragraphs twice more; the whole completion twice), and those four runs' repeating
-  MATH-500 final completions (seed 1) as written and cut after the first answer, with both judges as in GRPO.
-  `scores.jsonl.gz`: every score; `repeat_probe.json`: the mean change per edit, with bootstrap intervals over
-  problems. It ran on 2026-10-19 on a Colab RTX PRO 6000 shared with two GRPO runs (Kev-4B 33 minutes, the AR judge
-  14, model loading included). Command:
+  repetition added (the last two paragraphs twice more; the whole completion twice), and repeating runs' MATH-500 final
+  completions as written and cut after the first answer, with both judges as in GRPO. `scores.jsonl.gz`: every score;
+  `repeat_probe.json`: the mean change per edit, with bootstrap intervals over problems. The first version (seed 1 of
+  those four conditions) ran on 2026-10-19 on a GPU shared with two GRPO runs. When later runs showed that policies
+  trained without the judge in their reward repeat themselves too (`rlvr` seed 3; Part III-C's `tree_kev` seed 2), the
+  probe was run again from the pushed code with these two runs added, on 2026-10-19 between 15:27 and 15:44 UTC on an
+  otherwise idle Colab RTX PRO 6000 (Kev-4B 10 minutes, the AR judge 6, model loading included). The files here are
+  from that second run. Its rows for the four earlier runs and the base policy match the first version's within 0.002
+  (GPU kernels are not deterministic). Command:
 
       python -m dcjev.llm.repeat_probe --study experiments/part2_llm/judge_study \
           --runs experiments/part2_llm/runs/kev_only/s1 experiments/part2_llm/runs/rlvr_kev_gate/s1 \
                  experiments/part3b_labels/runs/sub_kev/s1 experiments/part3b_labels/runs/sub_kev_recal/s1 \
+                 experiments/part2_llm/runs/rlvr/s3 experiments/part3c_tree/runs/tree_kev/s2 \
           --out experiments/part2_llm/repeat_probe
 
 - `prompts/judge_prompts.json`: the judges' questions, fixed before any GRPO run.

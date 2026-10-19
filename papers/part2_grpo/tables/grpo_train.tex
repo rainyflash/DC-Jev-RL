@@ -1,0 +1,11 @@
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+ & \multicolumn{5}{c}{training, last 20 steps} & \multicolumn{2}{c}{final policy, MATH-500} \\ \cmidrule(lr){2-6}\cmidrule(l){7-8}
+condition & accuracy & \kev{} $\pc$ & tokens & all wrong & all right & \kev{} $\pc$ & \kev{} AUROC \\ \midrule
+\texttt{rlvr} & 67.0 & 0.74 & 679 & 16\% & 44\% & 0.81 & 0.88 \\
+\texttt{rlvr\_kev\_add} & 69.0 & 0.74 & 593 & 14\% & 46\% & 0.82 & 0.89 \\
+\texttt{rlvr\_kev\_gate} & 69.7 & 0.78 & 831 & 14\% & 47\% & 0.87 & 0.89 \\
+\texttt{kev\_only} & 55.5 & 0.87 & 829 & 25\% & 32\% & 0.91 & 0.85 \\
+\texttt{rlvr\_ar\_add} & 68.0 & 0.73 & 585 & 15\% & 47\% & 0.80 & 0.89 \\
+\bottomrule
+\end{tabular}

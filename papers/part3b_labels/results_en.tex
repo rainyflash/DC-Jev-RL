@@ -1,14 +1,14 @@
 % Part III-B, results (included by main_en.tex).
-% DRAFT, written with seed 1 of the four conditions; every claim is to be checked against both seeds.
 
 \section{Results}\label{sec:res}
 
 Each condition ran with \NUM{seeds_subkev} seeds of 200 steps; Part II's \texttt{rlvr}, which labels every completion,
 is the reference with the full label budget (\NUM{seeds_rlvr} seeds). Table~\ref{tab:sub-acc} gives the final policies'
-accuracies and Table~\ref{tab:sub-paired} the paired differences to \texttt{rlvr\_sub}, the condition that simply drops
-the unlabelled completions. Table~\ref{tab:sub-fill} shows how good each fill-in reward was on the completions it
-scored, Table~\ref{tab:sub-style} what the final policies write, and Figure~\ref{fig:sub-curves} the training curves.
-The intervals resample problems and do not include the variation between seeds.
+accuracies, Table~\ref{tab:sub-seeds} those of every run, and Table~\ref{tab:sub-paired} the paired differences to
+\texttt{rlvr\_sub}, the condition that simply drops the unlabelled completions. Table~\ref{tab:sub-fill} shows how good
+each fill-in reward was on the completions it scored, Table~\ref{tab:sub-style} what each final policy writes, and
+Figure~\ref{fig:sub-curves} the training curves. The intervals resample problems and do not include the variation
+between seeds, which in this project's GRPO runs can be larger than the differences between conditions (Part II, \S8).
 
 \begin{table}[t]
 \centering\small
@@ -19,10 +19,18 @@ AMC23, AIME24 and AIME25: mean over 16 samples per problem at temperature 0.6. \
 \label{tab:sub-acc}
 \end{table}
 
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_seeds}
+\caption{The final policy of every run: accuracy in percent, as in Table~\ref{tab:sub-acc}.}
+\label{tab:sub-seeds}
+\end{table}
+
 \paragraph{Dropping three quarters of the labels costs a little.} With only the two labelled completions of each group,
-\texttt{rlvr\_sub} reaches \NUM{acc_sub_math}\% on MATH-500. Labelling all eight (\texttt{rlvr}) gives
-\NUM{d_rlvr_math} \ci{\NUM{dlo_rlvr_math}}{\NUM{dhi_rlvr_math}} points more, and \NUM{d_rlvr_aime24}
-\ci{\NUM{dlo_rlvr_aime24}}{\NUM{dhi_rlvr_aime24}} on AIME24. A fill-in reward has this much to win back.
+\texttt{rlvr\_sub} reaches \NUM{acc_sub_math}\% on MATH-500 (seeds \NUM{acc_sub_math_s1} and \NUM{acc_sub_math_s2}\%).
+Labelling all eight (\texttt{rlvr}) gives \NUM{d_rlvr_math} \ci{\NUM{dlo_rlvr_math}}{\NUM{dhi_rlvr_math}} points more,
+and \NUM{d_rlvr_aime24} \ci{\NUM{dlo_rlvr_aime24}}{\NUM{dhi_rlvr_aime24}} on AIME24. A fill-in reward has this much to
+win back, as long as it does not teach the policy something else.
 
 \begin{table}[t]
 \centering\small
@@ -33,22 +41,21 @@ averaged over problems, with a 95\% bootstrap interval over problems.}
 \end{table}
 
 \paragraph{The frozen judge makes things worse.} Rewarding the unlabelled completions with \kev{}'s $\pc$ as released
-(\texttt{sub\_kev}) ends below dropping them: \NUM{d_subkev_math} \ci{\NUM{dlo_subkev_math}}{\NUM{dhi_subkev_math}}
-points on MATH-500, \NUM{d_subkev_gsm} \ci{\NUM{dlo_subkev_gsm}}{\NUM{dhi_subkev_gsm}} on GSM8K, \NUM{d_subkev_amc}
+(\texttt{sub\_kev}) ends below dropping them, in both seeds (\NUM{acc_subkev_math_s1} and \NUM{acc_subkev_math_s2}\% on
+MATH-500): \NUM{d_subkev_math} \ci{\NUM{dlo_subkev_math}}{\NUM{dhi_subkev_math}} points on MATH-500, \NUM{d_subkev_amc}
 \ci{\NUM{dlo_subkev_amc}}{\NUM{dhi_subkev_amc}} on AMC23 and \NUM{d_subkev_aime24}
 \ci{\NUM{dlo_subkev_aime24}}{\NUM{dhi_subkev_aime24}} on AIME24. Yet the judge kept ranking the unlabelled completions
 well: its AUROC for the withheld labels was \NUM{fillauc_all_subkev} over the run (Table~\ref{tab:sub-fill}). It was
-too generous from the start, though. Its mean $\pc$ on the unlabelled completions was \NUM{fillmean_first20_subkev} in
-the first 20 steps, when \NUM{unlacc_first20_subkev}\% of them were correct, and \NUM{fillmean_last20_subkev} in the
-last 20, when \NUM{unlacc_last20_subkev}\% were. Which completions are labelled is random, so a constant offset raises
-the expected reward of every behaviour by the same amount, which the group baseline removes in expectation. A judge
-that pays more for some behaviour than its correctness warrants changes what the policy learns. By the end the policy repeats itself:
-\NUM{srep_subkev} of the lines of its MATH-500 solutions repeat an
-earlier line, against
-\NUM{srep_sub} for \texttt{rlvr\_sub}, and \NUM{strunc_subkev} of the solutions run into the 2048-token limit
-(Table~\ref{tab:sub-style}). After its first answer it restates its conclusion again and again, often until the
-length limit. That does not change the answer the verifier reads, so the labelled completions do not punish it, and on
-the unlabelled ones the judge pays for it (\S\ref{sec:res-repeat}).
+too generous, though. Its mean $\pc$ on the unlabelled completions was \NUM{fillmean_first20_subkev} in the first 20
+steps, when \NUM{unlacc_first20_subkev}\% of them were correct, and \NUM{fillmean_last20_subkev} in the last 20, when
+\NUM{unlacc_last20_subkev}\% were. Which completions are labelled is random, so a constant offset raises the expected
+reward of every behaviour by the same amount, which the group baseline removes in expectation. A judge that pays more
+for some behaviour than its correctness warrants changes what the policy learns. Both policies came to repeat
+themselves: \NUM{srep_subkev_s1} and \NUM{srep_subkev_s2} of the lines of their MATH-500 solutions repeat an earlier line,
+against \NUM{srep_sub_s1} and \NUM{srep_sub_s2} for \texttt{rlvr\_sub}, and \NUM{strunc_subkev_s1} of seed 1's solutions run into the
+2048-token limit (Table~\ref{tab:sub-style}). After the first answer seed 1 restates its conclusion again and again,
+often until the length limit, and seed 2 solves the problem again. Neither changes the answer the verifier reads, so the
+labelled completions do not punish it, and on the unlabelled ones the judge pays for it (\S\ref{sec:res-repeat}).
 
 \begin{table}[t]
 \centering\small
@@ -59,33 +66,35 @@ completions, expected calibration error, and the mean fill-in reward against the
 \label{tab:sub-fill}
 \end{table}
 
-\paragraph{Recalibration fixes the calibration, not the repetition.} Refitting \kev{}'s head on the labels collected so
+\paragraph{Recalibration fixes the calibration, not the preference.} Refitting \kev{}'s head on the labels collected so
 far (\texttt{sub\_kev\_recal}) works as intended on the numbers it was fitted for. Its calibration error on the
 unlabelled completions is \NUM{fillece_all_subrecal} against \NUM{fillece_all_subkev} for the frozen head, its mean
 fill-in reward \NUM{fillmean_all_subrecal} matches the \NUM{unlacc_all_subrecal}\% that are correct, and it ranks them
 slightly better than the frozen head does on the same completions (AUROC \NUM{fillauc_all_subrecal} against
-\NUM{frozenauc_all_subrecal}). The policy still learns to repeat itself (\NUM{srep_subrecal} of its lines), and its
-final accuracy is not better than dropping the unlabelled completions (\NUM{d_subrecal_math}
-\ci{\NUM{dlo_subrecal_math}}{\NUM{dhi_subrecal_math}} on MATH-500).
+\NUM{frozenauc_all_subrecal}). Seed 1 still learned to repeat itself (\NUM{srep_subrecal_s1} of its lines) and ends at
+\NUM{acc_subrecal_math_s1}\% on MATH-500; seed 2 did not (\NUM{srep_subrecal_s2}) and ends at
+\NUM{acc_subrecal_math_s2}\%. Over both seeds the condition is not better than dropping the unlabelled completions
+(\NUM{d_subrecal_math} \ci{\NUM{dlo_subrecal_math}}{\NUM{dhi_subrecal_math}} on MATH-500).
 
-\paragraph{A head trained from scratch on the same features does not teach repetition.} The probe
-(\texttt{sub\_probe}) ranks and calibrates about as well as the recalibrated head (AUROC \NUM{fillauc_all_subprobe},
-calibration error \NUM{fillece_all_subprobe}). Its policy does not repeat itself (\NUM{srep_subprobe} of its lines), and
-it ends at \NUM{acc_subprobe_math}\% on MATH-500, \NUM{d_subprobe_math} \ci{\NUM{dlo_subprobe_math}}{\NUM{dhi_subprobe_math}}
-points above \texttt{rlvr\_sub} and above the full-label \texttt{rlvr} as well (\NUM{acc_rlvr_math}\%), with gains on
-AMC23 and AIME24 too. % DRAFT: one seed; the claim stands or falls with seed 2.
-Both heads read the same features and see the same labels; what differs is where they start. A plausible reason for
-the difference, which these runs do not test directly: the recalibrated head starts from the released one and is
-anchored to it, so it keeps whatever preference the released head has where the labels say nothing, and repetition,
-which leaves the verifier's label unchanged, is such a place. A head that starts from nothing has no such preference to
-keep.
+\paragraph{The head trained from scratch: both seeds switched to drafting first.} The probe (\texttt{sub\_probe})
+ranks and calibrates about as well as the recalibrated head (AUROC \NUM{fillauc_all_subprobe}, calibration error
+\NUM{fillece_all_subprobe}), and neither of its policies repeats itself (\NUM{srep_subprobe_s1} and
+\NUM{srep_subprobe_s2} of their lines). Both end far above every other run of this paper: \NUM{acc_subprobe_math_s1}
+and \NUM{acc_subprobe_math_s2}\% on MATH-500, \NUM{acc_subprobe_aime24_s1} and \NUM{acc_subprobe_aime24_s2}\% on AIME24.
+Over both seeds that is \NUM{d_subprobe_math} \ci{\NUM{dlo_subprobe_math}}{\NUM{dhi_subprobe_math}} points above
+\texttt{rlvr\_sub} on MATH-500 and \NUM{d_subprobe_aime24} \ci{\NUM{dlo_subprobe_aime24}}{\NUM{dhi_subprobe_aime24}} on
+AIME24, and above the full-label \texttt{rlvr} as well (\NUM{acc_rlvr_math}\% on MATH-500). Both policies write
+differently from the others: they work the problem in plain text first and then write the formatted solution
+(\S\ref{sec:res-style}).
 
 \begin{table}[t]
 \centering\small
+\setlength{\tabcolsep}{4.5pt}
 \input{tables/grpo_style}
-\caption{What the final policies write on MATH-500 (greedy, seed mean): completion tokens, share truncated at 2048
-tokens, share of lines (of at least 20 characters) that repeat an earlier line of the same solution, share with more
-than one boxed answer or none (the verifier reads the last one), and \kev{}'s $\pc$ for right and for wrong answers.}
+\caption{What each final policy writes on MATH-500 (greedy): completion tokens, share truncated at 2048 tokens, share of
+lines (of at least 20 characters) that repeat an earlier line of the same completion, share of completions that repeat
+such a line after their first boxed answer, share with more than one boxed answer (the verifier reads the last one),
+share that open with an informal draft, and \kev{}'s $\pc$ for right and for wrong answers.}
 \label{tab:sub-style}
 \end{table}
 
@@ -105,13 +114,76 @@ evaluated twice on MATH-500, both times greedily: at step 200 with the periodic 
 evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
 (\NUM{rptruns_math500} runs).
 
+\subsection{Drafting first}\label{sec:res-style}
+
+Part II found that some GRPO runs switch, abruptly, to a style in which the completion opens with an informal draft in
+plain text, without LaTeX or markdown, gives the answer, and then writes the formatted solution; and that the runs that
+switch are the best ones. We measure the style by the share of completions that open with such a draft (no math
+delimiter, markdown heading or bold in the first 300 characters; Part II, \S8.3, defined after reading the
+completions). The base model opens \NUM{pdraftat_0_min} to \NUM{pdraftat_0_max} of its MATH-500 completions this way.
+
+\paragraph{Only the probe's policies switched.} Every run but one cut the share of drafts in its first 50 steps
+(Table~\ref{tab:sub-drafts}). The exception is \texttt{sub\_probe} seed 1, which drafted in
+\NUM{draftat_subprobe_s1_50} of its MATH-500 completions at step 50 and in \NUM{draftat_subprobe_s1_100} at step 100.
+In seed 2 of \texttt{sub\_probe} the share fell to \NUM{draftat_subprobe_s2_50} at step 50 and then rose, from
+\NUM{draftat_subprobe_s2_100} at step 100 to \NUM{draftat_subprobe_s2_150} at step 150. In the six other runs of the
+label-budget conditions, and in the three of \texttt{rlvr}, it was at most \NUM{pdraftmax_other} in the final
+evaluation. Across the \NUM{allruns} GRPO runs of this project, the \NUM{alldraftruns} that switched, in
+\NUM{alldraftconds} different conditions, are the \NUM{alldraftruns} best on AIME24 (\NUM{alldraftaime24min} to \NUM{alldraftaime24max}\%, every other
+run at most \NUM{allotheraime24max}\%; Part II, \S8.3). The gain of \texttt{sub\_probe} over \texttt{rlvr\_sub} comes
+with this switch, and with two seeds we cannot separate the effect of the probe from that of the switch.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_drafts}
+\caption{The share of MATH-500 completions that open with an informal draft, at each periodic evaluation (greedy, every
+50 steps) and in the final evaluation, per run, with the final accuracies.}
+\label{tab:sub-drafts}
+\end{table}
+
+\paragraph{What the fill-in rewards paid for drafts.} Within a group, GRPO favours the completions with the higher
+reward, so a style spreads when its completions are paid more than the others of their group. Table~\ref{tab:sub-draftgroups}
+compares the drafts with the other completions of the same group by the verifier's verdict, and Table~\ref{tab:sub-draftfill}
+by the fill-in reward among unlabelled completions with the same verdict. In steps 0--49 drafts were less often right
+than the other completions of their group in all \NUM{pdgn_0} runs (between \NUM{pdgverdict_0_min} and
+\NUM{pdgverdict_0_max} points), which is why their share fell. In both \texttt{sub\_probe} runs, from step 50 on, drafts
+were as often right as the others or more (\NUM{dgverdict_subprobe_s1_50} and \NUM{dgverdict_subprobe_s1_100} points in
+seed 1, \NUM{dgverdict_subprobe_s2_50} and \NUM{dgverdict_subprobe_s2_100} in seed 2), and in the windows in which
+drafts spread the probe paid right drafts more than the other right completions (\NUM{dgfillright_subprobe_s1_50}
+points in seed 1 over steps 50--99, \NUM{dgfillright_subprobe_s2_50} and \NUM{dgfillright_subprobe_s2_100} in seed 2
+over steps 50--149). In the other fill-in runs the picture is mixed. In \texttt{sub\_kev\_recal} seed 2, drafts were
+more often right than the others in the second half of the run (\NUM{dgverdict_subrecal_s2_100} and
+\NUM{dgverdict_subrecal_s2_150} points), the recalibrated head paid right drafts less (\NUM{dgfillright_subrecal_s2_100}
+and \NUM{dgfillright_subrecal_s2_150}), and drafts did not spread. In \texttt{sub\_kev\_recal} seed 1 the head paid right
+drafts more over steps 100--199 (\NUM{dgfillright_subrecal_s1_100} and \NUM{dgfillright_subrecal_s1_150}), and drafts
+did not spread either. A few windows of a few runs, read after the fact, do not tell what made the probe's runs switch,
+and Part II has runs that switched with the verifier's reward alone.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_draftgroups}
+\caption{Training completions that open with an informal draft, per 50-step window: their share, and $\Delta$ right,
+the mean over the groups that hold both kinds of the share of drafts the verifier accepts minus that of the other
+completions of the group, in percentage points.}
+\label{tab:sub-draftgroups}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_draftfill}
+\caption{The fill-in reward of unlabelled training completions that open with an informal draft minus that of the other
+unlabelled completions of the same group with the same verdict (right or wrong), per 50-step window, mean over the
+groups that hold both, in percentage points; -- where no group did.}
+\label{tab:sub-draftfill}
+\end{table}
+
 \subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
 
 After the GRPO runs we tested whether \kev{} pays for what the policies of \texttt{sub\_kev} and
 \texttt{sub\_kev\_recal} write after their first answer, with the probe of Part II (\file{dcjev/llm/repeat_probe.py};
-Table~\ref{tab:repeat-probe}). \texttt{sub\_kev}'s policy restates its conclusion again and again;
-\texttt{sub\_kev\_recal}'s solves the problem again in nearly the same words, like Part II's policies with \kev{} in
-the reward. We cut the final MATH-500 solutions of seed 1 that repeat lines after their first answer, as if the policy
+Table~\ref{tab:repeat-probe}). \texttt{sub\_kev}'s seed 1 restates its conclusion again and again;
+\texttt{sub\_kev\_recal}'s seed 1 solves the problem again in nearly the same words, like the repeating policies of
+Part II. We cut the final MATH-500 solutions of seed 1 that repeat lines after their first answer, as if the policy
 had stopped there. Solutions that repeat before their first answer, or whose first answer differs from their last,
 were left out (\NUM{rpskip_subkev} and \NUM{rpskip_subrecal}). No edit changes the answer the verifier reads.
 

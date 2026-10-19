@@ -1,5 +1,4 @@
 % Part II, abstract (included by main_en.tex).
-% DRAFT, written with 8 of the 12 GRPO runs; to be checked against the final numbers.
 \kev{} is a judge built as a LoRA adapter and a pointer head on Qwen3.5-4B-Base, so a GRPO policy trained as another
 LoRA adapter on the same base can share one copy of the backbone with it. We measure what that saves and what the judge
 adds to GRPO on MATH. On the shared backbone the judge's probabilities stay within \NUM{shared_parity_max} of its fp32
@@ -8,8 +7,13 @@ separately. Offline, on \NUM{js_completions} solutions of the base policy, \kev{
 well as an autoregressive judge of the same size (AUROC \NUM{js_auc_all_kevc} against \NUM{js_auc_all_arc}); the same
 model reasoning before it answers is better, at about \NUM{ratio_gen_kevbb} times the cost. In GRPO (200 steps, 2--3
 seeds per condition), the verifier alone raises MATH-500 accuracy from \NUM{acc_base_math}\% to \NUM{acc_rlvr_math}\%.
-Adding either judge's probability of correctness to the verifier's reward, or gating the verifier with \kev{}'s score,
-changes the final accuracy on MATH-500, GSM8K, AMC23, AIME24 and AIME25 by no more than the evaluation noise. Trained on
-\kev{}'s score alone, the policy learns to write solutions that \kev{} rates as correct when they are not. Its
-MATH-500 accuracy ends at \NUM{acc_kevonly_math}\%, a difference of \NUM{d_kevonly_math} points to the verifier-trained
-policy. Code, logs and every number in this paper are in the repository.
+With \kev{}'s probability of correctness added to the reward, or the verifier gated by \kev{}'s score, one seed of each
+condition ends far ahead (\NUM{acc_kevadd_math_s3} and \NUM{acc_kevgate_math_s2}\% on MATH-500) and the others end near
+the verifier-only runs. The two far seeds had switched to writing an informal draft before the formatted solution. Of
+the \NUM{allruns} GRPO runs of this project, the \NUM{alldraftruns} that made this switch, some without a judge in their
+reward, are the \NUM{alldraftruns} best on AIME24; the verdicts on the training completions do not show what set the
+switch off, and with 2--3 seeds we cannot attribute it to the judge. Trained on \kev{}'s score alone, the policy learns
+to write solutions that \kev{} rates as correct when they are not, and ends at \NUM{acc_kevonly_math}\% on MATH-500.
+\kev{} also pays for solutions that solve the problem again after answering, a style in which \NUM{allkevrepeat} of the
+\NUM{allkevruns} runs with \kev{} in the reward ended. Code, logs, every training completion and every number in this
+paper are in the repository.

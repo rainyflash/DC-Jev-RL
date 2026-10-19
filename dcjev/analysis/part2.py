@@ -17,6 +17,10 @@ step0_eval: the spread of the step-0 evaluations of all included runs (the same 
 measure of the evaluation noise of greedy decoding on vLLM. late_eval_change: how much a run's accuracy changes between
 its last two periodic evaluations, late in training (checkpoint noise). repeat_eval: the final evaluation minus the
 periodic one at the last step, two greedy evaluations of the same weights.
+Writing style: math500_style (final MATH-500 completions: length, repetition, boxed answers, the share that open with
+an informal draft), math500_draft_by_step (that share at every periodic evaluation), and from the training completions
+rollout_windows (style per 25-step window) and draft_windows (drafts against the other completions of the same group,
+per 50-step window).
 """
 from __future__ import annotations
 
@@ -71,23 +75,88 @@ def repeats_after_answer(text, min_len=20):
     return any(len(l.strip()) >= min_len and l.strip() in seen for l in text[i:].split("\n"))
 
 
-def rollout_windows(path, width=25):
-    """A run's training completions (rollouts.jsonl.gz, kept for the tree runs of III-C) per window of `width` steps:
-    completions, mean tokens, share truncated, share the verifier accepts, mean share of repeated lines, share with more
-    than one boxed answer, share that repeat part of the solution after its first answer."""
-    w = defaultdict(list)
+DRAFT_MARKS = ("$", "\\(", "\\[", "###", "**")
+
+
+def informal_opening(text, n=300, marks=DRAFT_MARKS):
+    """Whether a completion opens with an informal draft: its first n characters contain no LaTeX math delimiter ($, \\(
+    or \\[) and no markdown heading or bold (### or **), as in "We need to convert (0,3) ... r = sqrt(x^2 + y^2) = 3".
+    Such a completion works the problem in plain text first and writes it up with LaTeX and the boxed answer after."""
+    h = text[:n]
+    return not any(m in h for m in marks)
+
+
+def read_rollouts(path):
+    """A run's training completions (rollouts.jsonl.gz: every completion of every step), without the text but with what
+    the analyses read from it."""
+    out = []
     with gzip.open(path, "rt") as f:
         for l in f:
-            r = json.loads(l); t = r["text"]
-            w[r["step"] // width].append((r["n_tok"], r["finish"] == "length", r["v"], repeated_lines(t), t.count("\\boxed") > 1,
-                                          repeats_after_answer(t)))
+            r = json.loads(l); t = r.pop("text")
+            r.update(repeated_lines=repeated_lines(t), boxed_many=t.count("\\boxed") > 1, repeats_after_answer=repeats_after_answer(t),
+                     draft=informal_opening(t), kev=(r.get("kev") or {}).get("correct"))
+            out.append(r)
+    return out
+
+
+def rollout_windows(ro, width=25):
+    """A run's training completions (read_rollouts) per window of `width` steps: completions, mean tokens, share
+    truncated, share the verifier accepts, mean share of repeated lines, share with more than one boxed answer, share that
+    repeat part of the solution after its first answer, share that open with an informal draft."""
+    w = defaultdict(list)
+    for r in ro:
+        w[r["step"] // width].append((r["n_tok"], r["finish"] == "length", r["v"], r["repeated_lines"], r["boxed_many"],
+                                      r["repeats_after_answer"], r["draft"]))
     out = []
     for k in sorted(w):
         x = np.array(w[k], dtype=float)
         out.append({"steps": [k * width, k * width + width - 1], "n": len(x), "tokens": float(x[:, 0].mean()),
                     "truncated": float(x[:, 1].mean()), "right": float(x[:, 2].mean()), "repeated_lines": float(x[:, 3].mean()),
-                    "boxed_many": float(x[:, 4].mean()), "repeats_after_answer": float(x[:, 5].mean())})
+                    "boxed_many": float(x[:, 4].mean()), "repeats_after_answer": float(x[:, 5].mean()), "draft": float(x[:, 6].mean())})
     return out
+
+
+def draft_windows(ro, width=50):
+    """Training completions that open with an informal draft against the others of the same group (one problem at one
+    step), per window of `width` steps: the share of drafts and, over the groups that contain both kinds, the mean
+    difference draft minus other of the verifier's verdict; of the advantage (completions used in the update only); of
+    Kev-4B's P(correct) among completions with the same verdict, right and wrong ones apart (where it was logged); and for
+    the label-budget conditions, of the reward filled in for unlabelled completions with the same verdict."""
+    groups = defaultdict(list)
+    for r in ro: groups[(r["step"], r["id"])].append(r)
+    w = defaultdict(lambda: defaultdict(list))
+    diff = lambda d, o: float(np.mean(d) - np.mean(o)) if d and o else None
+    for (step, _), rs in groups.items():
+        o = w[step // width]; o["draft"].extend(r["draft"] for r in rs)
+        D, F = [r for r in rs if r["draft"]], [r for r in rs if not r["draft"]]
+        if not D or not F: continue
+        x = {"verdict": diff([r["v"] for r in D], [r["v"] for r in F]),
+             "advantage": diff([r["adv"] for r in D if r["used"]], [r["adv"] for r in F if r["used"]])}
+        for v, name in ((1, "right"), (0, "wrong")):
+            x["kev_" + name] = diff([r["kev"] for r in D if r["v"] == v and r["kev"] is not None],
+                                    [r["kev"] for r in F if r["v"] == v and r["kev"] is not None])
+            x["fill_" + name] = diff([r["r"] for r in D if r["v"] == v and r["used"] and r["labelled"] is False],
+                                     [r["r"] for r in F if r["v"] == v and r["used"] and r["labelled"] is False])
+        for k, d in x.items():
+            if d is not None: o[k].append(d)
+    out = []
+    for k in sorted(w):
+        o = w[k]
+        e = {"steps": [k * width, k * width + width - 1], "completions": len(o["draft"]), "draft": float(np.mean(o["draft"]))}
+        for key in ("verdict", "advantage", "kev_right", "kev_wrong", "fill_right", "fill_wrong"):
+            if o[key]: e[key] = {"diff": float(np.mean(o[key])), "groups": len(o[key])}
+        out.append(e)
+    return out
+
+
+def draft_by_step(d, sname="math500"):
+    """The share of a run's completions on one set that open with an informal draft, at every periodic evaluation."""
+    out = {}
+    for f in (d / "evals").glob("step*.jsonl.gz"):
+        with gzip.open(f, "rt") as g:
+            xs = [informal_opening(r["text"]) for r in map(json.loads, g) if r["set"] == sname]
+        if xs: out[int(f.name[4:].split(".")[0])] = float(np.mean(xs))
+    return dict(sorted(out.items()))
 
 
 def style(path, sname="math500"):
@@ -104,7 +173,12 @@ def style(path, sname="math500"):
     out = {"tokens": float(np.mean([r["n_tok"] for r in recs])), "truncated": float(np.mean([r["finish"] == "length" for r in recs])),
            "boxed_many": float(np.mean([b > 1 for b in boxes])), "boxed_none": float(np.mean([b == 0 for b in boxes])),
            "repeated_lines": float(np.mean([repeated_lines(r["text"]) for r in recs])),
-           "repeats_after_answer": float(np.mean([repeats_after_answer(r["text"]) for r in recs]))}
+           "repeats_after_answer": float(np.mean([repeats_after_answer(r["text"]) for r in recs])),
+           "draft_opening": float(np.mean([informal_opening(r["text"]) for r in recs])),
+           # the same with other opening windows, and with the LaTeX delimiters as the only markers (robustness)
+           "draft_opening_w150": float(np.mean([informal_opening(r["text"], 150) for r in recs])),
+           "draft_opening_w600": float(np.mean([informal_opening(r["text"], 600) for r in recs])),
+           "draft_opening_tex": float(np.mean([informal_opening(r["text"], marks=DRAFT_MARKS[:3]) for r in recs]))}
     for v, k in ((1, "kev_right"), (0, "kev_wrong")):
         xs = [r["kev"]["correct"] for r in recs if r["v"] == v and r.get("kev")]
         if xs: out[k] = float(np.mean(xs))
@@ -129,9 +203,10 @@ def load_runs(roots, conds, step=None):
                 if not ev or not comp.exists(): continue
                 res = {k: v for k, v in ev[0].items() if isinstance(v, dict)}
             if seed in runs[cond]: raise ValueError(f"{cond} s{seed} found in two roots")
-            ro = d / "rollouts.jsonl.gz"
+            ro = read_rollouts(d / "rollouts.jsonl.gz") if (d / "rollouts.jsonl.gz").exists() and step is None else None
             runs[cond][seed] = {"res": res, "log": log, "pp": per_problem(comp), "style": style(comp),
-                                "rollouts": rollout_windows(ro) if ro.exists() and step is None else None}
+                                "rollouts": rollout_windows(ro) if ro else None, "drafts": draft_windows(ro) if ro else None,
+                                "draft_steps": draft_by_step(d)}
     return runs
 
 
@@ -162,6 +237,9 @@ def main():
             e["math500_style_per_seed"] = {str(k): seeds[k]["style"] for k in sorted(seeds) if seeds[k]["style"]}
         rw = {str(k): seeds[k]["rollouts"] for k in sorted(seeds) if seeds[k].get("rollouts")}
         if rw: e["rollout_windows"] = rw
+        dw = {str(k): seeds[k]["drafts"] for k in sorted(seeds) if seeds[k].get("drafts")}
+        if dw: e["draft_windows"] = dw
+        e["math500_draft_by_step"] = {str(k): seeds[k]["draft_steps"] for k in sorted(seeds) if seeds[k]["draft_steps"]}
         m5 = [r["res"]["math500"] for r in seeds.values() if "math500" in r["res"]]
         if m5 and "kev" in m5[0]:
             e["math500_kev_correct_mean"] = float(np.mean([x["kev"]["correct"] for x in m5]))

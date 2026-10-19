@@ -1,0 +1,11 @@
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.2cm}cccc@{}}
+\toprule
+ & & \multicolumn{2}{c}{3 questions} & 1 question & \\ \cmidrule(lr){3-4}\cmidrule(lr){5-5}
+judge & used by & ms/request & ms/question & ms/question & peak GB \\ \midrule
+\kev{}, merged, fused kernels, one row per question & Part I judge server & 53.0 & 17.7 & 18.4 & 22.8 \\
+\kev{}, merged, shared prefix & offline studies & 44.3 & 14.8 & 27.9 & 13.4 \\
+\kev{} on the policy's backbone & GRPO trainers & 49.9 & 16.6 & 41.5 & 10.1 \\
+AR judge, fused kernels & baseline & -- & -- & 18.0 & 9.7 \\
+AR judge reasoning first (vLLM) & baseline & -- & -- & 478 & -- \\
+\bottomrule
+\end{tabularx}

@@ -1,6 +1,7 @@
 """Judges and repetition, a test added after the GRPO runs of Parts II and III-B to explain them: the final policies of
 several conditions with Kev-4B's P(correct) in the reward repeat parts of their solutions (dcjev.analysis.part2,
-repeated_lines), while those trained on the verifier alone do not. Does repetition itself raise a judge's P(correct)?
+repeated_lines), and so, as later runs showed, do a few trained on the verifier alone. Does repetition itself raise a
+judge's P(correct)?
 
     python -m dcjev.llm.repeat_probe --study experiments/part2_llm/judge_study --runs <run dir> [<run dir> ...] --out <dir>
 
