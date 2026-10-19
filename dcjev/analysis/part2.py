@@ -45,6 +45,24 @@ def per_problem(path):
     return {s: {i: float(np.mean(v)) for i, v in d.items()} for s, d in acc.items()}
 
 
+def style(path, sname="math500"):
+    """What the policy's completions on one set look like: tokens, truncation, how many give more than one boxed answer
+    or none (the verifier reads the last one), and Kev-4B's P(correct) for the right and for the wrong ones."""
+    recs = []
+    with gzip.open(path, "rt") as f:
+        for l in f:
+            r = json.loads(l)
+            if r["set"] == sname: recs.append(r)
+    if not recs: return {}
+    boxes = [r["text"].count("\\boxed") + r["text"].count("\\fbox") for r in recs]
+    out = {"tokens": float(np.mean([r["n_tok"] for r in recs])), "truncated": float(np.mean([r["finish"] == "length" for r in recs])),
+           "boxed_many": float(np.mean([b > 1 for b in boxes])), "boxed_none": float(np.mean([b == 0 for b in boxes]))}
+    for v, k in ((1, "kev_right"), (0, "kev_wrong")):
+        xs = [r["kev"]["correct"] for r in recs if r["v"] == v and r.get("kev")]
+        if xs: out[k] = float(np.mean(xs))
+    return out
+
+
 def load_runs(roots, conds, step=None):
     runs = defaultdict(dict)
     for root in roots:
@@ -55,13 +73,15 @@ def load_runs(roots, conds, step=None):
             log = read_log(d)
             if step is None:
                 if not (d / "final.json").exists(): continue
-                res, pp = json.loads((d / "final.json").read_text()).get("eval", {}), per_problem(d / "final_completions.jsonl.gz")
+                comp = d / "final_completions.jsonl.gz"
+                res = json.loads((d / "final.json").read_text()).get("eval", {})
             else:
                 ev = [r for r in log if r["kind"] == "eval" and r["step"] == step]
-                if not ev or not (d / "evals" / f"step{step}.jsonl.gz").exists(): continue
-                res, pp = {k: v for k, v in ev[0].items() if isinstance(v, dict)}, per_problem(d / "evals" / f"step{step}.jsonl.gz")
+                comp = d / "evals" / f"step{step}.jsonl.gz"
+                if not ev or not comp.exists(): continue
+                res = {k: v for k, v in ev[0].items() if isinstance(v, dict)}
             if seed in runs[cond]: raise ValueError(f"{cond} s{seed} found in two roots")
-            runs[cond][seed] = {"res": res, "log": log, "pp": pp}
+            runs[cond][seed] = {"res": res, "log": log, "pp": per_problem(comp), "style": style(comp)}
     return runs
 
 
@@ -85,6 +105,8 @@ def main():
         for s in SETS:
             xs = [r["res"][s]["acc"] for r in seeds.values() if s in r["res"]]
             if xs: e[s] = {"mean": float(np.mean(xs)), "std": float(np.std(xs, ddof=1)) if len(xs) > 1 else None, "per_seed": xs}
+        st = [r["style"] for r in seeds.values() if r["style"]]
+        if st: e["math500_style"] = {k: float(np.mean([x[k] for x in st if k in x])) for k in st[0]}
         m5 = [r["res"]["math500"] for r in seeds.values() if "math500" in r["res"]]
         if m5 and "kev" in m5[0]:
             e["math500_kev_correct_mean"] = float(np.mean([x["kev"]["correct"] for x in m5]))

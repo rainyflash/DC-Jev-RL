@@ -446,6 +446,20 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
     o.table(f"{tag}grpo_train", "\\begin{tabular}{@{}lccccccc@{}}\n\\toprule\n & \\multicolumn{5}{c}{training, last 20 steps} & \\multicolumn{2}{c}{final policy, MATH-500} \\\\ "
             "\\cmidrule(lr){2-6}\\cmidrule(l){7-8}\ncondition & accuracy & \\kev{} $\\pc$ & tokens & all wrong & all right & \\kev{} $\\pc$ & \\kev{} AUROC \\\\ \\midrule\n"
             + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+    rows = []   # what the final policies write on MATH-500
+    for c in conds:
+        st, ck = s["conditions"][c].get("math500_style"), COND_KEY[c]
+        if not st: continue
+        o.num(f"{tag}stok_{ck}", f(st["tokens"], 0)); o.num(f"{tag}strunc_{ck}", pct(st["truncated"], 1))
+        o.num(f"{tag}sboxmany_{ck}", pct(st["boxed_many"])); o.num(f"{tag}sboxnone_{ck}", pct(st["boxed_none"], 1))
+        for k in ("kev_right", "kev_wrong"):
+            if k in st: o.num(f"{tag}s{k.replace('_', '')}_{ck}", f(st[k]))
+        rows.append(f"{tt(c)} & {f(st['tokens'], 0)} & {pct(st['truncated'], 1)} & {pct(st['boxed_many'])} & {pct(st['boxed_none'], 1)} & "
+                    f"{f(st.get('kev_right'))} & {f(st.get('kev_wrong'))} \\\\")
+    if rows:
+        o.table(f"{tag}grpo_style", "\\begin{tabular}{@{}lcccccc@{}}\n\\toprule\n & & & \\multicolumn{2}{c}{boxed answers} & \\multicolumn{2}{c}{\\kev{} $\\pc$} \\\\ "
+                "\\cmidrule(lr){4-5}\\cmidrule(l){6-7}\ncondition & tokens & truncated & several & none & right & wrong \\\\ \\midrule\n"
+                + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     for x, v in s.get("step0_eval", {}).items():   # evaluation noise: the base model at step 0 of every run
         sk = x.replace("_", "")
         o.num(f"{tag}szruns_{sk}", str(v["runs"])); o.num(f"{tag}szmean_{sk}", pts(v["mean"])); o.num(f"{tag}szsd_{sk}", pts(v["std"]))
