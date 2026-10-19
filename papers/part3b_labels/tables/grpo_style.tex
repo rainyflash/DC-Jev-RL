@@ -1,0 +1,21 @@
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+ & & & & \multicolumn{2}{c}{repeated lines} & several & draft & \multicolumn{2}{c}{\kev{} $\pc$} \\ \cmidrule(lr){5-6}\cmidrule(l){9-10}
+condition & seed & tokens & truncated & share & after answer & answers & opening & right & wrong \\ \midrule
+\texttt{rlvr} & 1 & 541 & 2\% & 1\% & 0\% & 2\% & 1\% & 0.84 & 0.60 \\
+ & 2 & 555 & 4\% & 1\% & 0\% & 6\% & 0\% & 0.85 & 0.59 \\
+ & 3 & 909 & 8\% & 28\% & 90\% & 95\% & 1\% & 0.88 & 0.64 \\
+\addlinespace
+\texttt{rlvr\_sub} & 1 & 630 & 6\% & 1\% & 0\% & 3\% & 1\% & 0.84 & 0.54 \\
+ & 2 & 588 & 3\% & 1\% & 0\% & 3\% & 2\% & 0.83 & 0.56 \\
+\addlinespace
+\texttt{sub\_kev} & 1 & 1723 & 69\% & 49\% & 49\% & 99\% & 1\% & 0.91 & 0.72 \\
+ & 2 & 1072 & 12\% & 24\% & 85\% & 97\% & 2\% & 0.91 & 0.71 \\
+\addlinespace
+\texttt{sub\_kev\_recal} & 1 & 904 & 3\% & 22\% & 85\% & 98\% & 7\% & 0.90 & 0.71 \\
+ & 2 & 538 & 3\% & 1\% & 0\% & 11\% & 1\% & 0.85 & 0.62 \\
+\addlinespace
+\texttt{sub\_probe} & 1 & 546 & 6\% & 0\% & 0\% & 75\% & 90\% & 0.90 & 0.61 \\
+ & 2 & 694 & 6\% & 0\% & 0\% & 71\% & 90\% & 0.91 & 0.66 \\
+\bottomrule
+\end{tabular}

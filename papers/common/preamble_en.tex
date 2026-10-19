@@ -1,0 +1,25 @@
+% Shared preamble of the v4 papers (English; pdflatex).
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{newtxtext,newtxmath}   % provides the AMS symbols; amssymb would clash with it
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{booktabs,multirow,array,tabularx}
+\usepackage{graphicx}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\DeclareUrlCommand\fileurl{\urlstyle{tt}}
+\DeclareRobustCommand{\file}{\fileurl}   % file paths (also in captions); may break after / _ .
+\setlist{nosep,leftmargin=*}
+\setlength{\emergencystretch}{1.5em}
+\newcommand{\kev}{Kev-4B}
+\newcommand{\pc}{P_{\mathrm{c}}}
+\newcommand{\pg}{P_{\mathrm{g}}}
+\newcommand{\ci}[2]{[#1,\,#2]}
+\newenvironment{correction}{\begin{center}\begin{minipage}{0.95\linewidth}\small\setlength{\parskip}{3pt}\noindent\textbf{Correction notice.}~}{\end{minipage}\end{center}}

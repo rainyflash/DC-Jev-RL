@@ -1,0 +1,83 @@
+{
+ "val": {
+  "acc": 0.688,
+  "n_problems": 500,
+  "samples": 1,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "len_mean": 790.584,
+  "truncated": 0.116,
+  "seconds": 156.3
+ },
+ "math500": {
+  "acc": 0.764,
+  "n_problems": 500,
+  "samples": 1,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "len_mean": 671.594,
+  "truncated": 0.096,
+  "seconds": 88.4,
+  "kev": {
+   "correct": 0.7462290070354939,
+   "genuine": 0.7935630772709846,
+   "quality": 0.7533315549648057
+  },
+  "kev_correct_auroc": 0.8877007720294614,
+  "kev_correct_ece": 0.07734077310562133,
+  "kev_correct_brier": 0.11409999953234023
+ },
+ "gsm8k500": {
+  "acc": 0.878,
+  "n_problems": 500,
+  "samples": 1,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "len_mean": 193.834,
+  "truncated": 0.006,
+  "seconds": 56.6
+ },
+ "gsm8k_test": {
+  "acc": 0.8764215314632298,
+  "n_problems": 1319,
+  "samples": 1,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "len_mean": 193.62168309325247,
+  "truncated": 0.00530705079605762,
+  "seconds": 82.0
+ },
+ "amc23": {
+  "acc": 0.49375,
+  "n_problems": 40,
+  "samples": 16,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "len_mean": 1035.3125,
+  "truncated": 0.2203125,
+  "seconds": 150.4,
+  "pass_at_n": 0.85
+ },
+ "aime24": {
+  "acc": 0.1,
+  "n_problems": 30,
+  "samples": 16,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "len_mean": 1474.5625,
+  "truncated": 0.45416666666666666,
+  "seconds": 179.4,
+  "pass_at_n": 0.4
+ },
+ "aime25": {
+  "acc": 0.1125,
+  "n_problems": 30,
+  "samples": 16,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "len_mean": 1373.6958333333334,
+  "truncated": 0.31875,
+  "seconds": 165.0,
+  "pass_at_n": 0.3333333333333333
+ }
+}

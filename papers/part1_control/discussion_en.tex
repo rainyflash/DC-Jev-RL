@@ -1,0 +1,46 @@
+% Part I, discussion (included by main_en.tex).
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{What the experiment answers.} The question was whether a 4B judge that reads a text summary of the robot's
+behaviour can give PPO a reward to learn from. With \kev{}'s gated or distilled reward, PPO learned to move forward on
+all four locomotion tasks. On Hopper the final returns are close to those of the engineered reward, and on HalfCheetah
+they are higher. On Swimmer they are higher on average but spread widely, and on Walker2d they are lower. On Reacher
+every judge's reward failed. The autoregressive judge of the same size and family read the same text and answered the same questions, but its
+reward taught the hopper and the walker to stand.
+
+\paragraph{Correlation is not enough.} On Hopper and Walker2d the two gated judges rank windows by the reward almost
+equally well, offline (\S\ref{sec:agreement}) and during training (Table~\ref{tab:cost}). Yet one reward trained hopping
+and walking, and the other trained standing. The outcome was decided by how much more the judge pays for the behaviour the
+task wants than for safe but useless behaviour (Table~\ref{tab:slowfast}). An offline test of a judge as a reward should
+report this margin as well as the correlation. Here a fall ends the episode and every step earns a positive reward, so a
+small margin favours survival over progress. A judge whose scores crowd at the top of its scale makes the margin small.
+
+\paragraph{A judge's reward follows the task text.} It is not a noisy copy of the engineered reward. The HalfCheetah text
+calls flipping undesirable, and no judge's reward let the cheetah flip, while the engineered reward did in
+\NUM{flipruns_cheetah_env} of five runs. The Reacher text asks for little control effort, and the summary reports the
+effort, yet the arms trained on the judges' rewards flail. Both judges follow how the distance changes within a window more than how large it
+is, and with two windows per episode PPO did not find the target. A judge can add a preference that the engineered
+reward lacks, and it can miss a cost that the engineered reward charges.
+
+\paragraph{Distillation.} A reward network trained on \kev{}'s labels for a tenth of the windows did as well as asking
+\kev{} about every window. In our setup this saving did not shorten the runs, because the judge server was shared. We
+expect it to matter when a judge serves a single run, but we did not measure that.
+
+\paragraph{Limitations.} The judges read summaries that we designed from privileged simulator state. The summaries name
+the quantities that matter and state a target speed. This favours the judges, and the experiment says nothing about
+judging from pixels or raw observations. We used one PPO configuration (CleanRL's defaults) for every condition,
+$10^6$ steps, and five seeds (three for \texttt{ar\_sampled}). The intervals are wide, and per-task probabilities of
+improvement between about 0.3 and 0.7 should not be read as differences. The AR judge had one prompt format and one
+readout (the expectation over the option tokens, renormalised), with no calibration and no reasoning. A different prompt,
+a calibrated or rescaled readout, or reasoning before the answer could change its margin. We did not try them, and we did
+not tune either judge's prompts. The comparison involves two judges of one family and size. It does not show that
+decision models in general make better rewards than generative judges. The costs were measured with one judge server
+shared by up to 24 runs. Finally, \NUM{resumed_runs} runs were resumed after a reset of the machine, and each lost one
+episode.
+
+\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported a leaderboard and a ``100\% win rate
+over the human oracle'' for \kev{}'s reward. Those results were not produced by experiments (see the notice at the top and
+\file{CORRECTION.md}). The measured answer is narrower. With its gate, or distilled, \kev{}'s reward comes close to the
+engineered reward on locomotion. It helps where the task text carries a preference that the engineered reward lacks, and
+it fails on Reacher. It is far more usable for PPO than the reward of an autoregressive judge of the same size.

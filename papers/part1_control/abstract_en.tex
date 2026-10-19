@@ -1,0 +1,15 @@
+% Part I, abstract (included by main_en.tex).
+Can a 4-billion-parameter language judge that reads a text summary of a robot's behaviour replace the engineered reward
+of a MuJoCo task for PPO? We compare \kev{}, a decision model that answers questions about a JSON state in one forward
+pass, with an autoregressive (AR) judge of the same size and family (Qwen3.5-4B) that reads the same text. We train PPO
+on seven reward sources across five tasks, with five seeds each (\NUM{runs_total} runs of $10^6$ steps). With its healthy
+gate, \kev{}'s reward reaches an interquartile mean normalised score of \NUM{iqm_kev_gated}
+\ci{\NUM{iqmlo_kev_gated}}{\NUM{iqmhi_kev_gated}}, against \NUM{iqm_env} for the engineered reward. A reward network
+distilled from \kev{}'s labels on a tenth of the windows reaches \NUM{iqm_kev_distill}, and the AR judge's reward
+\NUM{iqm_ar_gated}. The aggregate hides a failure: on Reacher every judge's reward ends below a random policy. The AR
+judge's reward teaches Hopper and Walker2d to stand still, although its scores rank windows almost as well as \kev{}'s.
+On Hopper it pays an upright, slow window \NUM{sfratio_hopper_argated} of what it pays a fast one, against
+\NUM{sfratio_hopper_kevgated} for \kev{} and \NUM{sfratio_hopper_perstep} for the engineered reward. No judge's reward let
+the cheetah flip onto its back, which the engineered reward did in \NUM{flipruns_cheetah_env} of five runs. Waiting for a
+judge shared by up to 24 runs made each run about \NUM{wallratio} times slower. This version replaces earlier versions
+whose results were not produced by experiments. Code, logs and every number in this paper are in the repository.

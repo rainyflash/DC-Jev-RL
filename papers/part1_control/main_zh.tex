@@ -1,0 +1,32 @@
+\documentclass[11pt]{ctexart}
+\input{../common/preamble_zh}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{语言评判模型作为 MuJoCo 中 PPO 的奖励来源：\\\kev{} 与同等规模的自回归评判模型}
+\author{DC-Jev-RL 项目，第一部分（第 4 版）}
+\date{2026 年 10 月}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+本文第 1.0--3.0 版已撤回，其结果并非由文中所述实验产生。PPO 训练中的“Kev-4B 评判模型”其实是一个手写的仿真器状态函数，从未调用过模型；排行榜和“对人类预言机 100\% 胜率”建立在这些 run 和脚本中的常数之上。本版用实测结果替换了所有结果。撤回的文件保存在仓库的 \file{withdrawn/} 目录下，\file{CORRECTION.md} 列出了错误之处。
+\end{correction}
+
+\begin{abstract}
+\input{abstract_zh}
+\end{abstract}
+
+\input{intro_zh}
+\input{method_zh}
+\input{results_agreement_zh}
+\input{results_zh}
+\input{discussion_zh}
+
+\section*{可复现性}
+所有 run 的代码、提示、配置、原始日志（每个训练回合、每次更新、每次评估，以及 2\% 被评判窗口的样本）和最终策略都在仓库中（\file{experiments/part1_control/}）。表格和正文中的每个数字都由 \file{dcjev/analysis/part1.py}、\file{dcjev/analysis/judge_agreement.py}、\file{dcjev/analysis/behaviour.py} 和 \file{dcjev/analysis/paper_numbers.py} 从中生成。
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}

@@ -1,0 +1,38 @@
+% Part III-B, sections that do not depend on the results (included by main_en.tex).
+
+\section{Setting: a verifier that labels only some completions}\label{sec:setting}
+
+Part II gives the verifier's verdict to every completion. Here only a fraction $f=0.25$ of each group's completions is
+labelled, two of eight, chosen at random. The labelled share models a verifier that is costly to run, such as human
+grading or slow tests. The question is how to use the unlabelled 75\%:
+\begin{itemize}
+\item \texttt{rlvr\_sub}: leave them out. The advantages come from the two labelled completions of each group, and the
+  others get no gradient.
+\item \texttt{sub\_kev}: reward them with \kev{}'s $\pc$ (``Is the final answer of the proposed solution correct?''), as
+  released and frozen.
+\item \texttt{sub\_kev\_recal}: reward them with $\pc$ from a copy of \kev{}'s pointer head that is refitted online on
+  all labelled completions seen so far.
+\item \texttt{sub\_probe}: reward them with a head of the same shape, on the same features, trained from scratch on the
+  same labels. This separates what \kev{}'s released head contributes from what any small head fitted to these labels
+  would.
+\end{itemize}
+Labelled completions always get the verifier's reward. The upper reference is Part II's \texttt{rlvr}, where every
+completion is labelled. Everything else is Part II's setup: the same model, data, learning rate, batch, number of steps
+and evaluation (\S2 of Part II). For logging only, the verifier also checks every unlabelled completion, which measures
+how good each fill-in reward was on the completions it was used for.
+
+\section{Online recalibration}\label{sec:recal}
+
+\kev{}'s pointer head turns the backbone's hidden states into option logits $z$. Its $p(\text{yes})$ is
+$\mathrm{softmax}(z/T)_{\text{yes}}$ with the released temperature $T$. \texttt{sub\_kev\_recal} keeps the backbone and
+\kev{}'s adapter frozen and refits a float32 copy $\theta$ of the head after every step. The loss is the binary
+cross-entropy of $p(\text{yes})$ against the verifier's labels, plus $\alpha\lVert\theta-\theta_0\rVert^2$, an anchor to
+the released head $\theta_0$ ($\alpha=10^{-3}$). The fit uses 50 Adam steps (learning rate $10^{-4}$, batches of 256)
+over a buffer of the last 8192 labelled completions. The features (the head's inputs) are computed once, when \kev{}
+scores a completion, so the refit costs no backbone pass. The released head on the backbone is never changed.
+\texttt{sub\_probe} uses the same procedure from a fresh initialisation of the head's projections, with $T=1$ and no
+anchor.
+
+The reason to expect recalibration to matter is that the policy's completions drift during training. They get longer
+or shorter and change style, so a judge calibrated on its own training distribution can lose calibration on them. The
+labelled completions measure that drift directly, and online refitting is the cheapest way to follow it.

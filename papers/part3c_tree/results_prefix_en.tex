@@ -1,0 +1,73 @@
+% Part III-C, results of the offline prefix study (included by main_en.tex).
+
+\section{Can a judge tell a promising prefix?}\label{sec:res-prefix}
+
+The base policy's \NUM{ps_problems}$\times$4 solutions gave \NUM{ps_prefixes} prefixes and \NUM{ps_continuations}
+verified continuations, of which \NUM{ps_contacc} are correct. A prefix's value spreads over the whole range. At
+128 tokens the mean value is \NUM{ps_value_128} and \NUM{ps_dead_128} of the prefixes are dead (no correct
+continuation). At 512 tokens these are \NUM{ps_value_512} and \NUM{ps_dead_512}, because the solutions that are still
+running by then are the harder ones. So there is something to choose: among one problem's prefixes, some are worth
+continuing and some are not.
+
+\paragraph{All signals carry information, none separates a problem's prefixes well.} Table~\ref{tab:prefix-auc} gives
+each signal's AUROC for a continuation ending correct. Pooled over problems, every signal is clearly informative
+(\NUM{auc_128_logprob}--\NUM{auc_128_artrack} at 128 tokens). Most of that is the difficulty of the problem, which every
+signal partly sees. Within problems, the comparison that matters for choosing which prefixes to continue, the AUROCs
+fall to \NUM{aucw_128_kevcorrect}--\NUM{aucw_128_logprob} at 128 tokens and reach at most \NUM{aucw_512_artrack} at
+512 tokens. \kev{}'s \emph{on track} question does not do better than the AR judge of the same size asked the same
+question (within problems \NUM{aucw_256_kevtrack} against \NUM{aucw_256_artrack} at 256 tokens, a difference of
+\NUM{psdw_256_kevtrackartrack} \ci{\NUM{psdwlo_256_kevtrackartrack}}{\NUM{psdwhi_256_kevtrackartrack}}; 95\% intervals
+from resampling problems). Nor does it beat the policy's own mean token log-probability, which costs nothing
+(\NUM{aucw_256_logprob}; \kev{} minus log-probability \NUM{psdw_256_kevtracklogprob}
+\ci{\NUM{psdwlo_256_kevtracklogprob}}{\NUM{psdwhi_256_kevtracklogprob}}). Pooled over problems both judges are ahead of
+the log-probability (\NUM{psd_256_kevtracklogprob} \ci{\NUM{psdlo_256_kevtracklogprob}}{\NUM{psdhi_256_kevtracklogprob}}
+for \kev{}), so what the judges add is mostly a sense of how hard the problem is, which does not help to choose among
+one problem's prefixes. Asking \kev{} Part II's \emph{correct} question about an unfinished solution works worse than
+asking whether it is on track.
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_auc}
+\caption{How well each signal predicts that a continuation of the prefix ends correct, by prefix length. AUROC pooled
+over all prefixes and within problems (pairs of continuations of the same problem with different outcomes), and the
+Spearman correlation $\rho$ with the prefix's Monte-Carlo value. 500 validation problems, 4 solutions each, 4
+continuations per prefix.}
+\label{tab:prefix-auc}
+\end{table}
+
+\paragraph{Selecting prefixes helps a little, and any signal will do.} On the problems whose four solutions all run past
+the cut, keeping the two prefixes a signal ranks highest raises the mean value of what is continued
+(Table~\ref{tab:prefix-selection}). At 128 tokens \kev{}'s \emph{on track} gains \NUM{gain_128_kevtrack}
+\ci{\NUM{gainlo_128_kevtrack}}{\NUM{gainhi_128_kevtrack}} over the \NUM{ps_valueall_128} of keeping all four. The AR
+judge gains \NUM{gain_128_artrack} and the policy's log-probability \NUM{gain_128_logprob}. The best gains are at
+256 tokens, \NUM{gain_256_kevtrack} for \kev{}, \NUM{gain_256_artrack} for the AR judge and \NUM{gain_256_logprob} for
+the log-probability. The oracle, which ranks by two of the four continuations and is scored on the other two, gains
+\NUM{gain_256_oracle} there. With four continuations per prefix the value itself is a noisy estimate, so the oracle's
+gain underestimates what perfect knowledge would give. At 128 tokens the signals gain about as much as this oracle, at
+256 tokens about two thirds of it. In absolute terms the gains are small: a few more correct continuations in a
+hundred.
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_selection}
+\caption{Mean value of the 2 prefixes (of 4) a signal keeps, minus the mean value of all 4, on the problems whose 4
+solutions all run past the cut. 95\% bootstrap intervals over problems. The oracle ranks by half of the continuations
+and is scored on the other half.}
+\label{tab:prefix-selection}
+\end{table}
+
+\paragraph{The pruning rule of the withdrawn v3 paper rarely fires.} v3 pruned a prefix when the judge's
+$p(\text{yes})$ was below 0.3 (Table~\ref{tab:prefix-threshold}). \kev{}'s \emph{on track} probability is almost never that
+low. The rule prunes \NUM{thrpruned_128_kevtrack} of the prefixes at 128 tokens. \NUM{thrdead_128_kevtrack} of those are
+dead, but they are only \NUM{thrcaught_128_kevtrack} of all dead prefixes. With the \emph{correct} question the rule
+prunes more (\NUM{thrpruned_128_kevcorrect}), with fewer dead prefixes among the pruned (\NUM{thrdead_128_kevcorrect}),
+and it throws away \NUM{thrlost_128_kevcorrect} of all correct continuations. A fixed threshold on an uncalibrated
+probability is not a usable pruning rule here; ranking within a problem is.
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_threshold}
+\caption{The v3 rule, prune when $p(\text{yes})<0.3$: the fraction of prefixes pruned, the fraction of the pruned that
+were dead, and the fraction of all correct continuations that the pruned prefixes would have produced.}
+\label{tab:prefix-threshold}
+\end{table}

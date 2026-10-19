@@ -1,0 +1,9 @@
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+ & \multicolumn{5}{c}{training, last 20 steps} & \multicolumn{2}{c}{final policy, MATH-500} \\ \cmidrule(lr){2-6}\cmidrule(l){7-8}
+condition & accuracy & \kev{} $\pc$ & tokens & all wrong & all right & \kev{} $\pc$ & \kev{} AUROC \\ \midrule
+\texttt{rlvr} & 67.0 & 0.74 & 679 & 16\% & 44\% & 0.81 & 0.88 \\
+\texttt{tree\_random} & 68.1 & 0.73 & 572 & 15\% & 47\% & 0.81 & 0.88 \\
+\texttt{tree\_kev} & 68.2 & 0.75 & 647 & 17\% & 48\% & 0.83 & 0.89 \\
+\bottomrule
+\end{tabular}

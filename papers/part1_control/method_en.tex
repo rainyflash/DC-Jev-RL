@@ -1,0 +1,122 @@
+% Part I, sections that do not depend on the results (included by main_en.tex).
+
+\section{Judges}\label{sec:judges}
+
+\paragraph{\kev{}.} \kev{}~\cite{kev4b} is a ``System One'' decision model: a LoRA adapter (rank 16) and a pointer head
+on Qwen3.5-4B-Base~\cite{qwen35}, a hybrid model whose layers mix Gated DeltaNet~\cite{yang2025gated} and full
+attention. A request holds a \emph{state} (a JSON object, rendered to text by \texttt{kev.api}) and one or more
+\emph{questions}. A question of type \texttt{score} lists ordinal criteria; one of type \texttt{noul} asks for yes or no.
+\kev{} does not generate text. Each question is a branch appended to the rendered state, and the pointer head reads the
+hidden states at a decision position and at the positions of the answer options. A softmax with the temperature stored
+in the checkpoint ($T=2.406$) turns these into a distribution over the options. All questions of one request are
+answered in one forward pass of the shared state and their short branches. We use kev's code for the schema, the
+rendering, the encoder and the head unchanged (revision \texttt{6cfce5c}). Our wrapper only changes how rows are
+batched. On \NUM{parity_questions} questions its bf16 probabilities differ from kev's reference serving path by at most
+\NUM{parity_bf16_max} (argmax agreement \NUM{parity_bf16_argmax}), and by at most \NUM{parity_fp32_max} in fp32
+(\file{experiments/validation/kev_parity.json}).
+
+\paragraph{Autoregressive (AR) judge.} The baseline judge is Qwen3.5-4B~\cite{qwen35} (revision \texttt{851bf6e}), the
+instruction-tuned model of the same family and size, with thinking disabled. It gets the same rendered state and the
+same question text in a chat prompt, followed by the numbered options and the instruction to answer with the option
+number only (or with yes or no). We read the next-token distribution once, restrict it to the tokens of the valid
+answers and renormalise. The mass on valid answers before renormalisation is logged (\S\ref{sec:agreement}). It is at
+least \NUM{validmass_min_healthy} for the yes/no question, but only \NUM{validmass_min_progress} to
+\NUM{validmass_max_progress} for the five-level \texttt{progress} question, so the renormalisation is not a formality
+there. The AR judge costs one forward pass per question, like \kev{}. It needs one row per
+question instead of one shared state, and it is given no calibration.
+
+\paragraph{Questions.} For every task the state is \{task description, reference, segment summary\}
+(Table~\ref{tab:prompts}); the questions are fixed in \file{experiments/part1_control/prompts/judge_prompts.json} and
+were frozen before the grid was run. \texttt{progress} is a five-level \texttt{score} question (\emph{failing},
+\emph{poor}, \emph{fair}, \emph{good}, \emph{excellent}, each with a one-line description), read out as the expected
+level divided by four, in $[0,1]$. \texttt{healthy} is a \texttt{noul} question (``Is the robot making genuine forward
+progress with a controlled, upright gait\ldots?'') read out as $p(\text{yes})$.
+
+\begin{table}[t]
+\centering\footnotesize
+\input{tables/prompts}
+\caption{The task text both judges read, per task. Each request also holds the window's summary (the quantities of
+\S\ref{sec:method}). The \texttt{progress} question (``\NUM{progress_instruction}'') has five task-specific levels, from
+\emph{failing} to \emph{excellent}; all are in \file{experiments/part1_control/prompts/judge_prompts.json}.}
+\label{tab:prompts}
+\end{table}
+
+\section{Method}\label{sec:method}
+
+\paragraph{What the judges see.} A judge never sees the environment's reward. It sees a short summary of a
+\emph{window} of consecutive steps of one episode (32 steps; 25 for Reacher), computed from physical quantities read
+from the simulator: the forward velocity of the torso (mean, minimum and maximum over the window), the torso height and
+tilt for Hopper and Walker2d, the torso pitch for HalfCheetah, the fingertip--target distance for Reacher (at the start
+and end of the window, and its mean), the mean squared action (``control effort''), and, for Hopper and Walker2d,
+whether the episode terminated in the window (\texttt{fell\_over}). The reference field gives two facts per task, for
+example ``A strong policy for this robot hops forward at about 3\,m/s''. Windows are cut at episode ends and at the end
+of each PPO rollout, so a window can be shorter than 32 steps.
+
+This is a deliberately favourable setting for a language judge. The summary is built from privileged simulator state,
+it names the quantities that matter, and the reference states a target speed. The experiment tests whether a 4B judge
+can turn a task description and a numeric behaviour summary into a reward that PPO can optimise. It does not test
+perception from pixels or from raw observations.
+
+\paragraph{Reward conditions.} Every step of a window receives the window's score. The conditions are:
+\begin{itemize}
+\item \texttt{env}: the environment's own per-step reward, the engineered reference.
+\item \texttt{env\_window}: the environment's reward averaged over each window and given to every step of it. This
+  control has the judges' temporal resolution and the true reward's information. It separates the effect of
+  window-level feedback from the effect of the judge.
+\item \texttt{kev\_score}: \kev{}'s \texttt{progress} score.
+\item \texttt{kev\_gated}: \kev{}'s \texttt{progress} score multiplied by its $p(\text{healthy})$, a multiplicative gate
+  that should suppress windows that look fast but are not genuine progress.
+\item \texttt{kev\_distill}: a small reward network (two hidden layers of 64 units) trained online, with a
+  confidence-weighted squared loss, on \texttt{kev\_gated} labels of a random 10\% of the windows of each rollout (all
+  windows of the first rollout). It predicts the remaining windows from numeric features of the same quantities the
+  summary reports. The weight of a label is the confidence of \kev{}'s \texttt{progress} distribution, clipped to
+  $[0.05,1]$. This condition calls the judge about ten times less often.
+\item \texttt{ar\_gated}: the AR judge's expected \texttt{progress} level times its $p(\text{healthy})$, the AR
+  counterpart of \texttt{kev\_gated}.
+\item \texttt{ar\_sampled}: as \texttt{ar\_gated}, but with a \texttt{progress} level sampled from the AR judge's
+  distribution instead of its expectation. This is the reward an AR judge gives when it answers in text at temperature
+  one (3 seeds).
+\end{itemize}
+Every condition goes through the same reward normalisation (gymnasium's \texttt{NormalizeReward}, reproduced step by
+step, and clipping to $[-10,10]$). The judges are frozen, so no condition adapts the judge to the policy.
+
+\paragraph{PPO.} We use a single-environment port of CleanRL's \file{ppo_continuous_action.py}~\cite{huang2022cleanrl,
+schulman2017ppo} with its default hyperparameters: $10^6$ environment steps, rollouts of 2048 steps, 10 epochs of 32
+minibatches, learning rate $3\cdot10^{-4}$ annealed linearly to zero, $\gamma=0.99$, $\lambda_{\text{GAE}}=0.95$, clip
+coefficient 0.2, value coefficient 0.5, no entropy bonus, gradient-norm clipping at 0.5, and running observation
+normalisation. The hyperparameters are the same in every condition and were not tuned for any of them.
+
+\paragraph{Evaluation.} A policy is evaluated with its deterministic action (the mean of the Gaussian), frozen
+observation statistics and the environment's own undiscounted return. This is 10 episodes every $10^5$ steps and 20
+episodes at the end, from fixed evaluation seeds ($10,000+k$ and $20,000+k$ for episode $k$). The judges never see these returns. We
+normalise a run's final return $R$ per task as $(R-R_{\text{rand}})/(R_{\text{env}}-R_{\text{rand}})$, where
+$R_{\text{rand}}$ is the mean return of a uniform random policy and $R_{\text{env}}$ is the mean final return of the
+\texttt{env} condition. A score of 1 means ``as good as PPO on the engineered reward''. Aggregates over the
+5~tasks~$\times$~5~seeds follow \citet{agarwal2021deep}: the interquartile mean (IQM) with 95\% stratified-bootstrap
+confidence intervals (10\,000 resamples), and the probability of improvement of one condition over another.
+
+\paragraph{Judge agreement.} Every run logs a random 2\% of its windows with the summary and the environment reward
+over the window. The windows logged by the \texttt{env} runs (all seeds, all of training) cover the failing, mediocre
+and good behaviour of the reference learner. Offline, both judges score up to 4000 of them per task, through the same
+server and prompts as in training. We report each signal's Spearman correlation with the window's per-step
+environment reward. We also report it with the physical quantity the task is about: the mean forward velocity, or for
+Reacher the reduction of the fingertip--target distance over the window. For Hopper and Walker2d we also report the AUROC of
+$p(\text{healthy})$ for windows that did not end in a fall. During training, each judge-reward run also logs, per
+rollout, the correlation between the window scores it trained on and the environment reward of the same windows.
+
+\section{Experimental setup}\label{sec:setup}
+
+The tasks are Hopper, Walker2d, HalfCheetah, Swimmer and Reacher, all MuJoCo v5 through Gymnasium~1.3
+\cite{todorov2012mujoco,towers2024gymnasium}. There are five seeds per task and condition (three for
+\texttt{ar\_sampled}). Seed $s$ fixes the policy initialisation, the environment's seed and the run's own random choices, the
+windows sampled for logging and for distillation included. Runs that query a judge are still not bitwise reproducible.
+The judge's floating-point results depend slightly on how the server batched the request with those of other runs, and
+the level drawn for \texttt{ar\_sampled} comes from the server's random generator, which all runs share. All runs used one Colab virtual machine with one
+NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (96\,GB) and 48 vCPUs. PPO runs on the CPU, one process per run. The
+judges run in one GPU server process that holds both \kev{} (bf16, LoRA merged) and the AR judge. The server merges
+concurrent requests from all runs into batches (at most 4096 windows, 15\,ms gathering). Up to 24 runs trained at the
+same time. A run's wall-clock time therefore depends on how many other runs shared the judge, and we report it as
+measured. Software versions are pinned in the repository (\file{scripts/setup_colab.sh}, with the full package lists of
+both environments). A run interrupted by a runtime reset resumes from its last periodic checkpoint. The simulator state is not
+checkpointed, so the episode in progress is dropped and a new one starts. The log records every resume, and the number
+of resumed runs is reported with the results.

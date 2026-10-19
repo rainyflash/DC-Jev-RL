@@ -1,0 +1,1797 @@
+{
+ "runs": 165,
+ "max_abs_return_diff": 0.0,
+ "per_task": {
+  "Hopper-v5": {
+   "env": {
+    "runs": 5,
+    "still_frac": 0.004275334078280119,
+    "effort_mean": 0.4532778989906319
+   },
+   "env_window": {
+    "runs": 5,
+    "still_frac": 0.0030591139770648314,
+    "effort_mean": 0.5081091397227298
+   },
+   "kev_score": {
+    "runs": 5,
+    "still_frac": 0.0032811764705882353,
+    "effort_mean": 0.5162368756909177
+   },
+   "kev_gated": {
+    "runs": 5,
+    "still_frac": 0.005519579884314644,
+    "effort_mean": 0.5259196598907389
+   },
+   "kev_distill": {
+    "runs": 5,
+    "still_frac": 0.005741257703541919,
+    "effort_mean": 0.5750445725591545
+   },
+   "ar_gated": {
+    "runs": 5,
+    "still_frac": 0.49485,
+    "effort_mean": 0.8924645119911989
+   },
+   "ar_sampled": {
+    "runs": 3,
+    "still_frac": 0.2626850991733981,
+    "effort_mean": 0.7675613035025958
+   },
+   "random": {
+    "env_id": "Hopper-v5",
+    "return_mean": 13.243943940627583,
+    "still_frac": 0.31089072597804346,
+    "effort_mean": 0.32598239599513995
+   }
+  },
+  "Walker2d-v5": {
+   "env": {
+    "runs": 5,
+    "still_frac": 0.00500508098188579,
+    "effort_mean": 0.5930153540869176
+   },
+   "env_window": {
+    "runs": 5,
+    "still_frac": 0.0033647499518638436,
+    "effort_mean": 0.5621526271140408
+   },
+   "kev_score": {
+    "runs": 5,
+    "still_frac": 0.04057725994451784,
+    "effort_mean": 0.5627776277813077
+   },
+   "kev_gated": {
+    "runs": 5,
+    "still_frac": 0.10155051753931225,
+    "effort_mean": 0.5880465104481936
+   },
+   "kev_distill": {
+    "runs": 5,
+    "still_frac": 0.013703893163062641,
+    "effort_mean": 0.5551004603969687
+   },
+   "ar_gated": {
+    "runs": 5,
+    "still_frac": 0.39880130112604123,
+    "effort_mean": 0.5193601243742002
+   },
+   "ar_sampled": {
+    "runs": 3,
+    "still_frac": 0.17084845438187748,
+    "effort_mean": 0.6626970358936483
+   },
+   "random": {
+    "env_id": "Walker2d-v5",
+    "return_mean": -0.4015886656732298,
+    "still_frac": 0.035888481888481885,
+    "effort_mean": 0.3278483971346824
+   }
+  },
+  "HalfCheetah-v5": {
+   "env": {
+    "runs": 5,
+    "still_frac": 0.008870000000000001,
+    "effort_mean": 0.6721691301073879,
+    "flipped_frac": 0.22671999999999998,
+    "runs_flipped": 1
+   },
+   "env_window": {
+    "runs": 5,
+    "still_frac": 0.02721,
+    "effort_mean": 0.6268878337496891,
+    "flipped_frac": 0.58998,
+    "runs_flipped": 3
+   },
+   "kev_score": {
+    "runs": 5,
+    "still_frac": 0.007930000000000001,
+    "effort_mean": 0.8001392754774541,
+    "flipped_frac": 0.00449,
+    "runs_flipped": 0
+   },
+   "kev_gated": {
+    "runs": 5,
+    "still_frac": 0.00126,
+    "effort_mean": 0.7251829122118651,
+    "flipped_frac": 0.0,
+    "runs_flipped": 0
+   },
+   "kev_distill": {
+    "runs": 5,
+    "still_frac": 0.00152,
+    "effort_mean": 0.7957131974555551,
+    "flipped_frac": 0.0,
+    "runs_flipped": 0
+   },
+   "ar_gated": {
+    "runs": 5,
+    "still_frac": 0.024270000000000003,
+    "effort_mean": 0.7720276360625773,
+    "flipped_frac": 1e-05,
+    "runs_flipped": 0
+   },
+   "ar_sampled": {
+    "runs": 3,
+    "still_frac": 0.03969999999999999,
+    "effort_mean": 0.6803743596053371,
+    "flipped_frac": 0.0,
+    "runs_flipped": 0
+   },
+   "random": {
+    "env_id": "HalfCheetah-v5",
+    "return_mean": -279.6808417491684,
+    "still_frac": 0.12279999999999999,
+    "effort_mean": 0.3332995475082724,
+    "flipped_frac": 0.09154999999999999
+   }
+  },
+  "Swimmer-v5": {
+   "env": {
+    "runs": 5,
+    "still_frac": 0.61983,
+    "effort_mean": 0.6104267424064047
+   },
+   "env_window": {
+    "runs": 5,
+    "still_frac": 0.13621,
+    "effort_mean": 0.8246874326783354
+   },
+   "kev_score": {
+    "runs": 5,
+    "still_frac": 0.11206,
+    "effort_mean": 0.8301034012057423
+   },
+   "kev_gated": {
+    "runs": 5,
+    "still_frac": 0.14631000000000002,
+    "effort_mean": 0.8106609778052671
+   },
+   "kev_distill": {
+    "runs": 5,
+    "still_frac": 0.11281000000000004,
+    "effort_mean": 0.8722779548197013
+   },
+   "ar_gated": {
+    "runs": 5,
+    "still_frac": 0.17618000000000003,
+    "effort_mean": 0.8987051630064846
+   },
+   "ar_sampled": {
+    "runs": 3,
+    "still_frac": 0.49646666666666667,
+    "effort_mean": 0.8088645363166928
+   },
+   "random": {
+    "env_id": "Swimmer-v5",
+    "return_mean": -0.1343088214974145,
+    "still_frac": 0.2575,
+    "effort_mean": 0.3341439359171006
+   }
+  },
+  "Reacher-v5": {
+   "env": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.014097493733837774,
+    "dist_mean": 0.10078586133519345
+   },
+   "env_window": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.18983730760258832,
+    "dist_mean": 0.17992211852096313
+   },
+   "kev_score": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.36056958268471145,
+    "dist_mean": 0.2561239018047342
+   },
+   "kev_gated": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.6265451865828087,
+    "dist_mean": 0.2634110114041705
+   },
+   "kev_distill": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.758981014768834,
+    "dist_mean": 0.24996062683565506
+   },
+   "ar_gated": {
+    "runs": 5,
+    "still_frac": 1.0,
+    "effort_mean": 0.6250968200307796,
+    "dist_mean": 0.2529660038200518
+   },
+   "ar_sampled": {
+    "runs": 3,
+    "still_frac": 1.0,
+    "effort_mean": 0.5619661537266862,
+    "dist_mean": 0.2515176221506066
+   },
+   "random": {
+    "env_id": "Reacher-v5",
+    "return_mean": -42.05959556874015,
+    "still_frac": 1.0,
+    "effort_mean": 0.3306349194412169,
+    "dist_mean": 0.17992207249236908
+   }
+  }
+ },
+ "per_run": [
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_gated",
+   "seed": 1,
+   "return_mean": 341.9522432451607,
+   "final_json_return_mean": 341.9522432451607,
+   "still_frac": 0.061250000000000006,
+   "effort_mean": 0.7156590494278818,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_gated",
+   "seed": 2,
+   "return_mean": 1228.893362463861,
+   "final_json_return_mean": 1228.893362463861,
+   "still_frac": 0.0030499999999999998,
+   "effort_mean": 0.736769829326123,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_gated",
+   "seed": 3,
+   "return_mean": 2781.5511387422803,
+   "final_json_return_mean": 2781.5511387422803,
+   "still_frac": 0.00525,
+   "effort_mean": 0.7926204959996045,
+   "flipped_frac": 5e-05
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_gated",
+   "seed": 4,
+   "return_mean": 840.3833905358927,
+   "final_json_return_mean": 840.3833905358927,
+   "still_frac": 0.018150000000000003,
+   "effort_mean": 0.7143460000082851,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_gated",
+   "seed": 5,
+   "return_mean": 153.00135456259233,
+   "final_json_return_mean": 153.00135456259233,
+   "still_frac": 0.033650000000000006,
+   "effort_mean": 0.9007428055509925,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_sampled",
+   "seed": 1,
+   "return_mean": 1993.1726485480824,
+   "final_json_return_mean": 1993.1726485480824,
+   "still_frac": 0.0014,
+   "effort_mean": 0.639798564858362,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_sampled",
+   "seed": 2,
+   "return_mean": 467.7510990149418,
+   "final_json_return_mean": 467.7510990149418,
+   "still_frac": 0.0568,
+   "effort_mean": 0.6816305655889213,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "ar_sampled",
+   "seed": 3,
+   "return_mean": 690.240263262632,
+   "final_json_return_mean": 690.240263262632,
+   "still_frac": 0.06089999999999999,
+   "effort_mean": 0.7196939483687281,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env",
+   "seed": 1,
+   "return_mean": 3048.8644621777535,
+   "final_json_return_mean": 3048.8644621777535,
+   "still_frac": 0.013500000000000002,
+   "effort_mean": 0.680224821882695,
+   "flipped_frac": 0.1497
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env",
+   "seed": 2,
+   "return_mean": 4399.746281817544,
+   "final_json_return_mean": 4399.746281817544,
+   "still_frac": 0.0008500000000000001,
+   "effort_mean": 0.7682114452451467,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env",
+   "seed": 3,
+   "return_mean": 3948.9438039826864,
+   "final_json_return_mean": 3948.9438039826864,
+   "still_frac": 0.0009000000000000001,
+   "effort_mean": 0.6764404333684593,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env",
+   "seed": 4,
+   "return_mean": 4208.772334579856,
+   "final_json_return_mean": 4208.772334579856,
+   "still_frac": 0.0008500000000000003,
+   "effort_mean": 0.7403115859284995,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env",
+   "seed": 5,
+   "return_mean": 1599.2975079305875,
+   "final_json_return_mean": 1599.2975079305875,
+   "still_frac": 0.028250000000000004,
+   "effort_mean": 0.4956573641121388,
+   "flipped_frac": 0.9839
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env_window",
+   "seed": 1,
+   "return_mean": 1446.8634591830041,
+   "final_json_return_mean": 1446.8634591830041,
+   "still_frac": 0.03905,
+   "effort_mean": 0.6085417494403199,
+   "flipped_frac": 0.9808
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env_window",
+   "seed": 2,
+   "return_mean": 3481.5967310915075,
+   "final_json_return_mean": 3481.5967310915075,
+   "still_frac": 0.0014,
+   "effort_mean": 0.7214808422915637,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env_window",
+   "seed": 3,
+   "return_mean": 4175.246869164611,
+   "final_json_return_mean": 4175.246869164611,
+   "still_frac": 0.0115,
+   "effort_mean": 0.6554462752141058,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env_window",
+   "seed": 4,
+   "return_mean": 1376.7277849241423,
+   "final_json_return_mean": 1376.7277849241423,
+   "still_frac": 0.03540000000000001,
+   "effort_mean": 0.6028111099094151,
+   "flipped_frac": 0.9818
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "env_window",
+   "seed": 5,
+   "return_mean": 1398.1667630779782,
+   "final_json_return_mean": 1398.1667630779782,
+   "still_frac": 0.04870000000000001,
+   "effort_mean": 0.5461591918930412,
+   "flipped_frac": 0.9873
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_distill",
+   "seed": 1,
+   "return_mean": 4278.967245556143,
+   "final_json_return_mean": 4278.967245556143,
+   "still_frac": 0.0014000000000000002,
+   "effort_mean": 0.874455045504868,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_distill",
+   "seed": 2,
+   "return_mean": 3378.739351016679,
+   "final_json_return_mean": 3378.739351016679,
+   "still_frac": 0.0020500000000000006,
+   "effort_mean": 0.7395967951968314,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_distill",
+   "seed": 3,
+   "return_mean": 4067.635569576113,
+   "final_json_return_mean": 4067.635569576113,
+   "still_frac": 0.0011500000000000002,
+   "effort_mean": 0.7825027793481947,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_distill",
+   "seed": 4,
+   "return_mean": 4233.738319130551,
+   "final_json_return_mean": 4233.738319130551,
+   "still_frac": 0.0011,
+   "effort_mean": 0.7838166109211742,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_distill",
+   "seed": 5,
+   "return_mean": 4626.140680133272,
+   "final_json_return_mean": 4626.140680133272,
+   "still_frac": 0.0019000000000000002,
+   "effort_mean": 0.7981947563067078,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_gated",
+   "seed": 1,
+   "return_mean": 4119.32664975009,
+   "final_json_return_mean": 4119.32664975009,
+   "still_frac": 0.00115,
+   "effort_mean": 0.7727972238115967,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_gated",
+   "seed": 2,
+   "return_mean": 3892.7154182786207,
+   "final_json_return_mean": 3892.7154182786207,
+   "still_frac": 0.00135,
+   "effort_mean": 0.6597226406577975,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_gated",
+   "seed": 3,
+   "return_mean": 4286.863253112369,
+   "final_json_return_mean": 4286.863253112369,
+   "still_frac": 0.0010500000000000002,
+   "effort_mean": 0.7435217717587947,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_gated",
+   "seed": 4,
+   "return_mean": 4396.26695440302,
+   "final_json_return_mean": 4396.26695440302,
+   "still_frac": 0.0011,
+   "effort_mean": 0.6960730841320009,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_gated",
+   "seed": 5,
+   "return_mean": 4509.744898624927,
+   "final_json_return_mean": 4509.744898624927,
+   "still_frac": 0.00165,
+   "effort_mean": 0.7537998406991362,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_score",
+   "seed": 1,
+   "return_mean": 3421.9449232982724,
+   "final_json_return_mean": 3421.9449232982724,
+   "still_frac": 0.0010500000000000002,
+   "effort_mean": 0.8055259287059309,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_score",
+   "seed": 2,
+   "return_mean": 2084.856012879992,
+   "final_json_return_mean": 2084.856012879992,
+   "still_frac": 0.008750000000000003,
+   "effort_mean": 0.7511727676071226,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_score",
+   "seed": 3,
+   "return_mean": 2392.093333985292,
+   "final_json_return_mean": 2392.093333985292,
+   "still_frac": 0.0032500000000000003,
+   "effort_mean": 0.7839893181025982,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_score",
+   "seed": 4,
+   "return_mean": 3555.4038811248415,
+   "final_json_return_mean": 3555.4038811248415,
+   "still_frac": 0.0018500000000000003,
+   "effort_mean": 0.901253767311573,
+   "flipped_frac": 0.0
+  },
+  {
+   "env_id": "HalfCheetah-v5",
+   "reward": "kev_score",
+   "seed": 5,
+   "return_mean": 2768.6700717035083,
+   "final_json_return_mean": 2768.6700717035083,
+   "still_frac": 0.02475,
+   "effort_mean": 0.7587545956600458,
+   "flipped_frac": 0.02245
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_gated",
+   "seed": 1,
+   "return_mean": 998.459781489486,
+   "final_json_return_mean": 998.459781489486,
+   "still_frac": 0.9378500000000001,
+   "effort_mean": 0.8979208900801836
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_gated",
+   "seed": 2,
+   "return_mean": 1711.3453171853573,
+   "final_json_return_mean": 1711.3453171853573,
+   "still_frac": 0.003300000000000001,
+   "effort_mean": 0.8272333734795451
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_gated",
+   "seed": 3,
+   "return_mean": 997.4021988590554,
+   "final_json_return_mean": 997.4021988590554,
+   "still_frac": 0.1739,
+   "effort_mean": 0.9241895339593291
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_gated",
+   "seed": 4,
+   "return_mean": 1105.3738000020903,
+   "final_json_return_mean": 1105.3738000020903,
+   "still_frac": 0.376,
+   "effort_mean": 0.9012486034865489
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_gated",
+   "seed": 5,
+   "return_mean": 1012.9186620135217,
+   "final_json_return_mean": 1012.9186620135217,
+   "still_frac": 0.9832000000000001,
+   "effort_mean": 0.9117301589503883
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_sampled",
+   "seed": 1,
+   "return_mean": 872.2922447827577,
+   "final_json_return_mean": 872.2922447827577,
+   "still_frac": 0.054905297520194275,
+   "effort_mean": 0.7477073386131001
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_sampled",
+   "seed": 2,
+   "return_mean": 1447.8464154077283,
+   "final_json_return_mean": 1447.8464154077283,
+   "still_frac": 0.0075000000000000015,
+   "effort_mean": 0.664009532311064
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "ar_sampled",
+   "seed": 3,
+   "return_mean": 1061.788811087857,
+   "final_json_return_mean": 1061.788811087857,
+   "still_frac": 0.72565,
+   "effort_mean": 0.8909670395836236
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env",
+   "seed": 1,
+   "return_mean": 2442.1124530685,
+   "final_json_return_mean": 2442.1124530685,
+   "still_frac": 0.004163675288615559,
+   "effort_mean": 0.44427331065663267
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env",
+   "seed": 2,
+   "return_mean": 3539.3561683004373,
+   "final_json_return_mean": 3539.3561683004373,
+   "still_frac": 0.0020000000000000005,
+   "effort_mean": 0.3499176983345864
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env",
+   "seed": 3,
+   "return_mean": 3498.3687451070136,
+   "final_json_return_mean": 3498.3687451070136,
+   "still_frac": 0.002592740798901523,
+   "effort_mean": 0.3386439372043301
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env",
+   "seed": 4,
+   "return_mean": 1281.39440998211,
+   "final_json_return_mean": 1281.39440998211,
+   "still_frac": 0.009470254303883511,
+   "effort_mean": 0.6248797059644886
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env",
+   "seed": 5,
+   "return_mean": 3339.6610572537547,
+   "final_json_return_mean": 3339.6610572537547,
+   "still_frac": 0.003150000000000001,
+   "effort_mean": 0.5086748427931219
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env_window",
+   "seed": 1,
+   "return_mean": 3404.0825953774574,
+   "final_json_return_mean": 3404.0825953774574,
+   "still_frac": 0.0025000000000000005,
+   "effort_mean": 0.6110545347088977
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env_window",
+   "seed": 2,
+   "return_mean": 2651.192656001276,
+   "final_json_return_mean": 2651.192656001276,
+   "still_frac": 0.003434813692364571,
+   "effort_mean": 0.5816063026615674
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env_window",
+   "seed": 3,
+   "return_mean": 3636.3505164722037,
+   "final_json_return_mean": 3636.3505164722037,
+   "still_frac": 0.004760756192959584,
+   "effort_mean": 0.46040180971974837
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env_window",
+   "seed": 4,
+   "return_mean": 3783.770044770623,
+   "final_json_return_mean": 3783.770044770623,
+   "still_frac": 0.0026500000000000004,
+   "effort_mean": 0.4137471655956091
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "env_window",
+   "seed": 5,
+   "return_mean": 3622.0514280660623,
+   "final_json_return_mean": 3622.0514280660623,
+   "still_frac": 0.0019500000000000003,
+   "effort_mean": 0.47373588592782623
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_distill",
+   "seed": 1,
+   "return_mean": 3207.4312775259614,
+   "final_json_return_mean": 3207.4312775259614,
+   "still_frac": 0.0032500000000000007,
+   "effort_mean": 0.6862208273008465
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_distill",
+   "seed": 2,
+   "return_mean": 2822.0142025309497,
+   "final_json_return_mean": 2822.0142025309497,
+   "still_frac": 0.01,
+   "effort_mean": 0.4622982555635273
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_distill",
+   "seed": 3,
+   "return_mean": 3614.651796809592,
+   "final_json_return_mean": 3614.651796809592,
+   "still_frac": 0.003450000000000001,
+   "effort_mean": 0.47650762657030726
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_distill",
+   "seed": 4,
+   "return_mean": 3235.816871013346,
+   "final_json_return_mean": 3235.816871013346,
+   "still_frac": 0.0020000000000000005,
+   "effort_mean": 0.6177670894984855
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_distill",
+   "seed": 5,
+   "return_mean": 1286.1512894499504,
+   "final_json_return_mean": 1286.1512894499504,
+   "still_frac": 0.010006288517709589,
+   "effort_mean": 0.632429063862606
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_gated",
+   "seed": 1,
+   "return_mean": 3155.173055865423,
+   "final_json_return_mean": 3155.173055865423,
+   "still_frac": 0.006300000000000002,
+   "effort_mean": 0.582790998095274
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_gated",
+   "seed": 2,
+   "return_mean": 3172.1941220659173,
+   "final_json_return_mean": 3172.1941220659173,
+   "still_frac": 0.0021500000000000004,
+   "effort_mean": 0.4118295503693414
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_gated",
+   "seed": 3,
+   "return_mean": 3406.6220170064307,
+   "final_json_return_mean": 3406.6220170064307,
+   "still_frac": 0.004400000000000001,
+   "effort_mean": 0.39478836970936976
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_gated",
+   "seed": 4,
+   "return_mean": 3194.4821686576097,
+   "final_json_return_mean": 3194.4821686576097,
+   "still_frac": 0.006000000000000001,
+   "effort_mean": 0.5112214495735811
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_gated",
+   "seed": 5,
+   "return_mean": 2917.6865837001606,
+   "final_json_return_mean": 2917.6865837001606,
+   "still_frac": 0.008747899421573214,
+   "effort_mean": 0.728967931706128
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_score",
+   "seed": 1,
+   "return_mean": 2726.572598227881,
+   "final_json_return_mean": 2726.572598227881,
+   "still_frac": 0.007905882352941176,
+   "effort_mean": 0.47462517174324914
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_score",
+   "seed": 2,
+   "return_mean": 3304.8103090133386,
+   "final_json_return_mean": 3304.8103090133386,
+   "still_frac": 0.0025,
+   "effort_mean": 0.6096956930006651
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_score",
+   "seed": 3,
+   "return_mean": 3312.846008858555,
+   "final_json_return_mean": 3312.846008858555,
+   "still_frac": 0.0020000000000000005,
+   "effort_mean": 0.3029522307163556
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_score",
+   "seed": 4,
+   "return_mean": 2709.4385601604095,
+   "final_json_return_mean": 2709.4385601604095,
+   "still_frac": 0.0020000000000000005,
+   "effort_mean": 0.7153151104283519
+  },
+  {
+   "env_id": "Hopper-v5",
+   "reward": "kev_score",
+   "seed": 5,
+   "return_mean": 3252.9500628792957,
+   "final_json_return_mean": 3252.9500628792957,
+   "still_frac": 0.0020000000000000005,
+   "effort_mean": 0.478596172565967
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_gated",
+   "seed": 1,
+   "return_mean": -63.98502762398444,
+   "final_json_return_mean": -63.98502762398444,
+   "still_frac": 1.0,
+   "effort_mean": 0.5149808253994509,
+   "dist_mean": 0.24973890168078725
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_gated",
+   "seed": 2,
+   "return_mean": -100.55666031445972,
+   "final_json_return_mean": -100.55666031445972,
+   "still_frac": 1.0,
+   "effort_mean": 0.8796297170654288,
+   "dist_mean": 0.251873772158337
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_gated",
+   "seed": 3,
+   "return_mean": -74.30782529898697,
+   "final_json_return_mean": -74.30782529898697,
+   "still_frac": 1.0,
+   "effort_mean": 0.6172192060425877,
+   "dist_mean": 0.2517180938945639
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_gated",
+   "seed": 4,
+   "return_mean": -90.29924700705719,
+   "final_json_return_mean": -90.29924700705719,
+   "still_frac": 1.0,
+   "effort_mean": 0.773689331500791,
+   "dist_mean": 0.2586062771395612
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_gated",
+   "seed": 5,
+   "return_mean": -46.64115072591441,
+   "final_json_return_mean": -46.64115072591441,
+   "still_frac": 1.0,
+   "effort_mean": 0.3399650201456391,
+   "dist_mean": 0.25289297422700974
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_sampled",
+   "seed": 1,
+   "return_mean": -62.07497084542979,
+   "final_json_return_mean": -62.07497084542979,
+   "still_frac": 1.0,
+   "effort_mean": 0.49257607510641466,
+   "dist_mean": 0.2563472666957667
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_sampled",
+   "seed": 2,
+   "return_mean": -92.59944306164564,
+   "final_json_return_mean": -92.59944306164564,
+   "still_frac": 1.0,
+   "effort_mean": 0.8002599118826911,
+   "dist_mean": 0.25146903746753085
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "ar_sampled",
+   "seed": 3,
+   "return_mean": -51.643075533521404,
+   "final_json_return_mean": -51.643075533521404,
+   "still_frac": 1.0,
+   "effort_mean": 0.3930624741909529,
+   "dist_mean": 0.2467365622885223
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env",
+   "seed": 1,
+   "return_mean": -5.328017095734837,
+   "final_json_return_mean": -5.328017095734837,
+   "still_frac": 1.0,
+   "effort_mean": 0.010192752190584086,
+   "dist_mean": 0.08617483753352857
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env",
+   "seed": 2,
+   "return_mean": -8.859239414671688,
+   "final_json_return_mean": -8.859239414671688,
+   "still_frac": 1.0,
+   "effort_mean": 0.023839394236730184,
+   "dist_mean": 0.12950599981997338
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env",
+   "seed": 3,
+   "return_mean": -5.774564466596933,
+   "final_json_return_mean": -5.774564466596933,
+   "still_frac": 1.0,
+   "effort_mean": 0.009966053945619733,
+   "dist_mean": 0.09555918144069919
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env",
+   "seed": 4,
+   "return_mean": -7.382825311273076,
+   "final_json_return_mean": -7.382825311273076,
+   "still_frac": 1.0,
+   "effort_mean": 0.015979684267136952,
+   "dist_mean": 0.11569713769118761
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env",
+   "seed": 5,
+   "return_mean": -4.9005659124407135,
+   "final_json_return_mean": -4.9005659124407135,
+   "still_frac": 1.0,
+   "effort_mean": 0.010509584029117915,
+   "dist_mean": 0.07699215019057848
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env_window",
+   "seed": 1,
+   "return_mean": -24.863203684571978,
+   "final_json_return_mean": -24.863203684571978,
+   "still_frac": 1.0,
+   "effort_mean": 0.16160437103831243,
+   "dist_mean": 0.17405533161481473
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env_window",
+   "seed": 2,
+   "return_mean": -41.52400576149799,
+   "final_json_return_mean": -41.52400576149799,
+   "still_frac": 1.0,
+   "effort_mean": 0.3128650751709937,
+   "dist_mean": 0.2047499648879722
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env_window",
+   "seed": 3,
+   "return_mean": -30.294948989919096,
+   "final_json_return_mean": -30.294948989919096,
+   "still_frac": 1.0,
+   "effort_mean": 0.2117454708518635,
+   "dist_mean": 0.18240803809465483
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env_window",
+   "seed": 4,
+   "return_mean": -27.800764132934795,
+   "final_json_return_mean": -27.800764132934795,
+   "still_frac": 1.0,
+   "effort_mean": 0.19251398976541534,
+   "dist_mean": 0.1709873031278653
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "env_window",
+   "seed": 5,
+   "return_mean": -15.416260862611097,
+   "final_json_return_mean": -15.416260862611097,
+   "still_frac": 1.0,
+   "effort_mean": 0.07045763118635659,
+   "dist_mean": 0.1674099548795087
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_distill",
+   "seed": 1,
+   "return_mean": -101.71273420913406,
+   "final_json_return_mean": -101.71273420913406,
+   "still_frac": 1.0,
+   "effort_mean": 0.8997300650617108,
+   "dist_mean": 0.23479455405925967
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_distill",
+   "seed": 2,
+   "return_mean": -98.46276447768724,
+   "final_json_return_mean": -98.46276447768724,
+   "still_frac": 1.0,
+   "effort_mean": 0.8536677227634935,
+   "dist_mean": 0.26191984402675755
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_distill",
+   "seed": 3,
+   "return_mean": -55.87666729571769,
+   "final_json_return_mean": -55.87666729571769,
+   "still_frac": 1.0,
+   "effort_mean": 0.4457698300713355,
+   "dist_mean": 0.22599368577168244
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_distill",
+   "seed": 4,
+   "return_mean": -76.51434723307963,
+   "final_json_return_mean": -76.51434723307963,
+   "still_frac": 1.0,
+   "effort_mean": 0.6344390470891519,
+   "dist_mean": 0.2614088504832888
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_distill",
+   "seed": 5,
+   "return_mean": -109.41415087771213,
+   "final_json_return_mean": -109.41415087771213,
+   "still_frac": 1.0,
+   "effort_mean": 0.9612984088584782,
+   "dist_mean": 0.26568619983728686
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_gated",
+   "seed": 1,
+   "return_mean": -67.00329573287938,
+   "final_json_return_mean": -67.00329573287938,
+   "still_frac": 1.0,
+   "effort_mean": 0.5301560045092264,
+   "dist_mean": 0.27975390563913477
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_gated",
+   "seed": 2,
+   "return_mean": -83.45868651745646,
+   "final_json_return_mean": -83.45868651745646,
+   "still_frac": 1.0,
+   "effort_mean": 0.7012442958901038,
+   "dist_mean": 0.2666851385689214
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_gated",
+   "seed": 3,
+   "return_mean": -90.57280700994738,
+   "final_json_return_mean": -90.57280700994738,
+   "still_frac": 1.0,
+   "effort_mean": 0.7817455705639442,
+   "dist_mean": 0.24796499907105968
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_gated",
+   "seed": 4,
+   "return_mean": -73.10925632237085,
+   "final_json_return_mean": -73.10925632237085,
+   "still_frac": 1.0,
+   "effort_mean": 0.6019626572238049,
+   "dist_mean": 0.2582598119998073
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_gated",
+   "seed": 5,
+   "return_mean": -64.98130055979284,
+   "final_json_return_mean": -64.98130055979284,
+   "still_frac": 1.0,
+   "effort_mean": 0.5176174047269637,
+   "dist_mean": 0.2643912017419295
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_score",
+   "seed": 1,
+   "return_mean": -79.80587292374257,
+   "final_json_return_mean": -79.80587292374257,
+   "still_frac": 1.0,
+   "effort_mean": 0.6726943955061454,
+   "dist_mean": 0.2507286674625606
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_score",
+   "seed": 2,
+   "return_mean": -23.068439202635094,
+   "final_json_return_mean": -23.068439202635094,
+   "still_frac": 1.0,
+   "effort_mean": 0.11558574835931379,
+   "dist_mean": 0.2301972873340743
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_score",
+   "seed": 3,
+   "return_mean": -57.09697703790157,
+   "final_json_return_mean": -57.09697703790157,
+   "still_frac": 1.0,
+   "effort_mean": 0.44350835795655463,
+   "dist_mean": 0.25492282484492224
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_score",
+   "seed": 4,
+   "return_mean": -45.4771380210441,
+   "final_json_return_mean": -45.4771380210441,
+   "still_frac": 1.0,
+   "effort_mean": 0.30849794888377435,
+   "dist_mean": 0.29254686265333313
+  },
+  {
+   "env_id": "Reacher-v5",
+   "reward": "kev_score",
+   "seed": 5,
+   "return_mean": -38.867339608215936,
+   "final_json_return_mean": -38.867339608215936,
+   "still_frac": 1.0,
+   "effort_mean": 0.262561462717769,
+   "dist_mean": 0.2522238667287807
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_gated",
+   "seed": 1,
+   "return_mean": 156.56836368842738,
+   "final_json_return_mean": 156.56836368842738,
+   "still_frac": 0.0529,
+   "effort_mean": 0.8253730874300004
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_gated",
+   "seed": 2,
+   "return_mean": 123.90379675444771,
+   "final_json_return_mean": 123.90379675444771,
+   "still_frac": 0.03925000000000001,
+   "effort_mean": 0.8517385133862495
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_gated",
+   "seed": 3,
+   "return_mean": 331.2090611280015,
+   "final_json_return_mean": 331.2090611280015,
+   "still_frac": 0.1648,
+   "effort_mean": 0.9734111013516783
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_gated",
+   "seed": 4,
+   "return_mean": 7.128370905501683,
+   "final_json_return_mean": 7.128370905501683,
+   "still_frac": 0.5991500000000001,
+   "effort_mean": 0.9031746703416109
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_gated",
+   "seed": 5,
+   "return_mean": 87.97183022909906,
+   "final_json_return_mean": 87.97183022909906,
+   "still_frac": 0.024800000000000006,
+   "effort_mean": 0.9398284425228833
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_sampled",
+   "seed": 1,
+   "return_mean": 305.40075644282723,
+   "final_json_return_mean": 305.40075644282723,
+   "still_frac": 0.07554999999999999,
+   "effort_mean": 0.9176666167020799
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_sampled",
+   "seed": 2,
+   "return_mean": -8.37480442995262,
+   "final_json_return_mean": -8.37480442995262,
+   "still_frac": 0.9657,
+   "effort_mean": 0.9544973219081759
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "ar_sampled",
+   "seed": 3,
+   "return_mean": 55.860020657625945,
+   "final_json_return_mean": 55.860020657625945,
+   "still_frac": 0.44815000000000005,
+   "effort_mean": 0.5544296703398228
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env",
+   "seed": 1,
+   "return_mean": 104.6204472279837,
+   "final_json_return_mean": 104.6204472279837,
+   "still_frac": 0.34015,
+   "effort_mean": 0.5530152316231994
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env",
+   "seed": 2,
+   "return_mean": 69.78679493073545,
+   "final_json_return_mean": 69.78679493073545,
+   "still_frac": 0.79775,
+   "effort_mean": 0.5442688197290524
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env",
+   "seed": 3,
+   "return_mean": 64.62132833462482,
+   "final_json_return_mean": 64.62132833462482,
+   "still_frac": 0.7802,
+   "effort_mean": 0.6139846076965332
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env",
+   "seed": 4,
+   "return_mean": 106.24078735639834,
+   "final_json_return_mean": 106.24078735639834,
+   "still_frac": 0.37534999999999996,
+   "effort_mean": 0.7892162932629502
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env",
+   "seed": 5,
+   "return_mean": 61.89344025723612,
+   "final_json_return_mean": 61.89344025723612,
+   "still_frac": 0.8057000000000001,
+   "effort_mean": 0.5516487597202882
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env_window",
+   "seed": 1,
+   "return_mean": 270.2121144771009,
+   "final_json_return_mean": 270.2121144771009,
+   "still_frac": 0.06785,
+   "effort_mean": 0.8479739529609679
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env_window",
+   "seed": 2,
+   "return_mean": 323.26564933418933,
+   "final_json_return_mean": 323.26564933418933,
+   "still_frac": 0.2083,
+   "effort_mean": 0.7112016647565789
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env_window",
+   "seed": 3,
+   "return_mean": 101.68107894697012,
+   "final_json_return_mean": 101.68107894697012,
+   "still_frac": 0.09365000000000001,
+   "effort_mean": 0.6501438860349358
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env_window",
+   "seed": 4,
+   "return_mean": 347.9632085070475,
+   "final_json_return_mean": 347.9632085070475,
+   "still_frac": 0.14679999999999999,
+   "effort_mean": 0.9565075270358474
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "env_window",
+   "seed": 5,
+   "return_mean": 347.7401891515666,
+   "final_json_return_mean": 347.7401891515666,
+   "still_frac": 0.16444999999999999,
+   "effort_mean": 0.9576101326033474
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_distill",
+   "seed": 1,
+   "return_mean": 95.95194944189724,
+   "final_json_return_mean": 95.95194944189724,
+   "still_frac": 0.15440000000000004,
+   "effort_mean": 0.8649525669401046
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_distill",
+   "seed": 2,
+   "return_mean": 83.1318679666108,
+   "final_json_return_mean": 83.1318679666108,
+   "still_frac": 0.0747,
+   "effort_mean": 0.8229844780409126
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_distill",
+   "seed": 3,
+   "return_mean": 139.07840864255553,
+   "final_json_return_mean": 139.07840864255553,
+   "still_frac": 0.18315000000000003,
+   "effort_mean": 0.9309032099657605
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_distill",
+   "seed": 4,
+   "return_mean": 108.66496366246051,
+   "final_json_return_mean": 108.66496366246051,
+   "still_frac": 0.025050000000000006,
+   "effort_mean": 0.8110393291952089
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_distill",
+   "seed": 5,
+   "return_mean": 26.682291567603993,
+   "final_json_return_mean": 26.682291567603993,
+   "still_frac": 0.12675000000000003,
+   "effort_mean": 0.9315101899565199
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_gated",
+   "seed": 1,
+   "return_mean": 157.2872173688166,
+   "final_json_return_mean": 157.2872173688166,
+   "still_frac": 0.028500000000000004,
+   "effort_mean": 0.8914263294339179
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_gated",
+   "seed": 2,
+   "return_mean": 1.0659459887015776,
+   "final_json_return_mean": 1.0659459887015776,
+   "still_frac": 0.4706500000000001,
+   "effort_mean": 0.7506258766914911
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_gated",
+   "seed": 3,
+   "return_mean": 125.0068419984711,
+   "final_json_return_mean": 125.0068419984711,
+   "still_frac": 0.03690000000000001,
+   "effort_mean": 0.6903144919506492
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_gated",
+   "seed": 4,
+   "return_mean": 85.82635618385662,
+   "final_json_return_mean": 85.82635618385662,
+   "still_frac": 0.04815000000000001,
+   "effort_mean": 0.7434813302770256
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_gated",
+   "seed": 5,
+   "return_mean": 337.7430321454325,
+   "final_json_return_mean": 337.7430321454325,
+   "still_frac": 0.14735,
+   "effort_mean": 0.9774568606732531
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_score",
+   "seed": 1,
+   "return_mean": 306.7927166865637,
+   "final_json_return_mean": 306.7927166865637,
+   "still_frac": 0.07555,
+   "effort_mean": 0.9659877216219902
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_score",
+   "seed": 2,
+   "return_mean": 28.439847551852473,
+   "final_json_return_mean": 28.439847551852473,
+   "still_frac": 0.35219999999999996,
+   "effort_mean": 0.8569117047637702
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_score",
+   "seed": 3,
+   "return_mean": -25.70188404820616,
+   "final_json_return_mean": -25.70188404820616,
+   "still_frac": 0.025400000000000006,
+   "effort_mean": 0.698488850321807
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_score",
+   "seed": 4,
+   "return_mean": -16.158875146801066,
+   "final_json_return_mean": -16.158875146801066,
+   "still_frac": 0.05815,
+   "effort_mean": 0.6661767327965121
+  },
+  {
+   "env_id": "Swimmer-v5",
+   "reward": "kev_score",
+   "seed": 5,
+   "return_mean": 203.9594237160837,
+   "final_json_return_mean": 203.9594237160837,
+   "still_frac": 0.04900000000000001,
+   "effort_mean": 0.9629519965246323
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_gated",
+   "seed": 1,
+   "return_mean": 1394.0040507310816,
+   "final_json_return_mean": 1394.0040507310816,
+   "still_frac": 0.346421554770318,
+   "effort_mean": 0.8024337386426493
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_gated",
+   "seed": 2,
+   "return_mean": 1156.3136411379187,
+   "final_json_return_mean": 1156.3136411379187,
+   "still_frac": 0.31251611396393125,
+   "effort_mean": 0.4550318915022462
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_gated",
+   "seed": 3,
+   "return_mean": 1125.3330078401518,
+   "final_json_return_mean": 1125.3330078401518,
+   "still_frac": 0.6618999999999999,
+   "effort_mean": 0.39305304312631495
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_gated",
+   "seed": 4,
+   "return_mean": 1339.6597020502243,
+   "final_json_return_mean": 1339.6597020502243,
+   "still_frac": 0.60555,
+   "effort_mean": 0.4172394158617128
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_gated",
+   "seed": 5,
+   "return_mean": 1589.9782503562456,
+   "final_json_return_mean": 1589.9782503562456,
+   "still_frac": 0.06761883689595691,
+   "effort_mean": 0.5290425327380774
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_sampled",
+   "seed": 1,
+   "return_mean": 1433.2969848678997,
+   "final_json_return_mean": 1433.2969848678997,
+   "still_frac": 0.12181570698517397,
+   "effort_mean": 0.6434010317091047
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_sampled",
+   "seed": 2,
+   "return_mean": 1139.755906100187,
+   "final_json_return_mean": 1139.755906100187,
+   "still_frac": 0.23912965616045848,
+   "effort_mean": 0.6750909436131847
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "ar_sampled",
+   "seed": 3,
+   "return_mean": 1417.006882335231,
+   "final_json_return_mean": 1417.006882335231,
+   "still_frac": 0.1516,
+   "effort_mean": 0.6695991323586553
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env",
+   "seed": 1,
+   "return_mean": 1350.622893652729,
+   "final_json_return_mean": 1350.622893652729,
+   "still_frac": 0.011408647791941248,
+   "effort_mean": 0.6318182769734154
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env",
+   "seed": 2,
+   "return_mean": 4111.17249022933,
+   "final_json_return_mean": 4111.17249022933,
+   "still_frac": 0.0017667571174876998,
+   "effort_mean": 0.5489500076325325
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env",
+   "seed": 3,
+   "return_mean": 3912.3028286228932,
+   "final_json_return_mean": 3912.3028286228932,
+   "still_frac": 0.0009500000000000001,
+   "effort_mean": 0.5763076503130606
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env",
+   "seed": 4,
+   "return_mean": 2246.335271651682,
+   "final_json_return_mean": 2246.335271651682,
+   "still_frac": 0.0,
+   "effort_mean": 0.5315810813931956
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env",
+   "seed": 5,
+   "return_mean": 4128.083195533076,
+   "final_json_return_mean": 4128.083195533076,
+   "still_frac": 0.010900000000000002,
+   "effort_mean": 0.676419754122384
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env_window",
+   "seed": 1,
+   "return_mean": 4647.92078353988,
+   "final_json_return_mean": 4647.92078353988,
+   "still_frac": 0.0005500000000000001,
+   "effort_mean": 0.5767655222088097
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env_window",
+   "seed": 2,
+   "return_mean": 4876.283229993527,
+   "final_json_return_mean": 4876.283229993527,
+   "still_frac": 0.007600000000000001,
+   "effort_mean": 0.6369682150967421
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env_window",
+   "seed": 3,
+   "return_mean": 5237.406724635842,
+   "final_json_return_mean": 5237.406724635842,
+   "still_frac": 0.0014500000000000003,
+   "effort_mean": 0.5287784073024988
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env_window",
+   "seed": 4,
+   "return_mean": 4905.198320071792,
+   "final_json_return_mean": 4905.198320071792,
+   "still_frac": 0.0022500000000000003,
+   "effort_mean": 0.46734963056268164
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "env_window",
+   "seed": 5,
+   "return_mean": 674.2035208166641,
+   "final_json_return_mean": 674.2035208166641,
+   "still_frac": 0.004973749759319215,
+   "effort_mean": 0.6009013603994721
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_distill",
+   "seed": 1,
+   "return_mean": 2749.372376709758,
+   "final_json_return_mean": 2749.372376709758,
+   "still_frac": 0.050050000000000004,
+   "effort_mean": 0.48181124228332195
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_distill",
+   "seed": 2,
+   "return_mean": 2944.9620807157735,
+   "final_json_return_mean": 2944.9620807157735,
+   "still_frac": 0.0011268809012339512,
+   "effort_mean": 0.6425407001842677
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_distill",
+   "seed": 3,
+   "return_mean": 3498.3836254480657,
+   "final_json_return_mean": 3498.3836254480657,
+   "still_frac": 0.0013000000000000002,
+   "effort_mean": 0.4690486843355
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_distill",
+   "seed": 4,
+   "return_mean": 3411.4282078819315,
+   "final_json_return_mean": 3411.4282078819315,
+   "still_frac": 0.0011529051987767586,
+   "effort_mean": 0.5452699893325194
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_distill",
+   "seed": 5,
+   "return_mean": 2108.631338308887,
+   "final_json_return_mean": 2108.631338308887,
+   "still_frac": 0.014889679715302492,
+   "effort_mean": 0.6368316858492348
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_gated",
+   "seed": 1,
+   "return_mean": 2715.0847052603726,
+   "final_json_return_mean": 2715.0847052603726,
+   "still_frac": 0.015102587696561259,
+   "effort_mean": 0.5635319932957112
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_gated",
+   "seed": 2,
+   "return_mean": 2816.5409536035254,
+   "final_json_return_mean": 2816.5409536035254,
+   "still_frac": 0.0023500000000000005,
+   "effort_mean": 0.5030928538389503
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_gated",
+   "seed": 3,
+   "return_mean": 2949.202419270292,
+   "final_json_return_mean": 2949.202419270292,
+   "still_frac": 0.0014000000000000002,
+   "effort_mean": 0.5395429866472258
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_gated",
+   "seed": 4,
+   "return_mean": 2924.9926014320854,
+   "final_json_return_mean": 2924.9926014320854,
+   "still_frac": 0.01965,
+   "effort_mean": 0.5310541233289056
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_gated",
+   "seed": 5,
+   "return_mean": 1271.98889358995,
+   "final_json_return_mean": 1271.98889358995,
+   "still_frac": 0.46925,
+   "effort_mean": 0.8030105951301755
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_score",
+   "seed": 1,
+   "return_mean": 1909.9433450144995,
+   "final_json_return_mean": 1909.9433450144995,
+   "still_frac": 0.04280864606669435,
+   "effort_mean": 0.5387415279338932
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_score",
+   "seed": 2,
+   "return_mean": 3044.234471352562,
+   "final_json_return_mean": 3044.234471352562,
+   "still_frac": 0.0019000000000000006,
+   "effort_mean": 0.6097062954977155
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_score",
+   "seed": 3,
+   "return_mean": 2904.4492396674486,
+   "final_json_return_mean": 2904.4492396674486,
+   "still_frac": 0.0850636302294197,
+   "effort_mean": 0.594784490737115
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_score",
+   "seed": 4,
+   "return_mean": 2916.787583040402,
+   "final_json_return_mean": 2916.787583040402,
+   "still_frac": 0.031820915289798066,
+   "effort_mean": 0.5462070855721487
+  },
+  {
+   "env_id": "Walker2d-v5",
+   "reward": "kev_score",
+   "seed": 5,
+   "return_mean": 2187.790037085054,
+   "final_json_return_mean": 2187.790037085054,
+   "still_frac": 0.04129310813667709,
+   "effort_mean": 0.5244487391656659
+  }
+ ]
+}

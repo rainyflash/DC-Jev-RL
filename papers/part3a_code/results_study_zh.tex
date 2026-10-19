@@ -1,0 +1,27 @@
+% 第三部分 A 结果：离线代码评判研究（由 main_zh.tex 引入）。
+
+\section{评判模型在代码中看到了什么}\label{sec:res-study}
+
+\paragraph{可见测试留下了很大的缺口。} 基座策略的 \NUM{cs_policy} 次单次尝试（每题 \NUM{cs_samples} 次）中，\NUM{cs_vispass_all} 通过可见测试，\NUM{cs_allpass_all} 通过全部测试。在通过可见测试的尝试中，\NUM{cs_hack_all} 有留出测试失败：KodCode val 上为 \NUM{cs_hack_kod}，MBPP+ 上为 \NUM{cs_hack_mbpp}，HumanEval+ 上为 \NUM{cs_hack_he}。在训练还没来得及利用它之前，用可见测试构造的奖励就已经给这些尝试与正确尝试同样多的奖励。
+
+\paragraph{两个评判模型都能看出大部分问题，在训练分布上 \kev{} 并不更好。} 表~\ref{tab:code-study} 给出在通过可见测试的尝试中，各信号对“同时通过留出测试”的 AUROC。在三个数据集合并后，\kev{} 的 \emph{genuine} 达到 \NUM{csauc_all_kevg} \ci{\NUM{csauclo_all_kevg}}{\NUM{csauchi_all_kevg}}，AR 评判达到 \NUM{csauc_all_arg} \ci{\NUM{csauclo_all_arg}}{\NUM{csauchi_all_arg}}（按题目重采样得到的 95\% 区间）。两者之差 \NUM{csd_all_kevgarg} \ci{\NUM{csdlo_all_kevgarg}}{\NUM{csdhi_all_kevgarg}} 不能分辨。用 \emph{correct} 问题时，\kev{} 领先 \NUM{csd_all_kevcarc} \ci{\NUM{csdlo_all_kevcarc}}{\NUM{csdhi_all_kevcarc}}。两种差异的大部分都来自 MBPP+，在那里 \kev{} 的 \emph{genuine} 领先 \NUM{csd_mbpp_kevgarg} \ci{\NUM{csdlo_mbpp_kevgarg}}{\NUM{csdhi_mbpp_kevgarg}}。在策略训练所用的分布 KodCode val 上，AR 评判领先，但幅度不能分辨（\NUM{csd_kod_kevgarg} \ci{\NUM{csdlo_kod_kevgarg}}{\NUM{csdhi_kod_kevgarg}}）；在 HumanEval+ 上两者无法区分（\NUM{csd_he_kevgarg} \ci{\NUM{csdlo_he_kevgarg}}{\NUM{csdhi_he_kevgarg}}）。在全部尝试上，两个评判模型把全部通过的尝试与其余尝试区分得更好（\NUM{csaucall_all_kevg} 和 \NUM{csaucall_all_arg}），AR 评判略微领先（\NUM{csdall_all_kevgarg} \ci{\NUM{csdalllo_all_kevgarg}}{\NUM{csdallhi_all_kevgarg}}）。
+
+\begin{table}[t]
+\centering\small
+\input{tables/code_study}
+\caption{在基座策略通过可见测试的尝试中（每题 \NUM{cs_samples} 次尝试，温度 1），各评判信号对“通过留出测试”的 AUROC。\emph{within}：在 \NUM{cs_mixed_all} 道“通过可见测试的尝试中既有通过也有未通过留出测试者”的题目内部的平均 AUROC。\emph{all pass}：在全部尝试上识别“通过全部测试”的 AUROC。95\% 区间由按题目重采样得到。}
+\label{tab:code-study}
+\end{table}
+
+\paragraph{题目内部的证据很少。} GRPO 的组基线比较的是同一道题的各个回合，所以 \texttt{vis\_kev} 中评判因子的作用，取决于它如何给一道题中通过可见测试的回合排序。在 \NUM{cs_problems_all} 道至少有一次尝试通过可见测试的题目中，只有 \NUM{cs_mixed_all} 道在留出测试上两种结果都有。在这些题目内部，\kev{} 的 \emph{genuine} 达到 \NUM{csaucw_all_kevg}，AR 评判达到 \NUM{csaucw_all_arg}，差值 \NUM{csdw_all_kevgarg} \ci{\NUM{csdwlo_all_kevgarg}}{\NUM{csdwhi_all_kevgarg}}。这些题目太少，既不足以给两个评判模型排序，也不足以预测评判因子会在多大程度上改变训练。
+
+\paragraph{硬编码查表程序会被识破。} \NUM{cs_hardcoded} 个对可见测试调用做查表的程序通过了其所属 MBPP+ 或 HumanEval+ 题目的可见测试（其中 \NUM{cs_hardcoded_heldout} 个也通过了留出测试）。两个评判模型都几乎完美地把它们与同一批题目的参考解答区分开（表~\ref{tab:code-hardcoded}）。\kev{} 的 \emph{genuine} 给查表程序的平均分为 \NUM{rh_hc_kevg}，给参考解答的为 \NUM{rh_ref_kevg}，从未给查表程序打出高于其所属题目参考解答的分数。这类查表是对测试做特判最粗暴的方式。评判模型能识破它们，说明 \emph{genuine} 问题被正确理解了，但不能说明更隐蔽的过拟合也会被发现。
+
+\begin{table}[t]
+\centering\small
+\input{tables/code_hardcoded}
+\caption{在 \NUM{rh_problems} 道可见测试允许构造查表程序的 MBPP+ 和 HumanEval+ 题目上，参考解答对硬编码查表程序：AUROC、两类程序的平均 $p(\text{yes})$，以及查表程序得分高于其所属题目参考解答的频率。}
+\label{tab:code-hardcoded}
+\end{table}
+
+\paragraph{这预示着什么。} 评判因子可以压低通过可见测试却错误的尝试中的大部分，而 \kev{} 做到这一点的程度与 AR 评判——一个同样大小、被问同样问题的通用模型——相当。评判因子能否在训练中缩小这一差距，以及代价是多少可见测试通过率，要由训练实验来测量。

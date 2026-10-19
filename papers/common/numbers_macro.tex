@@ -1,0 +1,6 @@
+% \NUM{key}: a number computed by dcjev/analysis/paper_numbers.py and written to the paper's numbers.tex.
+% A key that numbers.tex does not define prints as ??key?? and logs a warning, so a missing number cannot vanish.
+\makeatletter
+\newcommand{\NUM}[1]{\ifcsname num@#1\endcsname\csname num@#1\endcsname\else\textbf{??\detokenize{#1}??}\PackageWarning{numbers}{Undefined number #1}\fi}
+\newcommand{\defnum}[2]{\expandafter\def\csname num@#1\endcsname{#2}}
+\makeatother

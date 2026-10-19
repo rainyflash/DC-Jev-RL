@@ -1,0 +1,40 @@
+{
+ "run": "jaredpalmer/kev-4b@6cfce5c2fa4b4bd64026336ab649c5ca78857d52",
+ "reference": "kev DecisionModel.probs, fp32",
+ "modes": [
+  {
+   "mode": "row_form",
+   "max_abs_diff": 0.026581943035125732,
+   "p99_abs_diff": 0.016185807287693005,
+   "mean_abs_diff": 0.002772964526278277,
+   "argmax_agreement": 0.9966666666666667,
+   "questions": 300,
+   "requests_per_s": 62.63254131634227,
+   "seconds": 31.93228245199998
+  },
+  {
+   "mode": "row_form+fused",
+   "max_abs_diff": 0.020573586225509644,
+   "p99_abs_diff": 0.01410323858261106,
+   "mean_abs_diff": 0.002813677997328341,
+   "argmax_agreement": 0.9966666666666667,
+   "questions": 300,
+   "requests_per_s": 115.19562746519523,
+   "seconds": 17.36177009500011
+  },
+  {
+   "mode": "shared_prefix",
+   "max_abs_diff": 0.02219805121421814,
+   "p99_abs_diff": 0.015441734939813606,
+   "mean_abs_diff": 0.0026286330081832904,
+   "argmax_agreement": 1.0,
+   "questions": 300,
+   "requests_per_s": 88.11325246987415,
+   "seconds": 22.69806123300009
+  },
+  {
+   "mode": "shared_prefix+fused",
+   "error": "TypeError(\"'method' object is not subscriptable\")"
+  }
+ ]
+}

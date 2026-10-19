@@ -1,0 +1,24 @@
+% 第一部分结果：评判模型与环境奖励的离线一致性（由 main_zh.tex 引入）。
+
+\section{评判分数是否跟得上奖励？}\label{sec:agreement}
+
+两个评判模型对 \texttt{env} 条件的 run 记录下的窗口打分：Hopper \NUM{windows_hopper} 个，Walker2d \NUM{windows_walker} 个，HalfCheetah \NUM{windows_cheetah} 个，Swimmer \NUM{windows_swimmer} 个，Reacher \NUM{windows_reacher} 个，来自全部五个 run 和整个训练过程。表~\ref{tab:agreement} 给出每种信号与窗口逐步环境奖励的 Spearman 相关系数。区间为两阶段 bootstrap 的 95\% 区间：先对 run 重采样，再对每个 run 的窗口重采样，因此同一个 run 的窗口不被当作相互独立。
+
+\begin{table}[t]
+\centering\small
+\input{tables/agreement}
+\caption{在 \texttt{env} 条件的 run 记录的窗口上（全部种子、整个训练过程），各评判信号与窗口逐步环境奖励的 Spearman 相关系数。\emph{progress}：期望等级除以 4；\emph{healthy}：$p(\text{yes})$；\emph{gated}：两者之积；\emph{sampled}：从 AR 评判的分布中抽取的一个等级，即以温度 1 用文字作答的 AR 评判会给出的结果。}
+\label{tab:agreement}
+\end{table}
+
+\paragraph{\kev{} 比 AR 评判更紧密地跟随奖励。} 在每个任务上，\kev{} 的 \texttt{progress} 与环境奖励的相关性都强于 AR 评判的期望 \texttt{progress}。差值在 Walker2d 上最小（\NUM{rhod_walker_kevprogress_arprogress} \ci{\NUM{rhodlo_walker_kevprogress_arprogress}}{\NUM{rhodhi_walker_kevprogress_arprogress}}），在 HalfCheetah（\NUM{rhod_cheetah_kevprogress_arprogress} \ci{\NUM{rhodlo_cheetah_kevprogress_arprogress}}{\NUM{rhodhi_cheetah_kevprogress_arprogress}}）和 Reacher（\NUM{rhod_reacher_kevprogress_arprogress} \ci{\NUM{rhodlo_reacher_kevprogress_arprogress}}{\NUM{rhodhi_reacher_kevprogress_arprogress}}）上最大，没有一个区间包含零。门控信号在每个任务上也保持同样的顺序（从 Walker2d 的 \NUM{rhod_walker_kevgated_argated} 到 Reacher 的 \NUM{rhod_reacher_kevgated_argated}）。
+
+\paragraph{Reacher 是需要限定这一结论的例外。} Reacher 的逐步奖励主要是指尖到目标的距离，这是一个状态；而 \texttt{progress} 的各等级描述的是接近目标并保持在目标上。以窗口内距离的减少量——问题主要关心的量——为准，两个评判模型相差不大，AR 评判略微领先（\kev{} \NUM{rhophys_reacher_kev_progress}，AR \NUM{rhophys_reacher_ar_progress}；差值 \NUM{rhophysd_reacher_kevprogress_arprogress} \ci{\NUM{rhophysdlo_reacher_kevprogress_arprogress}}{\NUM{rhophysdhi_reacher_kevprogress_arprogress}}）。因此，\kev{} 与 Reacher 奖励更高的相关性，并不是因为它更好地读懂了问题所问的“接近”。在四个运动任务上，奖励与前进速度对窗口的排序几乎相同，两种相关系数也几乎一致。
+
+\paragraph{对 AR 评判的答案采样会丢掉大部分信号。} 从 AR 评判的分布中抽取的等级与奖励的相关系数只有 \NUM{rho_cheetah_ar_progress_sampled}（HalfCheetah）到 \NUM{rho_swimmer_ar_progress_sampled}（Swimmer），而同一分布的期望等级为 \NUM{rho_reacher_ar_progress} 到 \NUM{rho_walker_ar_progress}。在单个窗口的尺度上，信息在分布之中，从中抽取一次的结果大部分是噪声。
+
+\paragraph{摔倒能被看出；门控的效果有好有坏。} $p(\text{healthy})$ 几乎完美地区分了未摔倒和摔倒的窗口：\kev{} 在 Hopper 和 Walker2d 上的 AUROC 为 \NUM{healthyauc_hopper_kev} 和 \NUM{healthyauc_walker_kev}，AR 评判为 \NUM{healthyauc_hopper_ar} 和 \NUM{healthyauc_walker_ar}。摘要本身就写明了机器人是否摔倒，所以这检验的是阅读而非判断。把 \kev{} 的 \texttt{progress} 乘以其 $p(\text{healthy})$，在四个任务上降低了与奖励的一致性，只在 Swimmer 上提高了它（\NUM{rho_swimmer_kev_gated} 对 \NUM{rho_swimmer_kev_progress}）。对 AR 评判，门控在 HalfCheetah 上也有帮助（\NUM{rho_cheetah_ar_gated} 对 \NUM{rho_cheetah_ar_progress}）。
+
+\paragraph{AR 评判把概率质量放在答案选项之外。} 重新归一化之前，AR 评判的下一词元分布放在五个 \texttt{progress} 选项上的质量只有 \NUM{validmass_min_progress} 到 \NUM{validmass_max_progress}（随任务而异），放在是/否上的至少为 \NUM{validmass_min_healthy}。\kev{} 没有这种损失，因为它的输出头只对选项打分。
+
+\paragraph{这说明了什么，没有说明什么。} 这些窗口来自优化真实奖励的策略，它们表明每个评判模型如何给这类策略产生的行为排序；它们不能表明，当策略优化的是评判模型本身时，评判模型会如何给其行为排序。后者由训练实验来测量（\S\ref{sec:results}）。

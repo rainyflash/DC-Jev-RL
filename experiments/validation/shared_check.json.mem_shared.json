@@ -1,0 +1,9 @@
+{
+ "arrangement": "mem_shared",
+ "after_load_gb": 8.806354944,
+ "adapter_switch_round_trip_ms": 18.456154499999684,
+ "peak_after_train_step_gb": 14.393719808,
+ "kev_requests_per_s": 8.047641251817197,
+ "peak_gb": 14.393719808,
+ "reserved_gb": 15.118368768
+}

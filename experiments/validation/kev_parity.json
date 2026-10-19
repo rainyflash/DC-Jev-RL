@@ -1,0 +1,41 @@
+{
+ "run": "jaredpalmer/kev-4b@6cfce5c2fa4b4bd64026336ab649c5ca78857d52",
+ "torch": "2.8.0+cu128",
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "parity_fp32": {
+  "questions": 300,
+  "max_abs_diff": 0.0009272843599319458,
+  "mean_max_abs_diff": 8.391086904642483e-05,
+  "p99_max_abs_diff": 0.00044315457344055054,
+  "argmax_agreement": 1.0
+ },
+ "temperature": 2.406050072164233,
+ "parity_bf16": {
+  "questions": 300,
+  "max_abs_diff": 0.04016083478927612,
+  "mean_max_abs_diff": 0.003571574221520374,
+  "p99_max_abs_diff": 0.01808666110038757,
+  "argmax_agreement": 0.9966666666666667
+ },
+ "throughput_bf16_telemetry": [
+  {
+   "token_budget": 16384,
+   "requests": 1000,
+   "seconds": 14.846004859999994,
+   "requests_per_s": 67.35818891547908
+  },
+  {
+   "token_budget": 32768,
+   "requests": 1000,
+   "seconds": 15.281216802000017,
+   "requests_per_s": 65.43981496742585
+  },
+  {
+   "token_budget": 65536,
+   "requests": 1000,
+   "seconds": 28.337742210999977,
+   "requests_per_s": 35.28862647398302
+  }
+ ],
+ "example_tokens_per_request": 191
+}

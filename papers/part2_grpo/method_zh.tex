@@ -1,0 +1,44 @@
+% 第二部分：不依赖结果的章节（由 main_zh.tex 引入）。
+
+\section{策略与评判模型共用一个骨干}\label{sec:shared}
+
+\kev{}~\cite{kev4b} 是 Qwen3.5-4B-Base（修订版 \texttt{1001bb4d}）上的一个秩 16 的 LoRA 适配器加一个指针头。我们训练的策略是同一基座上的一个 LoRA 适配器，因此一份基座权重可以同时服务两个模型。这份权重上挂两个适配器：\texttt{default} 是策略（秩 32，$\alpha=64$，覆盖所有注意力、MLP 和 Gated DeltaNet 投影），\texttt{kev} 是 \kev{} 发布的适配器，冻结且以未合并方式使用。只有策略适配器被训练，所以基座权重始终不变，\kev{} 读到的恰好是它训练时所用的骨干。给一个解答打分时，把活动适配器切换到 \texttt{kev}，并以其校准温度读取 \kev{} 的指针头。此时评判模型看到的骨干和适配器权重与单独加载的 \kev{} 完全相同，输出只因 bf16 下 LoRA 合并与未合并的算术差异而略有不同，这一差异我们做了测量（\S\ref{sec:res-shared}）。
+
+另一种做法是把 \kev{} 作为第二个模型加载。我们在同一进程、同一训练步下测量两种设计的显存：加载后的已分配显存，以及在固定批次上做一次策略更新再做 \kev{} 打分期间的峰值显存。
+
+\section{GRPO 设置}\label{sec:grpo}
+
+\paragraph{策略与数据。} 策略从 Qwen3.5-4B-Base 加一个零初始化的 LoRA 开始，所以第 0 步就是基座模型。训练题目是 MATH~\cite{hendrycks2021math} 训练集中 3--5 级的题目。从中固定随机抽取 500 道（种子 12345）作为验证集，这是唯一用于模型选择的数据；其余训练题按带种子的随机顺序遍历。MATH-500 的测试题都不在 MATH 训练集划分中（构建数据时已检查）。提示要求逐步解答并把最终答案写在 \verb|\boxed{}| 中。若 math-verify~\cite{mathverify} 判定解答中最后一个 boxed 答案与参考答案相等，则该解答正确。评判模型从不看到参考答案。
+
+\paragraph{Rollout。} 每一步从 vLLM~\cite{kwon2023vllm} 服务器采样 16 道题、每题 8 个解答，温度为 1（最多 1024 个词元）；每次更新后，策略适配器都会发送给该服务器。vLLM 与训练框架对同一组权重算出的概率略有差异。我们对每个词元做截断重要性采样修正~\cite{yao2025offpolicy}，权重为 $\min(\pi_{\text{train}}/\pi_{\text{vLLM}},2)$，并记录这一差异。
+
+\paragraph{目标函数。} 一个解答的优势等于其奖励减去所在组的平均奖励，再除以这些中心化奖励在整个批次上的标准差，与 Lite PPO~\cite{liu2026tricks} 相同。采用批级尺度后，即使验证器对一组中所有解答给出相同奖励，评判项的权重 $\lambda$ 也保持原有含义。损失是词元级策略梯度，对批次中所有解答词元求和再除以其个数~\cite{liu2025understanding}。每个批次只做一次 AdamW 更新，因此 PPO 的比率恒为 1，裁剪不起作用；不加 KL 项。学习率在验证集上用 \texttt{rlvr} 奖励从 $\{1,3,10\}\cdot10^{-5}$ 中选出（\S\ref{sec:res-sweep}），之后所有条件都固定使用。梯度范数裁剪为 1.0，每批 128 个解答，每个 run 训练 200 步。
+
+\paragraph{奖励条件。} 设 $v\in\{0,1\}$ 为验证器的判定。$\pc$ 是 \kev{} 对“所给解答的最终答案是否正确？”回答“是”的概率；$\pg$ 是它对“所给解答是否通过真实、相关的逐步推理得出最终答案……？”回答“是”的概率；$P_{\mathrm{a}}$ 是 AR 评判对第一个问题回答“是”的概率。评判提示见 \file{experiments/part2_llm/prompts/judge_prompts.json}，在任何 GRPO run 之前即已固定。评判模型看到题目和解答（截断到 1536 个词元）。
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+条件 & 奖励 \\ \midrule
+\texttt{rlvr} & $v$ \\
+\texttt{rlvr\_kev\_add} & $v+\lambda\pc$，$\lambda=0.2$ \\
+\texttt{rlvr\_kev\_gate} & $v\cdot\pg$ \\
+\texttt{kev\_only} & $\pc$（无验证器） \\
+\texttt{rlvr\_ar\_add} & $v+\lambda P_{\mathrm{a}}$，$\lambda=0.2$ \\ \bottomrule
+\end{tabular}
+\end{center}
+由于 $\lambda<1$，在加性条件中正确解答的排序总是高于错误解答，评判模型只能在判定相同的解答之间重新排序。\texttt{kev\_only} 提出的是另一个问题：仅靠评判模型能否训练策略，策略是否会学会利用评判模型。所有条件中，\kev{} 还会在每步随机给 64 个解答打分，仅用于记录。
+
+\paragraph{评估。} 每 50 步在验证集、MATH-500 和 GSM8K 测试集~\cite{cobbe2021gsm8k}的一个固定 500 题子集上做贪心评估（最多 2048 个词元）。最后一步之后，在完整的 GSM8K 测试集和 MATH-500 上做贪心评估，在 AMC23、AIME24 和 AIME25 上每题采样 16 次（温度 0.6，top-$p$ 0.95），报告样本的平均准确率。我们报告每个 run 的最终策略，不挑选检查点。逐题结果都被保存，因此各条件在相同的题目上比较：我们报告相对于 \texttt{rlvr} 的配对差值（对种子取平均），以及按题目做 bootstrap 得到的 95\% 置信区间。
+
+\paragraph{离线评判研究。} 基座策略在 1000 道题（MATH-500 和 GSM8K 的 500 题子集）上每题以温度 1 写 4 个解答，所用提示和停止串与训练相同，因此这些正是 GRPO 的起点所产生的解答。两个评判模型对每个解答回答全部问题。对每种信号，我们报告它对验证器判定的 AUROC：一是对全部解答；二是在题目内部，即只看同一道题中判定不同的解答对，这正是 GRPO 组基线所用的比较。我们还报告校准程度（期望校准误差 ECE；Brier 分数）和代价。四种改动用来探测什么会左右评判模型：
+\begin{itemize}
+\item \emph{只给答案}：把解答替换成一句只给出其最终答案的话；
+\item \emph{填充}：在末尾追加二十遍一句自我怀疑的话；
+\item \emph{声称}：在末尾追加一句“每一步都已验证”的声明；
+\item \emph{篡改}：把正确解答的最终 boxed 答案改掉，使之变错。
+\end{itemize}
+在一个随机子集上，另设一个生成式评判作为进一步的基线：同一个 AR 模型先推理再作答（开启思考），分数取作答位置上的 $p(\text{yes})$。这项研究使用测试题，只用于测量评判模型，不影响 GRPO run 的任何部分；GRPO run 的设计和提示在它运行之前就已固定。
+
+\section{实验设置}\label{sec:setup}
+
+每个 run 使用一台 Colab 虚拟机，配一块 NVIDIA RTX PRO 6000 Blackwell Server Edition GPU（96\,GB）。训练器（kev 锁定环境中的 PyTorch 2.8；Qwen3.5 的 Hugging Face 实现，其 Gated DeltaNet 层运行在 flash-linear-attention 内核上）与 vLLM~0.31 rollout 服务器（单独的环境）共用这块 GPU，最多三个训练器共用一个 rollout 服务器。本系列的其他实验也常常同时在这块 GPU 上运行，所以我们只报告在空闲 GPU 上测得的耗时，并明确标注。种子固定题目顺序、vLLM 的采样种子（每道题每一步一个）以及训练器的所有随机选择。GPU 内核不是确定性的，所以同一种子的两次运行并非逐比特相同。每 25 步保存一次检查点，中断后可以恢复；恢复过的 run 数会一并报告。

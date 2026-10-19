@@ -1,0 +1,289 @@
+% Part II, results of the GRPO runs (included by main_en.tex).
+
+\section{Does the judge add anything to the verifier?}\label{sec:res-grpo}
+
+\subsection{Learning rate}\label{sec:res-sweep}
+
+The learning rate was chosen once, on the validation set, with the \texttt{rlvr} reward and seed 1. Each sweep run had
+60 steps of 16 problems with 8 completions each, at $10^{-5}$, $3\cdot10^{-5}$ or $10^{-4}$ (Table~\ref{tab:sweep}).
+The rule takes the highest mean validation accuracy over steps 30 and 60, or the smaller learning rate when the best two
+are within 0.5 points (\file{experiments/part2_llm/LR_SELECTION.md}). It was written down while the $10^{-5}$ and
+$10^{-4}$ runs were starting. By then the $3\cdot10^{-5}$ run had logged its accuracies at steps 0 and 30, and we had seen
+them. $10^{-5}$ (\NUM{sweep_1em5_score}) and $3\cdot10^{-5}$ (\NUM{sweep_3em5_score}) are within 0.5 points, so the rule
+chose $10^{-5}$ for every run of Parts II and III. At $10^{-4}$ the validation accuracy rose to \NUM{sweep_1em4_30} by
+step 30 and fell to \NUM{sweep_1em4_60} by step 60, below the base model. All three runs start from the same base model,
+yet their step-0 accuracies differ (\NUM{sweep_1em5_0}, \NUM{sweep_3em5_0}, \NUM{sweep_1em4_0}). Greedy decoding on vLLM
+is not bitwise reproducible across server states, and this spread is the size of the evaluation noise.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+learning rate & step 0 & step 30 & step 60 & score (mean of 30 and 60) \\ \midrule
+$10^{-5}$ & \NUM{sweep_1em5_0} & \NUM{sweep_1em5_30} & \NUM{sweep_1em5_60} & \NUM{sweep_1em5_score} \\
+$3\cdot10^{-5}$ & \NUM{sweep_3em5_0} & \NUM{sweep_3em5_30} & \NUM{sweep_3em5_60} & \NUM{sweep_3em5_score} \\
+$10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NUM{sweep_1em4_score} \\
+\bottomrule
+\end{tabular}
+\caption{Learning-rate sweep: validation accuracy (500 held-out MATH training problems, greedy) of \texttt{rlvr}, seed 1.}
+\label{tab:sweep}
+\end{table}
+
+\subsection{Reward conditions}\label{sec:res-cond}
+
+\texttt{rlvr} and \texttt{rlvr\_kev\_add} ran with \NUM{seeds_rlvr} seeds, the other conditions with
+\NUM{seeds_kevgate}. Table~\ref{tab:grpo-acc} gives the final policies' accuracies, Table~\ref{tab:grpo-seeds} those
+of every run, Table~\ref{tab:grpo-paired} the paired differences to \texttt{rlvr}, and Figure~\ref{fig:grpo-curves} the
+training curves. The paired intervals resample problems. They do not include the variation between seeds, and in these
+runs that variation is the larger one.
+
+\paragraph{The verifier alone.} 200 steps of \texttt{rlvr} raise MATH-500 from \NUM{acc_base_math}\% (the base model)
+to \NUM{acc_rlvr_math}\%, GSM8K from \NUM{acc_base_gsm}\% to \NUM{acc_rlvr_gsm}\%, AMC23 from \NUM{acc_base_amc}\% to
+\NUM{acc_rlvr_amc}\%, and AIME24 and AIME25 from \NUM{acc_base_aime24}\% and \NUM{acc_base_aime25}\% to
+\NUM{acc_rlvr_aime24}\% and \NUM{acc_rlvr_aime25}\%.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_acc}
+\caption{Final policies: accuracy in percent, seed mean $\pm$ standard deviation over seeds. MATH-500 and GSM8K
+(1319 problems): greedy. AMC23, AIME24 and AIME25: mean over 16 samples per problem at temperature 0.6. Base model: the
+mean of two evaluations.}
+\label{tab:grpo-acc}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_seeds}
+\caption{The final policy of every run: accuracy in percent, as in Table~\ref{tab:grpo-acc}.}
+\label{tab:grpo-seeds}
+\end{table}
+
+\paragraph{One seed of each \kev{} condition is far ahead.} The three seeds of \texttt{rlvr} end at
+\NUM{acc_rlvr_math_s1}, \NUM{acc_rlvr_math_s2} and \NUM{acc_rlvr_math_s3}\% on MATH-500 and at
+\NUM{acc_rlvr_aime24_s1}, \NUM{acc_rlvr_aime24_s2} and \NUM{acc_rlvr_aime24_s3}\% on AIME24
+(Table~\ref{tab:grpo-seeds}). With \kev{}'s $\pc$ added to the reward, two seeds end near them
+(\NUM{acc_kevadd_math_s1} and \NUM{acc_kevadd_math_s2}\% on MATH-500) and the third at \NUM{acc_kevadd_math_s3}\%. With
+the gate, one seed ends at \NUM{acc_kevgate_math_s1}\% and the other at \NUM{acc_kevgate_math_s2}\%. On AIME24 these two
+far seeds reach \NUM{acc_kevadd_aime24_s3} and \NUM{acc_kevgate_aime24_s2}\%, and no other run of this paper exceeds
+\NUM{potheraime24max}\%. The two runs carry their conditions' means, and with them the paired differences to
+\texttt{rlvr}: \NUM{d_kevadd_math} \ci{\NUM{dlo_kevadd_math}}{\NUM{dhi_kevadd_math}} points on MATH-500 for
+\texttt{rlvr\_kev\_add} and \NUM{d_kevgate_math} \ci{\NUM{dlo_kevgate_math}}{\NUM{dhi_kevgate_math}} for
+\texttt{rlvr\_kev\_gate}, and more on the competition sets (Table~\ref{tab:grpo-paired}). These intervals say that the
+conditions' seed means beat \texttt{rlvr}'s on these problems. They do not say that the judge made the difference: the
+other seeds of the same conditions did not beat \texttt{rlvr}. With the AR judge's $P_{\mathrm{a}}$ added
+(\texttt{rlvr\_ar\_add}), both seeds end near \texttt{rlvr} (\NUM{d_aradd_math}
+\ci{\NUM{dlo_aradd_math}}{\NUM{dhi_aradd_math}} points on MATH-500). What sets the two far runs apart is how they write
+(\S\ref{sec:res-style}).
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_paired}
+\caption{Paired differences to \texttt{rlvr}, in percentage points: per problem, each condition's seed mean, averaged
+over problems, with a 95\% bootstrap interval over problems.}
+\label{tab:grpo-paired}
+\end{table}
+
+\paragraph{The judge alone is exploited.} Without the verifier (\texttt{kev\_only}), the policy maximises \kev{}'s
+$\pc$, which rises to \NUM{kevc_kevonly} on the training completions over the last 20 steps (\texttt{rlvr}:
+\NUM{kevc_rlvr}). The verifier's accuracy on the same completions stays at \NUM{trainacc_kevonly}\%
+(\texttt{rlvr}: \NUM{trainacc_rlvr}\%). Against \texttt{rlvr}, the final policy's accuracy differs by
+\NUM{d_kevonly_math} \ci{\NUM{dlo_kevonly_math}}{\NUM{dhi_kevonly_math}} points on MATH-500 and by
+\NUM{d_kevonly_aime24} on AIME24, and both seeds end below the base model they started from on MATH-500
+(\NUM{acc_kevonly_math_s1} and \NUM{acc_kevonly_math_s2}\% against \NUM{acc_base_math}\%) and on all three competition
+sets. What the policy learned is to write solutions that \kev{} rates as correct: \kev{} gives its wrong MATH-500
+answers \NUM{skevwrong_kevonly} on average, against \NUM{skevwrong_rlvr} for the wrong answers of \texttt{rlvr}'s
+policies. The within-group AUROC of \kev{} on the training completions, which is what GRPO's advantage uses, falls from
+\NUM{kevaucwtr_first20_kevonly} in the first 20 steps to \NUM{kevaucwtr_last20_kevonly} in the last 20. A 4B judge is a
+usable signal for a policy that is not optimised against it (\S\ref{sec:res-study}); it is not a usable reward on its
+own.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_train}
+\caption{Training statistics over the last 20 steps (seed mean): verifier accuracy of the training completions,
+\kev{}'s mean $\pc$ on 64 of them per step, completion tokens, and the share of groups in which every completion is
+wrong or every one is right (no learning signal from the verifier). Final policy: \kev{}'s mean $\pc$ and its AUROC
+for the verifier's verdict on the MATH-500 completions.}
+\label{tab:grpo-train}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../../experiments/part2_llm/results/training_curves.pdf}
+\caption{Training curves (seed mean): verifier accuracy, completion tokens, share of groups with no correct completion
+and \kev{}'s $\pc$ on the training completions (10-step moving averages), and greedy accuracy on MATH-500 and the
+validation set every 50 steps.}
+\label{fig:grpo-curves}
+\end{figure}
+
+\paragraph{Evaluation noise.} Every run evaluates the base model at step 0. Across the \NUM{szruns_math500} runs, MATH-500
+accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\% (standard deviation
+\NUM{szsd_math500} points) and validation accuracy from \NUM{szmin_val}\% to \NUM{szmax_val}\%. The final weights of
+each run are evaluated twice on MATH-500, both times greedily: at step 200 with the periodic evaluations, and in the
+final evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
+(\NUM{rptruns_math500} runs). Differences of a point between two final policies are within this noise; the differences
+between the far seeds and the others are not.
+
+\subsection{Three ways of writing a solution}\label{sec:res-style}
+
+Figure~\ref{fig:style-example} shows one MATH-500 problem as the final policies of three runs answer it. Most policies
+write one formatted solution, with LaTeX and markdown, and end with the boxed answer (left). The two far seeds first
+work the problem in plain text, without LaTeX or markdown, give the answer, and then, mostly, write the formatted
+solution (middle). Some policies write the formatted solution, give the answer, and write it again in nearly the same words
+(right). We measure the first style by the share of completions that open with an informal draft: no math delimiter
+(\texttt{\$}, \texttt{\textbackslash(} or \texttt{\textbackslash[}) and no markdown heading or bold (\texttt{\#\#\#} or
+\texttt{**}) in the first 300 characters. We measure the third by the share of a completion's lines (of at least 20
+characters) that repeat an earlier line of it. Both measures were defined after we had read the final completions, to
+describe what we saw.
+
+\begin{figure}[t]
+\centering
+\input{tables/style_example}
+\caption{One MATH-500 problem (\texttt{test/prealgebra/307}), the final greedy completion of three Part II runs,
+verbatim (runs of blank lines shortened). Left: \texttt{rlvr} seed 1 (\NUM{exmtok_rlvr_s1} tokens). Middle:
+\texttt{rlvr\_kev\_gate} seed 2, which drafts first (\NUM{exmtok_kevgate_s2} tokens). Right: \texttt{rlvr} seed 3,
+which repeats itself (\NUM{exmtok_rlvr_s3} tokens). All three are right. We chose this problem for illustration, as
+one with short completions in plain ASCII that all three runs solve.}
+\label{fig:style-example}
+\end{figure}
+
+\paragraph{The two far seeds switched to drafting first.} The base model drafts first in \NUM{pdraftat_0_min} to
+\NUM{pdraftat_0_max} of its MATH-500 completions at step 0 (Table~\ref{tab:grpo-drafts}). Every run cut this share in
+its first 50 steps, to at most \NUM{pdraftat_50_max} at step 50, and in ten of the twelve runs it stayed low (at most
+\NUM{pdraftmax_other} in the final evaluation). In \texttt{rlvr\_kev\_gate} seed 2 it rose from \NUM{draftat_kevgate_s2_100} at
+step 100 to \NUM{draftat_kevgate_s2_150} at step 150, and in \texttt{rlvr\_kev\_add} seed 3 from
+\NUM{draftat_kevadd_s3_150} at step 150 to \NUM{draftat_kevadd_s3_200} at step 200. The final MATH-500 completions of
+these two runs open with a draft on \NUM{sdraft_kevgate_s2} and \NUM{sdraft_kevadd_s3} of the problems, and
+\NUM{sdraftfmt_kevgate_s2} and \NUM{sdraftfmt_kevadd_s3} of these drafts go on to formatted text; in the others the
+plain text is the whole solution. They are no longer than those of the other runs (\NUM{stok_kevgate_s2} and \NUM{stok_kevadd_s3} tokens on average;
+Table~\ref{tab:grpo-style}). Runs with the same seed see the same problems in the same order and start from the same
+samples, so the switch is not a property of the data order: \texttt{rlvr} seeds 2 and 3 did not switch.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_drafts}
+\caption{The share of MATH-500 completions that open with an informal draft (no math delimiter, markdown heading or
+bold in the first 300 characters), at each periodic evaluation (greedy, every 50 steps) and in the final evaluation,
+per run, with the final accuracies.}
+\label{tab:grpo-drafts}
+\end{table}
+
+\paragraph{The same switch happened in the other papers, and only in the best runs.} In Parts III-B and III-C,
+\NUM{alldraftruns_iiib} and \NUM{alldraftruns_iiic} runs switched in the same way, \NUM{allveronlydraft} of them with the
+verifier's reward alone (in both tree conditions of Part III-C; \texttt{tree\_random} differs from \texttt{rlvr} only
+in how it samples the completions of a group). The plain text that opens their completions is not always followed by a
+formatted solution: in the runs of Part III-C that switched, only \NUM{alldraftfmt_treerand_s2} and
+\NUM{alldraftfmt_treekev_s1} of the drafts go on to formatted text.
+Table~\ref{tab:modes-all} lists all \NUM{allruns} GRPO runs of the project by the style of their final policy. The
+\NUM{alldraftruns} runs that switched reach \NUM{alldraftaime24min} to \NUM{alldraftaime24max}\% on AIME24, every other
+run at most \NUM{allotheraime24max}\%; on MATH-500 they reach \NUM{alldraftmathmin} to \NUM{alldraftmathmax}\%, every
+other run at most \NUM{allothermathmax}\%. The classes do not depend on the details of the definition: with an opening
+window of 150 or 600 characters instead of 300, or with the math delimiters as the only markers, the runs that switched
+still open at least \NUM{alldraftvarmin_draft} of their final completions with a draft and every other run at most
+\NUM{alldraftvarmax_other}. We found the switch after the runs had finished, and the classification is ours, so this is
+a description of the runs and not a test of a hypothesis stated in advance.
+
+\paragraph{The verdicts do not show why.} GRPO raises the probability of completions with a positive advantage, so a
+style spreads when its completions are better than the other completions of their group. Table~\ref{tab:grpo-draftgroups}
+compares, within each group of 8 training completions that holds both kinds, how often the drafts and the others are
+right. In steps 0--49 drafts were less often right in all \NUM{pdgn_0} runs: the difference was between
+\NUM{pdgverdict_0_min} and \NUM{pdgverdict_0_max} points, which is why their share fell. From step 50 on it was between
+\NUM{pdglate_draft_min} and \NUM{pdglate_draft_max} points in the two runs that switched, and between
+\NUM{pdglate_other_min} and \NUM{pdglate_other_max} in the others, whose groups rarely held a draft. In
+\texttt{rlvr\_kev\_add} seed 3, drafts were less often right than the other completions of their groups in every window,
+by \NUM{dgverdict_kevadd_s3_150} points over steps 150--199, while their share of the training completions grew from
+\NUM{dgshare_kevadd_s3_100} to \NUM{dgshare_kevadd_s3_150}. Their advantage, which includes the judge's term, was not
+larger either (\NUM{dgadv_kevadd_s3_150} on average). What made these runs switch, the verdicts and rewards we logged
+do not show.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_draftgroups}
+\caption{Training completions that open with an informal draft, per 50-step window: their share, and $\Delta$ right,
+the mean over the groups that hold both kinds of the share of drafts the verifier accepts minus that of the other
+completions of the group, in percentage points.}
+\label{tab:grpo-draftgroups}
+\end{table}
+
+\paragraph{Four policies came to repeat themselves.} Both seeds of \texttt{kev\_only}, \texttt{rlvr\_kev\_gate} seed 1
+and \texttt{rlvr} seed 3 write the solution, give the answer and write the solution again (Figure~\ref{fig:style-example},
+right). In their final MATH-500 completions \NUM{prepmin_repeat} or more of the lines repeat an earlier line, against at
+most \NUM{prepmax_other} in every other run of this paper, and \NUM{sansrep_rlvr_s3} of \texttt{rlvr} seed 3's
+completions repeat part of the solution after the first answer (Table~\ref{tab:grpo-style}). The reward of \texttt{rlvr}
+is the verifier's alone, so no judge is needed for this. It is more frequent with \kev{}'s score in the reward: across
+the project, \NUM{allkevrepeat} of the \NUM{allkevruns} runs whose reward contains it ended this way, against
+\NUM{allnokevrepeat} of the \NUM{allnokevruns} others, and the judge pays for it (\S\ref{sec:res-repeat}). Repeating did
+not make a policy more accurate. The repeating runs with the verifier in their reward end at
+\NUM{allrepeatvmathmin}--\NUM{allrepeatvmathmax}\% on MATH-500 (mean \NUM{allrepeatvmathmean}\%), the runs of neither
+style at \NUM{allplainmathmin}--\NUM{allplainmathmax}\% (mean \NUM{allplainmathmean}\%).
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4.5pt}
+\input{tables/grpo_style}
+\caption{What each final policy writes on MATH-500 (greedy): completion tokens, share truncated at 2048 tokens, share of
+lines (of at least 20 characters) that repeat an earlier line of the same completion, share of completions that repeat
+such a line after their first boxed answer, share with more than one boxed answer (the verifier reads the last one),
+share that open with an informal draft, and \kev{}'s $\pc$ for right and for wrong answers.}
+\label{tab:grpo-style}
+\end{table}
+
+\subsection{Does the judge pay for repetition?}\label{sec:res-repeat}
+
+After the GRPO runs we tested whether the judges pay for repetition (\file{dcjev/llm/repeat_probe.py};
+Table~\ref{tab:repeat-probe}). No edit changes the last boxed answer, the one the verifier reads, and each judge scores
+the texts as in training.
+
+\paragraph{Repetition as such is worth little to \kev{}.} Writing the last two paragraphs of the base policy's solutions
+from the judge study twice more raises \kev{}'s $\pc$ by \NUM{rpkevc_end3_1}
+\ci{\NUM{rpkevclo_end3_1}}{\NUM{rpkevchi_end3_1}} on the \NUM{rpn_end3_1} solutions the verifier accepts and changes it
+by \NUM{rpkevc_end3_0} \ci{\NUM{rpkevclo_end3_0}}{\NUM{rpkevchi_end3_0}} on the \NUM{rpn_end3_0} it rejects. Writing the
+whole solution twice gives \NUM{rpkevc_twice_1} and \NUM{rpkevc_twice_0}. The AR judge moves more, by
+\NUM{rparc_end3_1} on right answers and \NUM{rparc_end3_0} on wrong ones.
+
+\paragraph{The repetition the policies learned is paid for.} We took the final MATH-500 solutions of the repeating runs
+\texttt{kev\_only} and \texttt{rlvr\_kev\_gate} (seed 1 of each) and \texttt{rlvr} (seed 3) that repeat lines, and cut
+each one after its first answer, as if the policy had stopped there. Solutions that repeat before their first answer,
+or whose first answer differs from their last, were left out (\NUM{rpskip_kevonly}, \NUM{rpskip_kevgate} and
+\NUM{rpskip_rlvr}). \kev{} rates the solutions as written higher than the cut ones. For \texttt{kev\_only}, whose reward
+is \kev{}'s $\pc$, the part after the first answer raises it by \NUM{rpkevc_cutkevonly_1}
+\ci{\NUM{rpkevclo_cutkevonly_1}}{\NUM{rpkevchi_cutkevonly_1}} on right answers and by \NUM{rpkevc_cutkevonly_0}
+\ci{\NUM{rpkevclo_cutkevonly_0}}{\NUM{rpkevchi_cutkevonly_0}} on wrong ones, for \NUM{rpkevcup_cutkevonly_0} of the wrong
+ones: from \NUM{rpkevcwithout_cutkevonly_0} to \NUM{rpkevcwith_cutkevonly_0}. \texttt{rlvr\_kev\_gate} multiplies the
+verifier's reward by \kev{}'s $\pg$, so among the completions the verifier accepts this factor alone decides which are
+paid more. On those, the part after the first answer raises $\pg$ by \NUM{rpkevg_cutkevgate_1}
+\ci{\NUM{rpkevglo_cutkevgate_1}}{\NUM{rpkevghi_cutkevgate_1}}, for \NUM{rpkevgup_cutkevgate_1} of them: the gate pays
+right answers that repeat themselves more than right answers that stop. \kev{} was not in the reward of \texttt{rlvr}
+seed 3, yet it also rates that run's repeating solutions higher as written: $\pc$ by
+\NUM{rpkevc_cutrlvr_1} \ci{\NUM{rpkevclo_cutrlvr_1}}{\NUM{rpkevchi_cutrlvr_1}} on right answers and
+\NUM{rpkevc_cutrlvr_0} \ci{\NUM{rpkevclo_cutrlvr_0}}{\NUM{rpkevchi_cutrlvr_0}} on wrong ones, $\pg$ by
+\NUM{rpkevg_cutrlvr_1} on right ones. The AR judge, in none of these rewards, also rates these solutions higher with the
+part after the first answer (by \NUM{rparc_cutkevonly_1}, \NUM{rparc_cutkevgate_1} and \NUM{rparc_cutrlvr_1} on right
+answers), though less consistently.
+
+The repetition we added is a verbatim copy, while the policies solve the problem again in slightly different words.
+Which property of their repetition the judge pays for, the probe does not tell. It does show that what these policies
+learned to write after their first answer raises the judge's score, so a reward with the judge in it pays for it, and
+it does so whether or not the policy was trained against the judge.
+
+\begin{table}[t]
+\centering\small
+\input{tables/repeat_probe}
+\caption{What repetition is worth to the judges: P(with the repetition) minus P(without), on the solutions the
+verifier accepts (right) and rejects (wrong), with the number of each. Top: the base policy's solutions of the judge
+study (MATH-500 and the GSM8K subset), with repetition added. Bottom: the final MATH-500 solutions of repeating GRPO runs,
+as written against cut after their first answer. \kev{}'s $\pc$ and $\pg$ and the AR judge's $P_{\mathrm{a}}$, each
+scoring the solution as in training; intervals in the text resample problems.}
+\label{tab:repeat-probe}
+\end{table}
+
+\begin{table}[p]
+\centering\small
+\input{tables/modes_all}
+\caption{Every GRPO run of this project (Parts II, III-B and III-C, 200 steps each), grouped by the style of its final
+policy: informal draft first (at least half of its MATH-500 completions open with one), repeats itself (on average at
+least 5\% of the lines of its MATH-500 completions repeat an earlier line), or neither. Both shares are bimodal across
+the runs, so the groups do not depend on these thresholds. Final accuracy in percent; tokens per MATH-500 completion.
+Part II's \texttt{rlvr} is the reference of all three papers and is listed once.}
+\label{tab:modes-all}
+\end{table}

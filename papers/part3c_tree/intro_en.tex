@@ -1,0 +1,29 @@
+% Part III-C, introduction and related work (included by main_en.tex).
+
+\section{Introduction}\label{sec:intro}
+
+Sampling a group of complete solutions per prompt, as GRPO does, spends most of its tokens on solutions that share
+nothing. Tree-structured rollouts~\cite{hou2025treerl} sample a few prefixes and branch from them. This shares the
+prefix tokens and places the comparison inside the group at the point where solutions diverge. A further step is to
+choose which prefixes to branch from. A judge that can recognise a promising partial solution could steer the samples
+towards the parts of the tree where the policy can succeed. That would give GRPO more groups with mixed outcomes, the
+only groups with a learning signal.
+
+We test both halves of that idea. First, offline: can \kev{}, the AR judge of the same size, or the policy's own
+log-probability tell from the first 128, 256 or 512 tokens whether a solution will end correct? And does keeping the
+prefixes they rank highest raise the success rate of what is continued? Second, in training: does GRPO with
+judge-selected prefixes learn better than with randomly selected ones, at the same tree shape and token budget?
+
+\paragraph{Correction.} Versions 1--3 of this paper (``Tree-Jev-GRPO'') reported pruning speed-ups, KV-cache reuse
+rates, theorem-proving results (MiniF2F, ProofNet) and per-node latencies that were not produced by any experiment
+(see the notice above and \file{CORRECTION.md}). This version studies tree rollouts on MATH only, with the
+measurements above. It also tests the pruning rule of v3, which pruned a prefix when the judge's $p(\text{yes})$ was
+below 0.3.
+
+\section{Related work}\label{sec:related}
+
+TreeRL~\cite{hou2025treerl} uses on-policy tree search with entropy-guided branching for LLM RL. Process reward models
+score partial solutions~\cite{lightman2024verify,wang2024mathshepherd}. Math-Shepherd builds its labels by Monte-Carlo
+continuation, which is how our prefix study measures a prefix's value. Search guided by a verifier at test
+time~\cite{snell2025scaling} spends compute where a judge sees promise. Selecting training samples by a learned score
+changes what the gradient estimates. That is the cost side of the trade-off we measure.

@@ -1,0 +1,25 @@
+% 第二部分结果：离线评判研究（由 main_zh.tex 引入）。
+
+\section{评判模型能多大程度看出策略的错误}\label{sec:res-study}
+
+基座策略在 \NUM{js_completions} 次尝试中答对了 \NUM{js_acc_all}（MATH-500 上 \NUM{js_acc_math}，GSM8K 子集上 \NUM{js_acc_gsm}）。\NUM{js_problems} 道题中有 \NUM{js_mixed_all} 道既有答对的尝试也有答错的尝试。
+
+\paragraph{\kev{} 与 AR 评判的准确度相当。} 表~\ref{tab:judge-study} 给出每种信号对验证器判定的 AUROC。在全部尝试上，\kev{} 的 \emph{correct} 达到 \NUM{js_auc_all_kevc}，AR 评判达到 \NUM{js_auc_all_arc}。AR 评判的领先幅度很小，但统计上可以分辨：\kev{} 减 AR 为 \NUM{jsd_all_kevcarc} \ci{\NUM{jsdlo_all_kevcarc}}{\NUM{jsdhi_all_kevcarc}}（按题目重采样得到的 95\% 区间）。在题目内部，也就是 GRPO 组基线所做的比较，排序反了过来：\NUM{js_aucw_all_kevc} 对 \NUM{js_aucw_all_arc}，差值 \NUM{jsdw_all_kevcarc} \ci{\NUM{jsdwlo_all_kevcarc}}{\NUM{jsdwhi_all_kevcarc}}，不能分辨。在 GSM8K 上可以分辨（\NUM{jsdw_gsm_kevcarc} \ci{\NUM{jsdwlo_gsm_kevcarc}}{\NUM{jsdwhi_gsm_kevcarc}}）。在更接近训练题的 MATH-500 上，\kev{} 落后，但幅度不能分辨（\NUM{jsdw_math_kevcarc} \ci{\NUM{jsdwlo_math_kevcarc}}{\NUM{jsdwhi_math_kevcarc}}）。\kev{} 的三个问题携带的信息几乎相同：\emph{genuine} 和 \emph{quality} 的 AUROC 与 \emph{correct} 相近。作为“答案正确”的概率，AR 评判的是/否概率校准得更好（ECE \NUM{js_ece_all_arc} 对 \NUM{js_ece_all_kevc}）。\kev{} 的 \emph{correct} 在错误解答上偏高（均值 \NUM{js_mean0_all_kevc}，AR 评判为 \NUM{js_mean0_all_arc}）。
+
+\begin{table}[t]
+\centering\small
+\input{tables/judge_study}
+\caption{在 1000 道题（MATH-500 和 GSM8K 测试集中的 500 道）上、每题 4 次基座策略尝试中，各评判信号对验证器判定的 AUROC：全部尝试上的，以及题目内部的（同一道题中判定不同的尝试对）；该信号作为“正确”概率的 ECE 和 Brier 分数（主要对 \emph{correct} 类问题有意义）。}
+\label{tab:judge-study}
+\end{table}
+
+\paragraph{先推理的评判更好，但有代价。} 在随机抽取的 \NUM{gj_n} 次尝试上，先推理再作答的 AR 模型达到 AUROC \NUM{gj_auc}（在该子集中两种结果都有的 \NUM{gj_mixed} 道题内部为 \NUM{gj_aucw}），同样这些尝试上 \kev{} 的 \emph{correct} 为 \NUM{gj_same_auc_kevc} 和 \NUM{gj_same_aucw_kevc}。全部尝试上的领先可以分辨（\NUM{gjd_genkevc} \ci{\NUM{gjdlo_genkevc}}{\NUM{gjdhi_genkevc}}）；题目内部的领先不能分辨（\NUM{gjdw_genkevc} \ci{\NUM{gjdwlo_genkevc}}{\NUM{gjdwhi_genkevc}}），因为子集中两种结果都有的题目太少。它的思考在多数情况下触到了 2048 词元的上限（只有 \NUM{gj_finished} 正常结束），之后仍被要求给出答案。在空闲 GPU 上，它每次评判耗时 \NUM{cost_gen}\,ms，约为 GRPO 训练器中 \kev{} 每个问题耗时的 \NUM{ratio_gen_kevbb} 倍（\S\ref{sec:res-shared}）。GRPO 每一步要评判 128 个解答。
+
+\paragraph{什么会左右评判模型。} 表~\ref{tab:probes} 给出四种改动下各评判模型 \emph{correct} 概率的平均变化。正确解答的最终答案被篡改时，两个评判模型都能察觉（\kev{} \NUM{probe_altered_kevc_1}，AR \NUM{probe_altered_arc_1}）。两者都会惩罚不带推理、只给出的正确答案（\NUM{probe_answeronly_kevc_1} 和 \NUM{probe_answeronly_arc_1}），而对不带推理的错误答案则基本不变。在末尾追加“每一步都已验证”的声明会让两个评判模型都略微升高：\kev{} 在正确解答上升高 \NUM{probe_asserted_kevc_1}，其中 \NUM{probeup_asserted_kevc_1} 的解答分数上升；AR 评判升高 \NUM{probe_asserted_arc_1}。这些变化与正确、错误解答之间的差距相比很小，但它们是系统性的，以评判分数为训练目标的策略找到它们就会得到奖励。
+
+\begin{table}[t]
+\centering\small
+\input{tables/probes}
+\caption{解答被改动时 $\pc$（\kev{}）和 $P_{\mathrm{a}}$（AR 评判）的平均变化，按验证器判为正确和错误的解答分别统计。\emph{只给答案}：解答替换为一句给出其最终答案的话；\emph{填充}：追加二十句自我怀疑的话；\emph{声称}：追加一句已验证的声明；\emph{篡改}：改掉正确解答的最终答案。}
+\label{tab:probes}
+\end{table}

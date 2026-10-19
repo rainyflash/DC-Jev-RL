@@ -1,0 +1,41 @@
+% Part III-B, discussion (included by main_en.tex).
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{A good ranking is not enough.} The frozen \kev{} ranked the unlabelled completions well (AUROC
+\NUM{fillauc_all_subkev}), and rewarding them with it still ended below dropping them. Two things it pays for beyond
+correctness matter differently. Its generosity, a $\pc$ well above the share of correct completions, raises every
+completion's expected reward by about the same amount and is removed by the group baseline. Its preference for
+solutions that go on after their answer is not: such text leaves the verifier's label unchanged, so the labelled
+completions never punish it, and the judge pays for it on the unlabelled ones (\S\ref{sec:res-repeat}). Both policies
+of \texttt{sub\_kev} learned to repeat themselves. A fill-in reward has to be judged by what it pays for among
+completions with the same verdict, which an AUROC for the verdict does not measure.
+
+\paragraph{Recalibration fixes the numbers, not the preference.} Refitting the head on the labels so far made the
+fill-in reward calibrated (ECE \NUM{fillece_all_subrecal} against \NUM{fillece_all_subkev}), and one of its two
+policies still learned to repeat itself. A plausible reason, which these runs do not test directly: the refitted head
+starts from the released one and is anchored to it, so it keeps the released head's preferences wherever the labels
+say nothing, and repetition after the answer, which leaves the label unchanged, is such a place. A head trained from
+scratch has no preference to keep, and neither of its policies repeated itself.
+
+\paragraph{The probe's gain comes with a change of style.} \texttt{sub\_probe} ends \NUM{d_subprobe_math} points above
+\texttt{rlvr\_sub} on MATH-500 and \NUM{d_subprobe_aime24} on AIME24, and above the full-label \texttt{rlvr} as well.
+Both of its policies switched to drafting first, which no other run of this paper did; in this project's other GRPO
+runs the same switch marks the best runs whatever their reward, \NUM{allveronlydraft} of them trained with the
+verifier's reward alone (Part II, \S8.3). So with two seeds per condition we cannot say how much of the gain the probe is responsible for. If
+the probe makes the switch more likely, which two of two runs suggest but cannot show, a scratch head trained on a
+quarter of the labels would be a better fill-in reward than the judge it is built from, for a reason that has little
+to do with how well it predicts the labels. More seeds of \texttt{sub\_probe} and \texttt{rlvr\_sub}, and runs that
+force or forbid the draft opening, would tell.
+
+\paragraph{Limitations.} One model (4B), one task, one label fraction (a quarter), 200 steps, two seeds per condition;
+the recalibration's hyperparameters (anchor, buffer, steps) were set once and not tuned. The intervals resample
+problems and not seeds. The style measures were defined after we had read the final completions. The repetition probe
+scores with the released head, not with the refitted heads as they were at the end of training. Other experiments
+shared the GPUs during training, so we report no training times.
+
+\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported a judge and a policy that improve
+each other, long-horizon curves and anti-hacking results, none of which came from an experiment (see the notice at the
+top and \file{CORRECTION.md}). This version runs a narrower setting that could be checked: partial labels, with only a
+small head of the judge adapting. In it, adapting the judge's head fixed its calibration but not what it rewards, and
+the best fill-in reward was a head trained from scratch, whose runs also changed how they write.

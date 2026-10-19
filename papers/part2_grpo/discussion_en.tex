@@ -1,0 +1,61 @@
+% Part II, discussion (included by main_en.tex).
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{What sharing the backbone buys.} The judge on the shared backbone gives the same answers as the judge
+loaded on its own, and the trainer holds one copy of the backbone instead of two: \NUM{mem_saving_load} less GPU memory
+after loading. For a 4B policy on a 96\,GB GPU this is a convenience; on a smaller GPU, or with a larger model, it can
+decide whether a judge fits next to the policy at all. It costs \NUM{adapter_switch_ms}\,ms per adapter switch and
+some speed from applying the judge's adapter unmerged.
+
+\paragraph{What the judge adds on top of the verifier.} One seed of \texttt{rlvr\_kev\_add} and one of
+\texttt{rlvr\_kev\_gate} end far above every \texttt{rlvr} seed, and they lift their conditions' means above
+\texttt{rlvr}'s. These two runs differ from the others in that they switched to drafting first, which
+\NUM{alldraftruns} runs of this project did in all, \NUM{allveronlydraft} of them with the verifier as their only reward; the other seeds
+of the same conditions end near \texttt{rlvr}. With 2--3 seeds per condition we cannot tell whether the judge in the
+reward makes such a switch more likely (here 2 of the 5 runs with \kev{}'s score added or as a gate, and none of the 3
+\texttt{rlvr} runs). Where the judge can act at all is narrow. The verifier gives every completion an exact verdict,
+and with $\lambda<1$ the judge can only reorder completions with the same verdict: among wrong completions, by preferring
+the ones closer to right, and in groups where every completion is wrong, where the verifier gives no signal at all.
+After the first steps few groups are all wrong (\NUM{allwrong_rlvr} over the last 20 steps of \texttt{rlvr}), and among
+same-verdict completions a judge's preference can be about style as much as about correctness: \kev{} pays for solving
+the problem again after the answer (\S\ref{sec:res-repeat}), and \NUM{allkevrepeat} of the \NUM{allkevruns} runs of this
+project with \kev{}'s score in the reward ended doing so, against \NUM{allnokevrepeat} of the \NUM{allnokevruns} others.
+None of these repeating runs became more accurate for it.
+
+\paragraph{Seeds and styles.} The largest differences between our runs are not between reward conditions but between
+the styles the final policies write in. The runs that switched to drafting first reach \NUM{alldraftaime24min} to
+\NUM{alldraftaime24max}\% on AIME24, every other run of the project at most \NUM{allotheraime24max}\%. The switch was
+abrupt: in each of these runs the share of drafts among the MATH-500 completions rose from at most
+\NUM{alldraftjumpbeforemax} to at least \NUM{alldraftjumpaftermin} between two evaluations 50 steps apart, starting at
+step \NUM{alldraftjumpfrommin} at the earliest and step \NUM{alldraftjumpfrommax} at the latest. The verifier's verdicts
+on the training completions do not show what set it off. A comparison of reward variants
+with one to three seeds per condition, as ours, can mistake such a switch for an effect of the reward. We therefore
+report every run and its style, and a comparison of RLVR variants on a small model should do the same, or use enough
+seeds to estimate how often each variant switches. Whether drafting causes the higher accuracy or only comes with it,
+we did not test; forcing or forbidding the draft opening at evaluation, or in training, would be a first test.
+
+\paragraph{A judge is not a verifier.} Offline, \kev{}'s $\pc$ separates correct from incorrect base-policy solutions
+with an AUROC near 0.9 (\S\ref{sec:res-study}). The probes showed that it can be moved by edits that do not change the
+answer, if only slightly (a claim that every step was verified). Trained against $\pc$ alone, the policy found
+solutions the judge overrates: its wrong answers reach a $\pc$ the judge used to give only to right ones, the judge's
+ranking within a group decays towards chance, and the accuracy on every benchmark but GSM8K falls below the base
+model's. This is the reward over-optimisation that \citet{gao2023scaling} describe, at small scale and within 200
+steps. An offline AUROC measures a judge on the distribution it was trained for, not on the distribution a policy
+optimised against it will produce, nor on the styles a policy may drift into on its own.
+
+\paragraph{Limitations.} One policy and judge size (4B), one task (MATH, evaluated on MATH-500, GSM8K and three
+competition sets), 200 steps, one learning rate chosen for \texttt{rlvr}, one judge weight, and 2--3 seeds per
+condition, too few to say how often a condition ends in each style. The intervals resample problems and not seeds.
+Greedy evaluation on vLLM varies by about \NUM{szsd_math500} points between repeated evaluations of the same model
+(\S\ref{sec:res-cond}). The two style measures were defined after we had read the final completions. The policies'
+weights are not in the repository (their completions, logs and training completions are), so interventions on the
+final policies cannot be run from it. Other experiments shared the GPUs during training, so we report no training
+times except those measured on an idle GPU.
+
+\paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported a leaderboard on which \kev{}'s
+reward improved on the verifier, and memory savings computed from an assumed factor. Neither was measured (see the
+notice at the top and \file{CORRECTION.md}). The measured answer: the shared backbone saves one copy of the backbone
+and leaves the judge unchanged, and adding \kev{}'s judgment to the verifier did not reliably improve GRPO on MATH in
+our runs. Two of its runs did improve a lot, together with a change of writing style that runs without the judge also
+made.

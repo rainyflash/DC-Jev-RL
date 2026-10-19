@@ -1,0 +1,16 @@
+{
+  "_about": "Judge prompts for Part II/III math experiments, fixed before any GRPO run (git history records when). The judge sees the problem and the policy's completion only; it never sees the reference answer.",
+  "version": 1,
+  "state_fields": {"problem": "the problem statement", "proposed_solution": "the policy's completion, truncated to max_solution_tokens"},
+  "max_solution_tokens": 1536,
+  "questions": {
+    "correct": {"type": "noul", "instructions": "Is the final answer of the proposed solution correct?"},
+    "genuine": {"type": "noul", "instructions": "Does the proposed solution reach its final answer through genuine, relevant step-by-step reasoning (not a guess, not an unsupported claim, not filler or repetition)?"},
+    "quality": {"type": "score", "instructions": "How sound is the reasoning in the proposed solution?",
+                "criteria": ["the reasoning is wrong or missing",
+                             "the reasoning has serious errors or gaps",
+                             "the reasoning is mostly sound with minor issues",
+                             "the reasoning is complete and correct"]}
+  },
+  "ar_template": "{state}\n\nQuestion: {question}\n\nAnswer with yes or no only."
+}

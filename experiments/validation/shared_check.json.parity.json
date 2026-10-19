@@ -1,0 +1,22 @@
+{
+ "requests": 192,
+ "separate_bf16_merged_fused": {
+  "questions": 576,
+  "max_abs_diff": 0.00880366563796997,
+  "mean_max_abs_diff": 0.0021652899449691176,
+  "p99_max_abs_diff": 0.008056551218032837,
+  "argmax_agreement": 0.9947916666666666
+ },
+ "shared_backbone_unmerged": {
+  "questions": 576,
+  "max_abs_diff": 0.015074461698532104,
+  "mean_max_abs_diff": 0.002326447138329968,
+  "p99_max_abs_diff": 0.008281633257865906,
+  "argmax_agreement": 0.9895833333333334
+ },
+ "sanity_auroc_correct_vs_altered_answer": {
+  "fp32_reference": 0.9544270833333334,
+  "shared_backbone": 0.9539930555555556,
+  "separate_bf16": 0.9547526041666666
+ }
+}

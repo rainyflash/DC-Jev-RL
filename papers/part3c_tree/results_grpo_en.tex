@@ -1,0 +1,227 @@
+% Part III-C, results of the tree GRPO runs (included by main_en.tex).
+
+\section{Training with tree rollouts}\label{sec:res-tree}
+
+Both tree conditions ran with \NUM{seeds_treekev} seeds of 200 steps, everything else as in Part II's \texttt{rlvr},
+which is the flat reference (\NUM{seeds_rlvr} seeds). Runs with the same seed see the same problems in the same order.
+We first ran two seeds of each tree condition. Each condition then had one seed far above \texttt{rlvr} and one at its
+level, which left the effect of the tree shape undecided, so after both had finished we added a third seed of each
+(\file{scripts/make_jobs.sh}). That decision was made after seeing the first results; the third seeds are reported like
+the others. Table~\ref{tab:tree-acc} gives the final accuracies, Table~\ref{tab:tree-seeds} those of each seed,
+Table~\ref{tab:tree-paired} the paired differences, Table~\ref{tab:tree-stats} what happened inside the trees during
+training, and Figure~\ref{fig:tree-curves} the training curves. The intervals resample problems and do not include the
+variation between seeds.
+
+\subsection{The judge's choice of roots}\label{sec:res-tree-choice}
+
+\paragraph{The judge's choice gained little over a random one.} Every tenth step the roots that were not kept are
+continued too, so we know what keeping the chosen two gained over keeping all four (Table~\ref{tab:tree-stats}). Under
+\texttt{tree\_kev} the leaves of the two roots \kev{} ranked highest were correct \NUM{auditgain_all_treekev}
+\ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}} points more often than the leaves of all four roots,
+over \NUM{auditgain_records_treekev} audited steps. Under \texttt{tree\_random}, whose choice gains nothing in
+expectation, the same number is \NUM{auditgain_all_treerand}
+\ci{\NUM{auditgainlo_all_treerand}}{\NUM{auditgainhi_all_treerand}}; these intervals resample the audited steps.
+Keeping the two roots whose leaves turned out best would have gained \NUM{auditbest_all_treekev} points, more than any
+ranking made before the leaves exist could, since the same four leaves per root both rank the roots and score them. On
+the audited steps \kev{}'s \emph{on track} score of a root separates its correct from its incorrect leaves with an AUROC
+of \NUM{auditotauc_all_treekev} pooled over prompts, but only \NUM{auditotaucw_all_treekev}
+\ci{\NUM{auditotaucwlo_all_treekev}}{\NUM{auditotaucwhi_all_treekev}} within a prompt, the comparison that decides which
+roots are kept (\NUM{auditotaucw_all_treerand} under \texttt{tree\_random}). Offline, with the same structure (four
+prefixes of 128 tokens per problem, four continuations each), the within-problem AUROC was \NUM{aucw_128_kevtrack}, and
+keeping the two best-ranked prefixes raised the share of continuations ending correct by \NUM{gainpt_128_kevtrack}
+points (\S\ref{sec:res-prefix}). The prefixes differ: offline they are the base policy's, in training the policy's own
+as it learns. Its roots lead to correct answers more and more often (under \texttt{tree\_random},
+\NUM{auditval_firsthalf_treerand}\% of the audited leaves were correct in the first half of training and
+\NUM{auditval_secondhalf_treerand}\% in the second, against \NUM{ps_valueallpct_128}\% of the continuations of the base
+policy's prefixes offline), and the room for a choice, the best two in hindsight, shrank from \NUM{auditbest_firsthalf_treerand}
+to \NUM{auditbest_secondhalf_treerand} points.
+
+\begin{table}[t]
+\centering\small
+\input{tables/tree_stats}
+\caption{Inside the trees during training (mean over steps and seeds): share of roots that had already ended within 128
+tokens; on the audited steps (every tenth), where all four roots of a prompt are continued, the AUROC of \kev{}'s
+\emph{on track} score of a root for its leaves' verdicts, pooled and within prompt, the leaf accuracy of all four roots
+(percent), and what keeping the chosen two, or the best two in hindsight, gained over it (points); tokens generated per
+step (thousands, last 20 steps), not counting the audit's continuations.}
+\label{tab:tree-stats}
+\end{table}
+
+\paragraph{Final accuracy: no effect of the judge's choice.} With the same tree shape, keeping \kev{}'s roots instead
+of random ones changed the final accuracy by \NUM{dvtreerand_treekev_math}
+\ci{\NUM{dvtreerandlo_treekev_math}}{\NUM{dvtreerandhi_treekev_math}} points on MATH-500, \NUM{dvtreerand_treekev_gsm}
+\ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}} on GSM8K, \NUM{dvtreerand_treekev_amc}
+\ci{\NUM{dvtreerandlo_treekev_amc}}{\NUM{dvtreerandhi_treekev_amc}} on AMC23, \NUM{dvtreerand_treekev_aime24}
+\ci{\NUM{dvtreerandlo_treekev_aime24}}{\NUM{dvtreerandhi_treekev_aime24}} on AIME24 and \NUM{dvtreerand_treekev_aime25}
+\ci{\NUM{dvtreerandlo_treekev_aime25}}{\NUM{dvtreerandhi_treekev_aime25}} on AIME25 (Table~\ref{tab:tree-paired}). No
+interval excludes zero; the one on GSM8K just reaches it.
+
+\paragraph{Against flat sampling, the seed means follow the seeds that switched.} In the seed mean both tree conditions
+end above \texttt{rlvr}, by \NUM{d_treerand_math} and \NUM{d_treekev_math} points on MATH-500 and by
+\NUM{d_treerand_aime24} and \NUM{d_treekev_aime24} on AIME24. Seed by seed the picture is different
+(Table~\ref{tab:tree-seeds}). \NUM{treedraftruns} of the tree runs switched to opening their solutions in plain text
+(\S\ref{sec:res-tree-drafts}), and they end at \NUM{treedraftmathmin}--\NUM{treedraftmathmax}\% on MATH-500 and
+\NUM{treedraftaime24min}--\NUM{treedraftaime24max}\% on AIME24. The other \NUM{treeotherruns} end at
+\NUM{treeothermathmin}--\NUM{treeothermathmax}\% and \NUM{treeotheraime24min}--\NUM{treeotheraime24max}\%, and the
+\NUM{flatruns} seeds of \texttt{rlvr}, none of which switched, at \NUM{flatmathmin}--\NUM{flatmathmax}\% and
+\NUM{flataime24min}--\NUM{flataime24max}\%. The seed means of a condition thus mostly count how many of its seeds
+switched. Whether the tree shape helps a policy that does not switch, or makes the switch more likely, these runs
+cannot tell. At step 100, when no run drafted in more than \NUM{pdraftat_100_max} of its MATH-500 completions, neither
+tree condition was ahead on MATH-500 (\NUM{st100acc_treerand_math}\% and \NUM{st100acc_treekev_math}\%, against
+\NUM{st100acc_rlvr_math}\% for \texttt{rlvr}).
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_acc}
+\caption{Final policies: accuracy in percent, seed mean $\pm$ standard deviation over seeds. MATH-500 and GSM8K: greedy.
+AMC23, AIME24 and AIME25: mean over 16 samples per problem at temperature 0.6. \texttt{rlvr}: flat sampling (Part II).}
+\label{tab:tree-acc}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_seeds}
+\caption{The final accuracy of each seed, in percent. The third seed of each tree condition was added after the first
+two had finished.}
+\label{tab:tree-seeds}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_paired_treerand}
+\caption{Paired differences to \texttt{tree\_random} in percentage points: per problem, each condition's seed mean,
+averaged over problems, with a 95\% bootstrap interval over problems. \texttt{tree\_kev} minus \texttt{tree\_random}
+isolates the judge's choice of roots; \texttt{rlvr} minus \texttt{tree\_random} the tree shape.}
+\label{tab:tree-paired}
+\end{table}
+
+\subsection{Opening in plain text}\label{sec:res-tree-drafts}
+
+Part II found that some GRPO runs switch, abruptly, to opening their completions with an informal draft in plain text,
+without LaTeX or markdown, and that the runs that switch are the best ones (Part II, \S8.3). We measure the style as
+there, by the share of completions that open with such a draft: no math delimiter, markdown heading or bold in the
+first 300 characters, a measure defined after reading the completions.
+
+\paragraph{One seed of each tree condition switched.} The base model opens \NUM{pdraftat_0_min} to
+\NUM{pdraftat_0_max} of its MATH-500 completions this way, and every run cut that share in its first 50 steps, to at
+most \NUM{pdraftat_50_max} at step 50 (Table~\ref{tab:tree-drafts}). In \texttt{tree\_random} seed 2 it then rose from
+\NUM{draftat_treerand_s2_100} at step 100 to \NUM{draftat_treerand_s2_150} at step 150, and in \texttt{tree\_kev} seed 1
+from \NUM{draftat_treekev_s1_150} at step 150 to \NUM{draftat_treekev_s1_200} at step 200. Every other run, the \NUM{flatruns} of
+\texttt{rlvr} included, opens at most \NUM{pdraftmax_other} of its final completions this way. The two runs that switched
+write differently from those of Part II: in most of their completions the plain text is the whole solution, and only
+\NUM{sdraftfmt_treerand_s2} and \NUM{sdraftfmt_treekev_s1} of their drafts go on to formatted text, against
+\NUM{alldraftfmt_kevgate_s2} and \NUM{alldraftfmt_kevadd_s3} in the runs of Part II that switched (\texttt{rlvr\_kev\_gate}
+seed 2 and \texttt{rlvr\_kev\_add} seed 3).
+
+In a tree, how a completion opens is settled by its root. The four leaves of a root share its first 128 tokens, which
+nearly always hold the first 300 characters: they agree on whether they open with a draft for all but at most
+\NUM{prootsmixedmax} of the roots of a run. Keeping two roots of four is thus also a choice among openings, made by
+\kev{} under \texttt{tree\_kev} and at random under \texttt{tree\_random}; the random choice did not keep a run from
+switching.
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_drafts}
+\caption{The share of MATH-500 completions that open with an informal draft (no math delimiter, markdown heading or
+bold in the first 300 characters), at each periodic evaluation (greedy, every 50 steps) and in the final evaluation,
+per run, with the final accuracies.}
+\label{tab:tree-drafts}
+\end{table}
+
+\paragraph{The verdicts do not show why.} As in Part II, we compare within each group of training completions that
+holds both kinds how often the drafts and the others are right (Table~\ref{tab:tree-draftgroups}); in a tree run such a
+group has one root of each kind. In steps 0--49 drafts were less often right than the others in
+all \NUM{pdgn_0} runs (the difference was between \NUM{pdgverdict_0_min} and \NUM{pdgverdict_0_max} points), which is
+why their share fell. In the windows in which they spread, they were about as often right as the others:
+\NUM{dgverdict_treerand_s2_100} points in \texttt{tree\_random} seed 2 over steps 100--149, when
+\NUM{dgshare_treerand_s2_100} of its training completions were drafts, and \NUM{dgverdict_treekev_s1_150} in
+\texttt{tree\_kev} seed 1 over steps 150--199 (\NUM{dgshare_treekev_s1_150}). What made these runs switch, the verdicts
+we logged do not show. Across the \NUM{allruns} GRPO runs of this project, the \NUM{alldraftruns} that switched, in
+\NUM{alldraftconds} conditions and \NUM{allveronlydraft} of them with the verifier's reward alone, are the
+\NUM{alldraftruns} best on AIME24 (\NUM{alldraftaime24min} to \NUM{alldraftaime24max}\%, every other run at most
+\NUM{allotheraime24max}\%; Part II, \S8.3).
+
+\begin{table}[t]
+\centering\small
+\input{tables/grpo_draftgroups}
+\caption{Training completions that open with an informal draft, per 50-step window: their share, and $\Delta$ right,
+the mean over the groups that hold both kinds of the share of drafts the verifier accepts minus that of the other
+completions of the group, in percentage points.}
+\label{tab:tree-draftgroups}
+\end{table}
+
+\subsection{Repetition}\label{sec:res-tree-repeat}
+
+\paragraph{One seed of \texttt{tree\_kev} came to repeat itself, as one of \texttt{rlvr} did.} The training completions
+of \texttt{tree\_kev}'s seed 2 came to repeat part of the solution after the first answer: \NUM{roansrep_treekev_s2_0}
+of them did in steps 0--24, \NUM{roansrep_treekev_s2_50} in steps 50--74, \NUM{roansrep_treekev_s2_100} in steps
+100--124, \NUM{roansrep_treekev_s2_150} in steps 150--174 and \NUM{roansrep_treekev_s2_175} in steps 175--199
+(Table~\ref{tab:tree-repeat}; the share first exceeded a fifth in the window from step \NUM{roonset_treekev_s2}). They
+grew from \NUM{rotok_treekev_s2_0} to \NUM{rotok_treekev_s2_175} tokens on average; in the last 25 steps
+\NUM{rotrunc_treekev_s2_175} of them were cut off at the length limit of 1024 tokens and the verifier accepted
+\NUM{roright_treekev_s2_175}. The final policy repeats after its first answer on \NUM{sansrep_treekev_s2} of the
+MATH-500 problems, writes \NUM{stok_treekev_s2} tokens per solution, and its accuracy, \NUM{acc_treekev_math_s2}\%, is
+that of \texttt{rlvr}. Seed 3 of \texttt{rlvr} did the same (from the window at step \NUM{roonset_rlvr_s3}; its final
+policy repeats on \NUM{sansrep_rlvr_s3} of the problems). In every other run at most \NUM{roansrepmax_other} of the
+training completions of any window from step 50 on repeated after the answer. More than
+one boxed answer is not repetition: \texttt{tree\_random} seed 2 gives several on \NUM{sboxmany_treerand_s2} of the
+MATH-500 problems while \NUM{srep_treerand_s2} of its lines repeat an earlier one, against \NUM{srep_treekev_s2} for
+seed 2 of \texttt{tree\_kev}.
+
+Both runs that repeat are rewarded by the verifier alone, which reads the last answer, so a repetition that restates
+the answer costs them nothing. \kev{} would have paid for it, had it scored whole solutions: on the final MATH-500
+solutions of \texttt{tree\_kev} seed 2 that repeat lines, its $\pc$ is \NUM{rpkevc_cuttreekev_1}
+\ci{\NUM{rpkevclo_cuttreekev_1}}{\NUM{rpkevchi_cuttreekev_1}} higher as written than cut after the first answer on the
+\NUM{rpn_cuttreekev_1} the verifier accepts, and \NUM{rpkevc_cuttreekev_0}
+\ci{\NUM{rpkevclo_cuttreekev_0}}{\NUM{rpkevchi_cuttreekev_0}} higher on the \NUM{rpn_cuttreekev_0} it rejects (the probe
+of Part II, \S8.4). Under \texttt{tree\_kev}, however, it scores only the roots, the first 128 tokens, long before any
+answer, so its choice cannot have paid for the repetition, and \texttt{rlvr} seed 3 repeats with no judge at all.
+
+\begin{table}[t]
+\centering\small
+\input{tables/rollout_repeat}
+\caption{Share of completions that repeat part of the solution after the first boxed answer (a line of at least 20
+characters that already occurred before it): the training completions of each run in five 25-step windows, and the
+final policy's greedy MATH-500 completions.}
+\label{tab:tree-repeat}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4.5pt}
+\input{tables/grpo_style}
+\caption{What each final policy writes on MATH-500 (greedy): completion tokens, share truncated at 2048 tokens, share of
+lines (of at least 20 characters) that repeat an earlier line of the same completion, share of completions that repeat
+such a line after their first boxed answer, share with more than one boxed answer (the verifier reads the last one),
+share that open with an informal draft, and \kev{}'s $\pc$ for right and for wrong answers.}
+\label{tab:tree-style}
+\end{table}
+
+\subsection{Cost and evaluation noise}\label{sec:res-tree-cost}
+
+\paragraph{Cost.} A tree samples four roots of at most 128 tokens per prompt and continues two of them four times each,
+so the leaves of a root share its tokens. In the last 20 steps the tree runs generated \NUM{gensavemin_treerand} to
+\NUM{gensavemax_treerand} (\texttt{tree\_random}) and \NUM{gensavemin_treekev} to \NUM{gensavemax_treekev}
+(\texttt{tree\_kev}) fewer tokens than flat sampling of completions of the same lengths would have. Per step,
+\texttt{tree\_random} generated \NUM{gentok_treerand} thousand tokens and \texttt{tree\_kev} \NUM{gentok_treekev}
+thousand, against \NUM{gentok_rlvr} thousand for \texttt{rlvr}; these means also depend on how long each seed's
+completions grew (\texttt{rlvr} seed 3 and \texttt{tree\_kev} seed 2, which
+repeat themselves, generated \NUM{gentok_rlvr_s3} and \NUM{gentok_treekev_s2} thousand). Scoring the roots with \kev{}
+on the shared backbone is the only extra cost of the judge's choice.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../../experiments/part3c_tree/results/training_curves.pdf}
+\caption{Training curves (seed mean): verifier accuracy, completion tokens, share of groups with no correct completion
+and \kev{}'s $\pc$ on the training completions (10-step moving averages), and greedy accuracy on MATH-500 and the
+validation set every 50 steps.}
+\label{fig:tree-curves}
+\end{figure}
+
+\paragraph{Evaluation noise.} Across the \NUM{szruns_math500} runs in this comparison, the base model's MATH-500
+accuracy at step 0 ranges from \NUM{szmin_math500}\% to \NUM{szmax_math500}\%, and a run's accuracy changes by
+\NUM{lecabs_math500} points on average between its evaluations at steps 150 and 200. The final weights of each run are
+evaluated twice on MATH-500, both times greedily: at step 200 with the periodic evaluations, and in the final
+evaluation. The two results differ by \NUM{rptabs_math500} points on average and by up to \NUM{rptmax_math500}
+(\NUM{rptruns_math500} runs). A difference of about a point between two single evaluations is within the noise of the
+evaluation itself.

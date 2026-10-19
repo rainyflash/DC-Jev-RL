@@ -1,0 +1,17 @@
+{
+ "problems": 500,
+ "roots": 4,
+ "branches": 4,
+ "cuts": [
+  128,
+  256,
+  512
+ ],
+ "max_tokens": 1024,
+ "lora": null,
+ "prefixes": 4515,
+ "continuations": 18060,
+ "continuation_accuracy": 0.3775747508305648,
+ "roots_ended_before_last_cut": 967,
+ "seconds": 2100.0
+}

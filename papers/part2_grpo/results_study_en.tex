@@ -1,0 +1,59 @@
+% Part II, results: the offline judge study (included by main_en.tex).
+
+\section{How well the judges see the policy's mistakes}\label{sec:res-study}
+
+The base policy solved \NUM{js_acc_all} of its \NUM{js_completions} attempts (\NUM{js_acc_math} on MATH-500,
+\NUM{js_acc_gsm} on the GSM8K subset). \NUM{js_mixed_all} of the \NUM{js_problems} problems got both correct and incorrect
+attempts.
+
+\paragraph{\kev{} and the AR judge are about equally accurate.} Table~\ref{tab:judge-study} gives each signal's AUROC
+for the verifier's verdict. Over all attempts, \kev{}'s \emph{correct} reaches \NUM{js_auc_all_kevc} and the AR judge's
+\NUM{js_auc_all_arc}. The AR judge's lead is small but resolved: \kev{} minus AR is \NUM{jsd_all_kevcarc}
+\ci{\NUM{jsdlo_all_kevcarc}}{\NUM{jsdhi_all_kevcarc}} (95\% interval from resampling problems). Within problems, the
+comparison GRPO's group baseline makes, the order turns: \NUM{js_aucw_all_kevc} against \NUM{js_aucw_all_arc}, a
+difference of \NUM{jsdw_all_kevcarc} \ci{\NUM{jsdwlo_all_kevcarc}}{\NUM{jsdwhi_all_kevcarc}} that is not resolved. It
+is resolved on GSM8K (\NUM{jsdw_gsm_kevcarc} \ci{\NUM{jsdwlo_gsm_kevcarc}}{\NUM{jsdwhi_gsm_kevcarc}}). On MATH-500, the
+benchmark closer to the training problems, \kev{} is behind by a margin that is not resolved (\NUM{jsdw_math_kevcarc}
+\ci{\NUM{jsdwlo_math_kevcarc}}{\NUM{jsdwhi_math_kevcarc}}). \kev{}'s three questions carry almost the same information:
+\emph{genuine} and \emph{quality} reach about the same AUROCs as \emph{correct}. The AR
+judge's yes/no probability is the better calibrated probability of being correct (ECE \NUM{js_ece_all_arc} against
+\NUM{js_ece_all_kevc}). \kev{}'s \emph{correct} is too high on incorrect solutions (mean \NUM{js_mean0_all_kevc} against
+\NUM{js_mean0_all_arc} for the AR judge).
+
+\begin{table}[t]
+\centering\small
+\input{tables/judge_study}
+\caption{AUROC of each judge signal for the verifier's verdict on 4 base-policy attempts at each of 1000 problems
+(MATH-500 and 500 GSM8K test problems), over all attempts and within problems (pairs of attempts at the same problem with
+different verdicts); ECE and Brier score of the signal as a probability of being correct (meaningful mainly for the
+\emph{correct} questions).}
+\label{tab:judge-study}
+\end{table}
+
+\paragraph{A judge that reasons first is better, at a price.} On a random \NUM{gj_n} of the attempts, the AR model
+reasoning before it answers reaches an AUROC of \NUM{gj_auc} (\NUM{gj_aucw} within the \NUM{gj_mixed} problems with
+both outcomes in the subset), against \NUM{gj_same_auc_kevc} and \NUM{gj_same_aucw_kevc} for \kev{}'s \emph{correct} on
+the same attempts. The lead over all attempts is resolved (\NUM{gjd_genkevc} \ci{\NUM{gjdlo_genkevc}}{\NUM{gjdhi_genkevc}});
+the lead within problems is not (\NUM{gjdw_genkevc} \ci{\NUM{gjdwlo_genkevc}}{\NUM{gjdwhi_genkevc}}), because few
+problems of the subset have both outcomes. Its thinking ran into the 2048-token limit in most cases (it finished in \NUM{gj_finished}); it was
+then asked for its answer anyway. On an idle GPU it costs \NUM{cost_gen}\,ms per judgment, about \NUM{ratio_gen_kevbb}
+times what \kev{} costs per question in the GRPO trainers (\S\ref{sec:res-shared}). One GRPO step judges 128 solutions.
+
+\paragraph{What moves the judges.} Table~\ref{tab:probes} shows the mean change of each judge's probability of
+\emph{correct} under four edits. Both judges notice when the final answer of a correct solution is changed (\kev{}
+\NUM{probe_altered_kevc_1}, AR \NUM{probe_altered_arc_1}). Both penalise a correct answer given without its reasoning
+(\NUM{probe_answeronly_kevc_1} and \NUM{probe_answeronly_arc_1}), and leave a wrong answer without reasoning about where
+it was. Appending a claim that every step was verified raises both judges a little: \kev{} by
+\NUM{probe_asserted_kevc_1} on correct solutions, upwards in \NUM{probeup_asserted_kevc_1} of them, and the AR judge by
+\NUM{probe_asserted_arc_1}. These shifts are small next to the gap between correct and incorrect solutions, but they are
+systematic, and a policy trained on a judge's score is rewarded for finding them.
+
+\begin{table}[t]
+\centering\small
+\input{tables/probes}
+\caption{Mean change of $\pc$ (\kev{}) and $P_{\mathrm{a}}$ (AR judge) when a completion is edited, separately for
+completions the verifier marks correct and incorrect. \emph{Answer only}: the completion replaced by one sentence giving
+its final answer; \emph{padded}: twenty self-doubt sentences appended; \emph{asserted}: a claim of verification
+appended; \emph{altered}: the final answer of a correct completion changed.}
+\label{tab:probes}
+\end{table}

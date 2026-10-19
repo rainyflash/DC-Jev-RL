@@ -1,0 +1,77 @@
+{
+ "config": {
+  "cond": "vis_kev",
+  "seed": 2,
+  "out": "/content/work/runs/part3a/vis_kev/s2",
+  "data": "/content/work/data/code",
+  "steps": 100,
+  "prompts": 16,
+  "group": 8,
+  "lr": 1e-05,
+  "tis_cap": 2.0,
+  "temperature": 1.0,
+  "lora_r": 32,
+  "micro_tokens": 16384,
+  "grad_clip": 1.0,
+  "eval_every": 50,
+  "periodic": "kodcode_val,mbppplus,humanevalplus",
+  "ckpt_every": 25,
+  "rollout_port": 6200,
+  "final_eval": 1,
+  "kev_log_n": 64,
+  "workers": 32
+ },
+ "eval": {
+  "kodcode_val": {
+   "episodes": 298,
+   "vis_pass": 0.9496644295302014,
+   "all_pass": 0.8456375838926175,
+   "hack": 0.1040268456375839,
+   "hack_among_vis_pass": 0.10954063604240283,
+   "attempts_mean": 1.1308724832214765,
+   "first_attempt_vis_pass": 0.9194630872483222,
+   "first_attempt_all_pass": 0.8221476510067114,
+   "tokens_mean": 165.01677852348993,
+   "seconds": 35.4,
+   "kev": {
+    "genuine": 0.8073224221799997,
+    "correct": 0.8030980844800705
+   },
+   "kev_genuine_auroc_all_pass_given_vis": 0.8268049155145929
+  },
+  "mbppplus": {
+   "episodes": 376,
+   "vis_pass": 0.8297872340425532,
+   "all_pass": 0.6888297872340425,
+   "hack": 0.14095744680851063,
+   "hack_among_vis_pass": 0.16987179487179488,
+   "attempts_mean": 1.4122340425531914,
+   "first_attempt_vis_pass": 0.7712765957446809,
+   "first_attempt_all_pass": 0.6462765957446809,
+   "tokens_mean": 151.42021276595744,
+   "seconds": 71.7,
+   "kev": {
+    "genuine": 0.8115744554298989,
+    "correct": 0.8101591551676393
+   },
+   "kev_genuine_auroc_all_pass_given_vis": 0.7107889560719749
+  },
+  "humanevalplus": {
+   "episodes": 161,
+   "vis_pass": 0.8695652173913043,
+   "all_pass": 0.7577639751552795,
+   "hack": 0.11180124223602485,
+   "hack_among_vis_pass": 0.12857142857142856,
+   "attempts_mean": 1.2981366459627328,
+   "first_attempt_vis_pass": 0.8322981366459627,
+   "first_attempt_all_pass": 0.7329192546583851,
+   "tokens_mean": 168.8385093167702,
+   "seconds": 44.1,
+   "kev": {
+    "genuine": 0.7921516879560044,
+    "correct": 0.7715486483359189
+   },
+   "kev_genuine_auroc_all_pass_given_vis": 0.8570127504553734
+  }
+ }
+}

@@ -1,0 +1,185 @@
+{
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "torch": "2.8.0+cu128",
+ "n": 1000,
+ "requests": "experiments/part2_llm/judge_study/completions.jsonl.gz",
+ "kev_rows_fused": {
+  "correct+genuine+quality": {
+   "requests": 1000,
+   "questions": 3000,
+   "seconds": 53.01347935500053,
+   "requests_per_s": 18.863127117229563,
+   "seconds_per_1k_questions": 17.671159785000174,
+   "peak_gb": 22.767461376
+  },
+  "correct": {
+   "requests": 1000,
+   "questions": 1000,
+   "seconds": 18.442539988000135,
+   "requests_per_s": 54.22246613810583,
+   "seconds_per_1k_questions": 18.442539988000135,
+   "peak_gb": 20.947177984
+  },
+  "gpu_before": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 31,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  }
+ },
+ "kev_shared_prefix": {
+  "correct+genuine+quality": {
+   "requests": 1000,
+   "questions": 3000,
+   "seconds": 44.29911505400014,
+   "requests_per_s": 22.57381437035505,
+   "seconds_per_1k_questions": 14.766371684666712,
+   "peak_gb": 12.988872192
+  },
+  "correct": {
+   "requests": 1000,
+   "questions": 1000,
+   "seconds": 27.90989881600035,
+   "requests_per_s": 35.82958170477903,
+   "seconds_per_1k_questions": 27.90989881600035,
+   "peak_gb": 13.41850368
+  },
+  "gpu_before": {
+   "utilization_pct": 31,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  }
+ },
+ "kev_backbone_8k": {
+  "correct+genuine+quality": {
+   "requests": 1000,
+   "questions": 3000,
+   "seconds": 49.89809765800055,
+   "requests_per_s": 20.040844179150028,
+   "seconds_per_1k_questions": 16.632699219333517,
+   "peak_gb": 9.973332992
+  },
+  "correct": {
+   "requests": 1000,
+   "questions": 1000,
+   "seconds": 41.51322464600071,
+   "requests_per_s": 24.088709285471943,
+   "seconds_per_1k_questions": 41.51322464600071,
+   "peak_gb": 10.067579392
+  },
+  "gpu_before": {
+   "utilization_pct": 28,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  }
+ },
+ "kev_backbone_32k": {
+  "correct+genuine+quality": {
+   "requests": 1000,
+   "questions": 3000,
+   "seconds": 53.48514867599988,
+   "requests_per_s": 18.696778914419003,
+   "seconds_per_1k_questions": 17.82838289199996,
+   "peak_gb": 13.402571776
+  },
+  "correct": {
+   "requests": 1000,
+   "questions": 1000,
+   "seconds": 44.782374782999796,
+   "requests_per_s": 22.33021372461065,
+   "seconds_per_1k_questions": 44.782374782999796,
+   "peak_gb": 13.838665728
+  },
+  "gpu_before": {
+   "utilization_pct": 20,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  }
+ },
+ "ar_fused": {
+  "correct": {
+   "prompts": 1000,
+   "seconds": 18.04800309300026,
+   "seconds_per_1k_questions": 18.04800309300026,
+   "peak_gb": 9.66744832
+  },
+  "quality": {
+   "prompts": 1000,
+   "seconds": 19.10829244099932,
+   "seconds_per_1k_questions": 19.10829244099932,
+   "peak_gb": 9.642492416
+  },
+  "gpu_before": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 0,
+   "memory_used_mib": 21723,
+   "compute_apps": [
+    "27829, 21712"
+   ]
+  }
+ },
+ "genjudge": {
+  "judgments": 300,
+  "seconds": 143.31404439200014,
+  "seconds_per_1k_questions": 477.7134813066671,
+  "think_tokens_mean": 1708.83,
+  "think_finished": 0.32,
+  "gpu_before": {
+   "utilization_pct": 0,
+   "memory_used_mib": 45128,
+   "compute_apps": [
+    "27829, 21712",
+    "55226, 23400"
+   ]
+  },
+  "gpu_after": {
+   "utilization_pct": 15,
+   "memory_used_mib": 47434,
+   "compute_apps": [
+    "27829, 21712",
+    "55226, 25706"
+   ]
+  }
+ }
+}

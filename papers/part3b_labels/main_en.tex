@@ -1,0 +1,38 @@
+\documentclass[11pt]{article}
+\input{../common/preamble_en}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{When the Verifier Labels Only Some Samples:\\A Frozen, a Recalibrated and a Scratch Judge Head in GRPO}
+\author{DC-Jev-RL project, Part III-B (version 4)}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+Versions 1.0--3.0 of this paper (``CoEvo-Jev-GRPO'') are withdrawn. Their results were not produced by any experiment.
+The script behind the judge--policy co-evolution results, the long-horizon curves and the anti-hacking results contains
+no code that loads, trains or evaluates a model; every number is written into it. This version replaces the
+co-evolution claim with an experiment that was run: GRPO with partial verifier labels, where only the judge's small
+head adapts. The withdrawn files are kept in the repository under \file{withdrawn/}, and \file{CORRECTION.md} lists
+what was wrong.
+\end{correction}
+
+\begin{abstract}
+\input{abstract_en}
+\end{abstract}
+
+\input{intro_en}
+\input{method_en}
+\input{results_en}
+\input{discussion_en}
+
+\section*{Reproducibility}
+Code, prompts, raw logs (every GRPO step, with the fill-in rewards' agreement with the withheld labels, and every
+evaluation) and every training completion of the GRPO runs are in the repository (\file{experiments/part3b_labels/}). The tables and every number in the text are
+generated from them by \file{dcjev/analysis/part2.py} and \file{dcjev/analysis/paper_numbers.py}.
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}

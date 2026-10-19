@@ -1,0 +1,9 @@
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+ & & \multicolumn{3}{c}{fill-in AUROC} & frozen \kev{} & & \multicolumn{2}{c}{mean} \\ \cmidrule(lr){3-5}\cmidrule(l){8-9}
+condition & seeds & steps 0--19 & first half & second half & AUROC & ECE & fill-in & label \\ \midrule
+\texttt{sub\_kev} & 2 & 0.89 & 0.92 & 0.90 & 0.91 & 0.19 & 0.75 & 0.60 \\
+\texttt{sub\_kev\_recal} & 2 & 0.92 & 0.94 & 0.92 & 0.90 & 0.10 & 0.63 & 0.62 \\
+\texttt{sub\_probe} & 2 & 0.93 & 0.95 & 0.92 & 0.91 & 0.11 & 0.66 & 0.65 \\
+\bottomrule
+\end{tabular}

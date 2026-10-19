@@ -1,0 +1,32 @@
+% Part III-A, introduction and related work (included by main_en.tex).
+
+\section{Introduction}\label{sec:intro}
+
+A coding agent usually sees a few example tests, while the code it writes has to work beyond them. A training reward
+built from the visible tests pays for passing them, not for solving the problem. A policy can learn to satisfy the
+examples in ways that do not generalise, and in the extreme to special-case them. Reward hacking of this kind has been
+observed when reasoning models are trained against
+tests~\cite{baker2025monitoring,denison2024sycophancy,skalse2022defining}.
+
+This paper measures how much a judge can help, in a small but complete setting. The task is multi-turn code repair:
+the policy writes a function, sees the first failing example test and its error, and tries again, up to three times. The
+rewards are the visible tests alone; the visible tests times \kev{}'s judgment of whether the code ``solves the problem
+for all valid inputs, instead of special-casing the example tests''; and, as an oracle, the visible and the held-out
+tests. We measure the gap between what the visible tests certify and what the held-out tests find. We do this offline,
+for the base policy's code and for hard-coded lookups built to pass the visible tests, and online, during and after
+GRPO training.
+
+\paragraph{Correction.} Versions 1--3 of this paper (``Agentic-Jev-GRPO'') reported results on BFCL-v3, MBPP+,
+HumanEval+ and SWE-bench-Verified-Mini that were not produced by any experiment. The scripts that ``generated'' them
+contain no model code (see the notice above and \file{CORRECTION.md}). This version runs MBPP+ and HumanEval+, with a
+protocol that splits each problem's tests into visible and held-out ones. It does not attempt tool-calling benchmarks or
+SWE-bench.
+
+\section{Related work}\label{sec:related}
+
+Execution feedback is the standard reward for code RL. Benchmarks with extended tests such as EvalPlus~\cite{liu2023evalplus}
+showed that the original tests of HumanEval and MBPP~\cite{chen2021codex,austin2021program} miss many wrong programs. That
+is exactly the gap a visible-test reward leaves open. KodCode~\cite{xu2025kodcode} provides synthetic problems with
+verified tests for RL. LLM judges of code correctness are the code counterpart of the generative
+verifiers~\cite{zhang2024genverifier} that Part II studies for math. Monitoring a policy's reasoning for signs of reward
+hacking~\cite{baker2025monitoring} is another way to use a second model; here the judge reads the final code only.

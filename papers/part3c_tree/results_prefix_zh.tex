@@ -1,0 +1,32 @@
+% 第三部分 C 结果：离线前缀研究（由 main_zh.tex 引入）。
+
+\section{评判模型能否看出有希望的前缀？}\label{sec:res-prefix}
+
+基座策略的 \NUM{ps_problems}$\times$4 个解答产生了 \NUM{ps_prefixes} 个前缀和 \NUM{ps_continuations} 个经过验证的续写，其中 \NUM{ps_contacc} 是正确的。前缀的价值分布在整个取值范围内。在 128 个词元处，平均价值为 \NUM{ps_value_128}，\NUM{ps_dead_128} 的前缀是死前缀（没有任何正确续写）。在 512 个词元处，这两个数分别为 \NUM{ps_value_512} 和 \NUM{ps_dead_512}，因为到那时仍未结束的解答多是更难的题。所以确实有选择的余地：同一道题的前缀中，有些值得续写，有些不值得。
+
+\paragraph{所有信号都含有信息，但没有一个能很好地区分同一道题的前缀。} 表~\ref{tab:prefix-auc} 给出每种信号对“续写最终正确”的 AUROC。合并所有题目时，每种信号都明显有信息量（128 个词元处为 \NUM{auc_128_logprob}--\NUM{auc_128_artrack}）。其中大部分来自题目的难度，每种信号都能部分看出难度。在题目内部，也就是选择续写哪些前缀时真正重要的比较，AUROC 在 128 个词元处降到 \NUM{aucw_128_kevcorrect}--\NUM{aucw_128_logprob}，在 512 个词元处最高也只有 \NUM{aucw_512_artrack}。\kev{} 的 \emph{on track} 问题并不比被问同样问题、同样大小的 AR 评判更好（256 个词元处，题目内部 \NUM{aucw_256_kevtrack} 对 \NUM{aucw_256_artrack}，差值 \NUM{psdw_256_kevtrackartrack} \ci{\NUM{psdwlo_256_kevtrackartrack}}{\NUM{psdwhi_256_kevtrackartrack}}；95\% 区间由按题目重采样得到）。它也没有胜过不需要任何代价的策略自身平均词元对数概率（\NUM{aucw_256_logprob}；\kev{} 减对数概率为 \NUM{psdw_256_kevtracklogprob} \ci{\NUM{psdwlo_256_kevtracklogprob}}{\NUM{psdwhi_256_kevtracklogprob}}）。合并所有题目时，两个评判模型都领先于对数概率（\kev{} 为 \NUM{psd_256_kevtracklogprob} \ci{\NUM{psdlo_256_kevtracklogprob}}{\NUM{psdhi_256_kevtracklogprob}}），可见评判模型额外提供的主要是对题目难度的感知，而这对在同一道题的前缀之间做选择并无帮助。对未完成的解答问 \kev{} 第二部分的 \emph{correct} 问题，效果不如问它是否 on track。
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_auc}
+\caption{各信号按前缀长度预测“续写最终正确”的能力：合并所有前缀的 AUROC 和题目内部的 AUROC（同一道题中结果不同的续写对），以及与前缀蒙特卡洛价值的 Spearman 相关系数 $\rho$。500 道验证题，每题 4 个解答，每个前缀 4 次续写。}
+\label{tab:prefix-auc}
+\end{table}
+
+\paragraph{选择前缀略有帮助，用哪种信号都差不多。} 在 4 个解答都超过截断长度的题目上，保留某种信号排得最高的两个前缀，可以提高被续写部分的平均价值（表~\ref{tab:prefix-selection}）。在 128 个词元处，\kev{} 的 \emph{on track} 比保留全部 4 个前缀的 \NUM{ps_valueall_128} 提高 \NUM{gain_128_kevtrack} \ci{\NUM{gainlo_128_kevtrack}}{\NUM{gainhi_128_kevtrack}}，AR 评判提高 \NUM{gain_128_artrack}，策略的对数概率提高 \NUM{gain_128_logprob}。收益最大的是 256 个词元处：\kev{} 为 \NUM{gain_256_kevtrack}，AR 评判为 \NUM{gain_256_artrack}，对数概率为 \NUM{gain_256_logprob}。按四次续写中的两次排序、在另外两次上计分的预言机在那里提高 \NUM{gain_256_oracle}。每个前缀只有四次续写，价值本身就是一个有噪声的估计，所以预言机的收益低估了完美知识所能带来的收益。在 128 个词元处，这些信号的收益与该预言机相当；在 256 个词元处约为它的三分之二。从绝对值看收益很小：每一百次续写中多出几次正确的。
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_selection}
+\caption{在 4 个解答都超过截断长度的题目上，某种信号保留的 2 个前缀（共 4 个）的平均价值减去全部 4 个前缀的平均价值。95\% 区间为按题目的 bootstrap 区间。预言机按一半续写排序，在另一半上计分。}
+\label{tab:prefix-selection}
+\end{table}
+
+\paragraph{已撤回的 v3 论文的剪枝规则很少触发。} v3 在评判模型的 $p(\text{yes})$ 低于 0.3 时剪掉前缀（表~\ref{tab:prefix-threshold}）。\kev{} 的 \emph{on track} 概率几乎从不这么低：这条规则在 128 个词元处只剪掉 \NUM{thrpruned_128_kevtrack} 的前缀，其中 \NUM{thrdead_128_kevtrack} 是死前缀，但它们只占全部死前缀的 \NUM{thrcaught_128_kevtrack}。用 \emph{correct} 问题时，规则剪得更多（\NUM{thrpruned_128_kevcorrect}），被剪掉的前缀中死前缀更少（\NUM{thrdead_128_kevcorrect}），并且丢掉了全部正确续写的 \NUM{thrlost_128_kevcorrect}。在未经校准的概率上设固定阈值，在这里不是可用的剪枝规则；在题目内部排序才是。
+
+\begin{table}[t]
+\centering\small
+\input{tables/prefix_threshold}
+\caption{v3 的规则，即 $p(\text{yes})<0.3$ 时剪枝：被剪掉的前缀比例、被剪掉的前缀中死前缀的比例，以及被剪掉的前缀本会产生的正确续写占全部正确续写的比例。}
+\label{tab:prefix-threshold}
+\end{table}

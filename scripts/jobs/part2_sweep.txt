@@ -1,0 +1,4 @@
+# Part II learning-rate sweep (rlvr, seed 1, 60 steps, validation every 30 steps); lr 3e-5 ran on its own first.
+# <out_dir> <free GB needed to start> <command>
+/content/work/runs/part2_sweep/lr1e-5 26 bash scripts/run_part2.sh sweep 1e-5
+/content/work/runs/part2_sweep/lr1e-4 26 bash scripts/run_part2.sh sweep 1e-4

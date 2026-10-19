@@ -1,22 +1,25 @@
 {
-  "title": "Beyond Brittle Code and Noisy Tokens: System-One Decision Models as Calibrated Dynamic-Curriculum Reward Judges for Continuous Control (DC-Jev-RL)",
+  "title": "DC-Jev-RL, version 4: Kev-4B as a Reward Judge for PPO and GRPO, Measured Experiments",
   "upload_type": "publication",
   "publication_type": "preprint",
+  "version": "4.0",
   "creators": [
     {
       "name": "Zhang, Ziyang",
       "affiliation": "Independent AI Researcher"
     }
   ],
-  "description": "Official paper, SOTA benchmark suite, and experimental logs for DC-Jev-RL by Ziyang Zhang across 5 canonical MuJoCo v5 environments (2.471x Mean ONS, 2.076x IQM ONS, 100% win rate over Human Oracle).",
+  "description": "Version 4 replaces versions 1.0 to 3.0, whose results were not produced by the experiments they described and are withdrawn (CORRECTION.md in the repository). It consists of five papers, in English and Chinese, with the code, logs and analysis of every run. Part I compares Kev-4B and an autoregressive judge of the same size as PPO rewards on five MuJoCo tasks. Part II measures what sharing one Qwen3.5-4B backbone between a GRPO policy and Kev-4B saves, and whether Kev-4B's judgment adds anything to the verifier reward on MATH. Part III-A measures reward hacking in multi-turn code repair rewarded by visible tests and graded by held-out ones. Part III-B fills in the labels of unlabelled samples with a judge head. Part III-C lets a judge choose the prefixes of tree rollouts. Every number in the papers is generated from the logs in experiments/.",
   "keywords": [
     "Reinforcement Learning",
-    "Reward Shaping",
-    "System-One Decision Models",
-    "Jev",
+    "Reward Models",
+    "LLM-as-a-Judge",
+    "GRPO",
+    "PPO",
+    "Reward Hacking",
     "Kev-4B",
     "MuJoCo",
-    "Language-to-Reward"
+    "MATH"
   ],
   "license": "apache-2.0"
 }

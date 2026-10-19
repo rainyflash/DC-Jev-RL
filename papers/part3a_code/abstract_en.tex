@@ -1,0 +1,15 @@
+% Part III-A, abstract (included by main_en.tex).
+A policy rewarded by the tests it can see may learn to satisfy them instead of solving the problem. We measure this in
+multi-turn code repair: Qwen3.5-4B-Base writes a function, sees the first failing example test, and tries again, up
+to three times; held-out tests decide whether the final program is correct. Offline, \NUM{cs_hack_all} of the base
+policy's attempts that pass the visible tests fail a held-out test, and both \kev{} and an autoregressive judge of the
+same size rank such attempts below correct ones (AUROC \NUM{csauc_all_kevg} and \NUM{csauc_all_arg}) and separate
+hard-coded lookups of the tests from reference solutions almost perfectly. We then train with GRPO for 100 steps, two
+seeds per reward, on the visible tests alone, on the visible tests times \kev{}'s judgment that the code is genuine, and
+on all tests as an oracle. We saw no sign that the visible-test reward was exploited: the share of problems solved rose on KodCode
+validation (\NUM{cgszmean_kod_allpass}\% to \NUM{cgall_vis_kod}\%), MBPP+ and HumanEval+, the share of visible-test
+passes that are wrong fell by about half on two of the three sets, and programs that copy values from the visible
+tests stayed as rare as in the base policy. The judge factor changed nothing beyond the variation between seeds, and the
+oracle reward, which never pays a wrong program, left slightly fewer wrong passes and solved no more problems. This version replaces earlier versions whose results
+were not produced by experiments. Code, logs and every number in this paper are in the
+repository.

@@ -1,0 +1,17 @@
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+ & & & & \multicolumn{2}{c}{repeated lines} & several & draft & \multicolumn{2}{c}{\kev{} $\pc$} \\ \cmidrule(lr){5-6}\cmidrule(l){9-10}
+condition & seed & tokens & truncated & share & after answer & answers & opening & right & wrong \\ \midrule
+\texttt{rlvr} & 1 & 541 & 2\% & 1\% & 0\% & 2\% & 1\% & 0.84 & 0.60 \\
+ & 2 & 555 & 4\% & 1\% & 0\% & 6\% & 0\% & 0.85 & 0.59 \\
+ & 3 & 909 & 8\% & 28\% & 90\% & 95\% & 1\% & 0.88 & 0.64 \\
+\addlinespace
+\texttt{tree\_random} & 1 & 553 & 3\% & 1\% & 0\% & 3\% & 3\% & 0.83 & 0.60 \\
+ & 2 & 549 & 7\% & 0\% & 0\% & 46\% & 82\% & 0.88 & 0.56 \\
+ & 3 & 582 & 4\% & 1\% & 0\% & 5\% & 2\% & 0.84 & 0.57 \\
+\addlinespace
+\texttt{tree\_kev} & 1 & 567 & 8\% & 0\% & 0\% & 18\% & 78\% & 0.88 & 0.55 \\
+ & 2 & 931 & 7\% & 24\% & 90\% & 94\% & 3\% & 0.89 & 0.66 \\
+ & 3 & 485 & 2\% & 1\% & 0\% & 1\% & 7\% & 0.83 & 0.57 \\
+\bottomrule
+\end{tabular}

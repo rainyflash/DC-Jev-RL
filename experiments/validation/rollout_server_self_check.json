@@ -1,0 +1,64 @@
+{
+ "sequential": {
+  "sampled": {
+   "right_prompts": true,
+   "identical_frac": 1.0,
+   "samples": 64,
+   "lp_absdiff_before_divergence": 0.0,
+   "seconds": 3.46
+  },
+  "sampled_lora": {
+   "right_prompts": true,
+   "identical_frac": 0.171875,
+   "samples": 64,
+   "lp_absdiff_before_divergence": 0.021713366527293686,
+   "seconds": 3.92
+  },
+  "greedy": {
+   "right_prompts": true,
+   "identical_frac": 0.96875,
+   "samples": 32,
+   "lp_absdiff_before_divergence": 0.00036115470597996023,
+   "seconds": 1.45
+  },
+  "continued": {
+   "right_prompts": true,
+   "identical_frac": 0.5625,
+   "samples": 32,
+   "lp_absdiff_before_divergence": 0.006879751267493605,
+   "seconds": 1.49
+  }
+ },
+ "concurrent": {
+  "sampled": {
+   "right_prompts": true,
+   "identical_frac": 0.46875,
+   "samples": 64,
+   "lp_absdiff_before_divergence": 0.009940498006514878,
+   "seconds": 6.41
+  },
+  "sampled_lora": {
+   "right_prompts": true,
+   "identical_frac": 0.21875,
+   "samples": 64,
+   "lp_absdiff_before_divergence": 0.023481856884747247,
+   "seconds": 6.45
+  },
+  "greedy": {
+   "right_prompts": true,
+   "identical_frac": 0.6875,
+   "samples": 32,
+   "lp_absdiff_before_divergence": 0.004469798189187254,
+   "seconds": 7.19
+  },
+  "continued": {
+   "right_prompts": true,
+   "identical_frac": 0.75,
+   "samples": 32,
+   "lp_absdiff_before_divergence": 0.0071619367678218936,
+   "seconds": 7.71
+  }
+ },
+ "sequential_seconds": 10.95,
+ "concurrent_seconds": 7.71
+}

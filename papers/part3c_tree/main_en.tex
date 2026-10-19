@@ -1,0 +1,39 @@
+\documentclass[11pt]{article}
+\input{../common/preamble_en}
+\input{../common/numbers_macro}
+\input{numbers}
+
+\title{Can a Judge Choose Where to Branch?\\Prefix Selection for Tree Rollouts in GRPO on MATH}
+\author{DC-Jev-RL project, Part III-C (version 4)}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{correction}
+Versions 1.0--3.0 of this paper (``Tree-Jev-GRPO'') are withdrawn. Their results were not produced by any experiment.
+The pruning speed-ups, KV-cache reuse rates, per-node latencies and theorem-proving results (MiniF2F-Lean4, ProofNet)
+are numbers written into a script that contains no code that loads, trains or evaluates a model. This version studies
+tree rollouts on MATH only, with measured experiments, and tests the pruning rule of v3 directly. The withdrawn files
+are kept in the repository under \file{withdrawn/}, and \file{CORRECTION.md} lists what was wrong.
+\end{correction}
+
+\begin{abstract}
+\input{abstract_en}
+\end{abstract}
+
+\input{intro_en}
+\input{method_en}
+\input{results_prefix_en}
+\input{results_grpo_en}
+\input{discussion_en}
+
+\section*{Reproducibility}
+Code, prompts, raw logs (every GRPO step and evaluation), every training completion of the GRPO runs, and the prefix
+study's solutions, prefixes, continuations and judge scores are in the repository (\file{experiments/part3c_tree/}). The tables and every number in the text are
+generated from them by \file{dcjev/llm/prefix_study.py}, \file{dcjev/analysis/part2.py} and
+\file{dcjev/analysis/paper_numbers.py}.
+
+\bibliographystyle{plainnat}
+\bibliography{../common/refs}
+\end{document}

@@ -1,0 +1,45 @@
+{
+ "torch": "2.8.0+cu128",
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "parity": {
+  "requests": 192,
+  "separate_bf16_merged_fused": {
+   "questions": 576,
+   "max_abs_diff": 0.00880366563796997,
+   "mean_max_abs_diff": 0.0021652899449691176,
+   "p99_max_abs_diff": 0.008056551218032837,
+   "argmax_agreement": 0.9947916666666666
+  },
+  "shared_backbone_unmerged": {
+   "questions": 576,
+   "max_abs_diff": 0.015074461698532104,
+   "mean_max_abs_diff": 0.002326447138329968,
+   "p99_max_abs_diff": 0.008281633257865906,
+   "argmax_agreement": 0.9895833333333334
+  },
+  "sanity_auroc_correct_vs_altered_answer": {
+   "fp32_reference": 0.9544270833333334,
+   "shared_backbone": 0.9539930555555556,
+   "separate_bf16": 0.9547526041666666
+  }
+ },
+ "mem_shared": {
+  "arrangement": "mem_shared",
+  "after_load_gb": 8.806354944,
+  "adapter_switch_round_trip_ms": 18.456154499999684,
+  "peak_after_train_step_gb": 14.393719808,
+  "kev_requests_per_s": 8.047641251817197,
+  "peak_gb": 14.393719808,
+  "reserved_gb": 15.118368768
+ },
+ "mem_separate": {
+  "arrangement": "mem_separate",
+  "after_load_gb": 17.097218048,
+  "peak_after_train_step_gb": 22.717899776,
+  "kev_requests_per_s": 39.22686566081739,
+  "peak_gb": 32.313744896,
+  "reserved_gb": 34.170994688
+ },
+ "memory_saving_after_load": 0.4849246866199878,
+ "memory_saving_peak": 0.5545635501448256
+}
