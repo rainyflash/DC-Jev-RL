@@ -5,11 +5,11 @@ other 6 are dropped (\texttt{rlvr\_sub}), rewarded with \kev{}'s frozen judgment
 \kev{} after its pointer head is refitted online on the labels collected so far (\texttt{sub\_kev\_recal}), or rewarded
 with a head of the same shape trained from scratch on the same features and labels (\texttt{sub\_probe}); two seeds
 each, 200 steps. The frozen judge ranks the unlabelled completions well (AUROC \NUM{fillauc_all_subkev}) but is too
-generous, and both of its policies learned to repeat themselves after the answer, which the judge pays for; they end
-\NUM{d_subkev_math} \ci{\NUM{dlo_subkev_math}}{\NUM{dhi_subkev_math}} points below dropping the completions on MATH-500.
+generous, and both of its policies learned to repeat themselves after the answer, which the judge pays for; against dropping
+the completions they end \NUM{d_subkev_math} \ci{\NUM{dlo_subkev_math}}{\NUM{dhi_subkev_math}} points on MATH-500.
 Refitting the head fixes its calibration (expected calibration error \NUM{fillece_all_subrecal} against
 \NUM{fillece_all_subkev}), but one of its two policies still repeats itself. The head trained from scratch ends
-\NUM{d_subprobe_math} \ci{\NUM{dlo_subprobe_math}}{\NUM{dhi_subprobe_math}} points above dropping on MATH-500 and
+\NUM{d_subprobe_math} \ci{\NUM{dlo_subprobe_math}}{\NUM{dhi_subprobe_math}} points against dropping on MATH-500 and
 \NUM{d_subprobe_aime24} on AIME24, above the full-label baseline too. Both of its policies switched to opening their
 solutions with an informal draft in plain text, a switch that in this project's other GRPO runs marks the best runs
 whatever their reward, so two seeds cannot tell how much of the gain is the probe's. Code, logs, every training completion and every number in
