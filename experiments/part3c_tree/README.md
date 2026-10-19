@@ -8,10 +8,12 @@ each from the exact token prefix, and the 8 leaves form the group.
 - `tree_kev`: the 2 roots with the highest Kev-4B P(yes) for `on_track` (`prompts/prefix_prompts.json`) are continued;
 - `tree_random`: 2 roots chosen at random (in distribution the same as sampling 2 roots only).
 
-Two seeds each. The files are those of a Part II run (`../part2_llm/README.md`): `final.json`, `log.jsonl.gz`,
-`final_completions.jsonl.gz` and `evals/step<N>.jsonl.gz`, and in addition `rollouts.jsonl.gz`, every training
-completion (leaf) with its step, problem id, root, verdict, reward and advantage; the paper's analysis of repetition
-during training reads it. Every step's log record also has the tree statistics: how
+Three seeds each. Seeds 1 and 2 were planned; seed 3 of each was added on 19 October 2026, after both had finished,
+because with two seeds each condition had one seed far above `rlvr` and one at its level (`scripts/make_jobs.sh`). The
+files are those of a Part II run (`../part2_llm/README.md`): `final.json`, `log.jsonl.gz`, `final_completions.jsonl.gz`,
+`evals/step<N>.jsonl.gz` and `rollouts.jsonl.gz`, every training completion (leaf) with its step, problem id, root,
+verdict, reward and advantage, its text including the root's tokens; the paper's analyses of repetition and of drafts
+during training read it. Every step's log record also has the tree statistics: how
 many roots had already ended, Kev-4B's `on_track` scores (mean, mean of the kept roots, AUROC for the leaves' verdicts,
 pooled and within problem) and the tokens generated. Every tenth step the roots that were not kept are continued as
 well, for the log only: `audit_selection_gain` is the mean value of the kept roots minus that of all 4, and

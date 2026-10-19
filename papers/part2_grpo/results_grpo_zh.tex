@@ -69,7 +69,7 @@ $10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NU
 
 \subsection{写解答的三种方式}\label{sec:res-style}
 
-图~\ref{fig:style-example} 给出三个 run 的最终策略对同一道 MATH-500 题目的解答。多数策略写一份带 LaTeX 和 markdown 格式的解答，以框出的答案结尾（左）。两个领先的种子先用纯文本、不带 LaTeX 或 markdown 把题目做一遍，给出答案，再写格式化的解答（中）。还有一些策略写完格式化的解答、给出答案之后，又用几乎相同的话把解答再写一遍（右）。第一种风格，我们用以非正式草稿开头的解答所占比例来衡量：前 300 个字符中没有数学定界符（\texttt{\$}、\texttt{\textbackslash(} 或 \texttt{\textbackslash[}），也没有 markdown 标题或粗体（\texttt{\#\#\#} 或 \texttt{**}）。第三种风格，我们用一个解答中（至少 20 个字符的）行有多大比例与该解答前面某行相同来衡量。这两个量都是在读过最终解答之后为了描述所见而定义的。
+图~\ref{fig:style-example} 给出三个 run 的最终策略对同一道 MATH-500 题目的解答。多数策略写一份带 LaTeX 和 markdown 格式的解答，以框出的答案结尾（左）。两个领先的种子先用纯文本、不带 LaTeX 或 markdown 把题目做一遍，给出答案，多数情况下再写格式化的解答（中）。还有一些策略写完格式化的解答、给出答案之后，又用几乎相同的话把解答再写一遍（右）。第一种风格，我们用以非正式草稿开头的解答所占比例来衡量：前 300 个字符中没有数学定界符（\texttt{\$}、\texttt{\textbackslash(} 或 \texttt{\textbackslash[}），也没有 markdown 标题或粗体（\texttt{\#\#\#} 或 \texttt{**}）。第三种风格，我们用一个解答中（至少 20 个字符的）行有多大比例与该解答前面某行相同来衡量。这两个量都是在读过最终解答之后为了描述所见而定义的。
 
 \begin{figure}[t]
 \centering
@@ -78,7 +78,7 @@ $10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NU
 \label{fig:style-example}
 \end{figure}
 
-\paragraph{两个领先的种子改成了先写草稿。} 在第 0 步，基座模型有 \NUM{pdraftat_0_min} 到 \NUM{pdraftat_0_max} 的 MATH-500 解答以草稿开头（表~\ref{tab:grpo-drafts}）。每个 run 在前 50 步都压低了这一比例，第 50 步时至多为 \NUM{pdraftat_50_max}；十二个 run 中有十个一直保持在低位（最终评估中至多 \NUM{pdraftmax_other}）。\texttt{rlvr\_kev\_gate} 种子 2 的这一比例从第 100 步的 \NUM{draftat_kevgate_s2_100} 升到第 150 步的 \NUM{draftat_kevgate_s2_150}，\texttt{rlvr\_kev\_add} 种子 3 从第 150 步的 \NUM{draftat_kevadd_s3_150} 升到第 200 步的 \NUM{draftat_kevadd_s3_200}。这两个 run 的最终 MATH-500 解答分别在 \NUM{sdraft_kevgate_s2} 和 \NUM{sdraft_kevadd_s3} 的题目上以草稿开头。它们并不比其他 run 的解答长（平均 \NUM{stok_kevgate_s2} 和 \NUM{stok_kevadd_s3} 个词元；表~\ref{tab:grpo-style}）。同一种子的 run 以相同顺序看到相同的题目，并从相同的样本出发，所以这一切换不是数据顺序的属性：\texttt{rlvr} 的种子 2 和 3 就没有切换。
+\paragraph{两个领先的种子改成了先写草稿。} 在第 0 步，基座模型有 \NUM{pdraftat_0_min} 到 \NUM{pdraftat_0_max} 的 MATH-500 解答以草稿开头（表~\ref{tab:grpo-drafts}）。每个 run 在前 50 步都压低了这一比例，第 50 步时至多为 \NUM{pdraftat_50_max}；十二个 run 中有十个一直保持在低位（最终评估中至多 \NUM{pdraftmax_other}）。\texttt{rlvr\_kev\_gate} 种子 2 的这一比例从第 100 步的 \NUM{draftat_kevgate_s2_100} 升到第 150 步的 \NUM{draftat_kevgate_s2_150}，\texttt{rlvr\_kev\_add} 种子 3 从第 150 步的 \NUM{draftat_kevadd_s3_150} 升到第 200 步的 \NUM{draftat_kevadd_s3_200}。这两个 run 的最终 MATH-500 解答分别在 \NUM{sdraft_kevgate_s2} 和 \NUM{sdraft_kevadd_s3} 的题目上以草稿开头，其中分别有 \NUM{sdraftfmt_kevgate_s2} 和 \NUM{sdraftfmt_kevadd_s3} 的草稿之后接着写了格式化的内容；其余的草稿就是整篇解答。它们并不比其他 run 的解答长（平均 \NUM{stok_kevgate_s2} 和 \NUM{stok_kevadd_s3} 个词元；表~\ref{tab:grpo-style}）。同一种子的 run 以相同顺序看到相同的题目，并从相同的样本出发，所以这一切换不是数据顺序的属性：\texttt{rlvr} 的种子 2 和 3 就没有切换。
 
 \begin{table}[t]
 \centering\small
@@ -87,7 +87,7 @@ $10^{-4}$ & \NUM{sweep_1em4_0} & \NUM{sweep_1em4_30} & \NUM{sweep_1em4_60} & \NU
 \label{tab:grpo-drafts}
 \end{table}
 
-\paragraph{另外两篇论文中也发生了同样的切换，且只发生在最好的 run 上。} 本项目第三部分 B 和 C 中有四个 run 以同样的方式切换，其中一个的奖励只有验证器（第三部分 C 的 \texttt{tree\_random} 种子 2，它与 \texttt{rlvr} 的唯一区别是一组解答的采样方式）。表~\ref{tab:modes-all} 按最终策略的写作风格列出本项目全部 \NUM{allruns} 个 GRPO run。切换了的 \NUM{alldraftruns} 个 run 在 AIME24 上达到 \NUM{alldraftaime24min}\% 到 \NUM{alldraftaime24max}\%，其他 run 至多 \NUM{allotheraime24max}\%；在 MATH-500 上它们达到 \NUM{alldraftmathmin}\% 到 \NUM{alldraftmathmax}\%，其他 run 至多 \NUM{allothermathmax}\%。分类不取决于定义的细节：把开头窗口从 300 个字符换成 150 或 600 个字符，或者只把数学定界符当作标记，切换了的 run 仍有至少 \NUM{alldraftvarmin_draft} 的最终解答以草稿开头，其他 run 至多 \NUM{alldraftvarmax_other}。这一切换是在 run 全部结束后才发现的，分类也是我们定的，所以这是对这些 run 的描述，而不是对事先提出的假设的检验。
+\paragraph{另外两篇论文中也发生了同样的切换，且只发生在最好的 run 上。} 第三部分 B 中有 \NUM{alldraftruns_iiib} 个 run、第三部分 C 中有 \NUM{alldraftruns_iiic} 个 run 以同样的方式切换，其中 \NUM{allveronlydraft} 个的奖励只有验证器（在第三部分 C 的两个树状条件中；\texttt{tree\_random} 与 \texttt{rlvr} 的唯一区别是一组解答的采样方式）。开头的纯文本之后并不总有格式化的解答：在第三部分 C 切换了的 run 中，只有 \NUM{alldraftfmt_treerand_s2} 和 \NUM{alldraftfmt_treekev_s1} 的草稿之后接着写了格式化的内容。表~\ref{tab:modes-all} 按最终策略的写作风格列出本项目全部 \NUM{allruns} 个 GRPO run。切换了的 \NUM{alldraftruns} 个 run 在 AIME24 上达到 \NUM{alldraftaime24min}\% 到 \NUM{alldraftaime24max}\%，其他 run 至多 \NUM{allotheraime24max}\%；在 MATH-500 上它们达到 \NUM{alldraftmathmin}\% 到 \NUM{alldraftmathmax}\%，其他 run 至多 \NUM{allothermathmax}\%。分类不取决于定义的细节：把开头窗口从 300 个字符换成 150 或 600 个字符，或者只把数学定界符当作标记，切换了的 run 仍有至少 \NUM{alldraftvarmin_draft} 的最终解答以草稿开头，其他 run 至多 \NUM{alldraftvarmax_other}。这一切换是在 run 全部结束后才发现的，分类也是我们定的，所以这是对这些 run 的描述，而不是对事先提出的假设的检验。
 
 \paragraph{验证结果看不出原因。} GRPO 提高优势为正的解答的概率，因此当一种风格的解答比同组其他解答更好时，这种风格就会扩散。表~\ref{tab:grpo-draftgroups} 在每个同时含有两类解答的 8 个训练解答的组内，比较草稿开头的解答和其他解答被判为正确的频率。第 0--49 步，在全部 \NUM{pdgn_0} 个 run 中草稿都更少被判正确：差值在 \NUM{pdgverdict_0_min} 到 \NUM{pdgverdict_0_max} 个百分点之间，这就是它们的比例下降的原因。从第 50 步起，在切换了的两个 run 中差值在 \NUM{pdglate_draft_min} 到 \NUM{pdglate_draft_max} 个百分点之间，在其他 run 中（它们的组里很少有草稿）在 \NUM{pdglate_other_min} 到 \NUM{pdglate_other_max} 之间。在 \texttt{rlvr\_kev\_add} 种子 3 中，草稿在每个窗口里都比同组其他解答更少被判正确，第 150--199 步差 \NUM{dgverdict_kevadd_s3_150} 个百分点，而它们在训练解答中的比例却从 \NUM{dgshare_kevadd_s3_100} 升到了 \NUM{dgshare_kevadd_s3_150}；它们的优势（包含评判项）也不更大（平均 \NUM{dgadv_kevadd_s3_150}）。是什么让这些 run 切换的，我们记录的验证结果和奖励都看不出来。
 

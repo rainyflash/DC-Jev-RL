@@ -128,8 +128,8 @@ between the far seeds and the others are not.
 
 Figure~\ref{fig:style-example} shows one MATH-500 problem as the final policies of three runs answer it. Most policies
 write one formatted solution, with LaTeX and markdown, and end with the boxed answer (left). The two far seeds first
-work the problem in plain text, without LaTeX or markdown, give the answer, and then write the formatted solution
-(middle). Some policies write the formatted solution, give the answer, and write it again in nearly the same words
+work the problem in plain text, without LaTeX or markdown, give the answer, and then, mostly, write the formatted
+solution (middle). Some policies write the formatted solution, give the answer, and write it again in nearly the same words
 (right). We measure the first style by the share of completions that open with an informal draft: no math delimiter
 (\texttt{\$}, \texttt{\textbackslash(} or \texttt{\textbackslash[}) and no markdown heading or bold (\texttt{\#\#\#} or
 \texttt{**}) in the first 300 characters. We measure the third by the share of a completion's lines (of at least 20
@@ -153,8 +153,9 @@ its first 50 steps, to at most \NUM{pdraftat_50_max} at step 50, and in ten of t
 \NUM{pdraftmax_other} in the final evaluation). In \texttt{rlvr\_kev\_gate} seed 2 it rose from \NUM{draftat_kevgate_s2_100} at
 step 100 to \NUM{draftat_kevgate_s2_150} at step 150, and in \texttt{rlvr\_kev\_add} seed 3 from
 \NUM{draftat_kevadd_s3_150} at step 150 to \NUM{draftat_kevadd_s3_200} at step 200. The final MATH-500 completions of
-these two runs open with a draft on \NUM{sdraft_kevgate_s2} and \NUM{sdraft_kevadd_s3} of the problems. They are no
-longer than those of the other runs (\NUM{stok_kevgate_s2} and \NUM{stok_kevadd_s3} tokens on average;
+these two runs open with a draft on \NUM{sdraft_kevgate_s2} and \NUM{sdraft_kevadd_s3} of the problems, and
+\NUM{sdraftfmt_kevgate_s2} and \NUM{sdraftfmt_kevadd_s3} of these drafts go on to formatted text; in the others the
+plain text is the whole solution. They are no longer than those of the other runs (\NUM{stok_kevgate_s2} and \NUM{stok_kevadd_s3} tokens on average;
 Table~\ref{tab:grpo-style}). Runs with the same seed see the same problems in the same order and start from the same
 samples, so the switch is not a property of the data order: \texttt{rlvr} seeds 2 and 3 did not switch.
 
@@ -167,9 +168,12 @@ per run, with the final accuracies.}
 \label{tab:grpo-drafts}
 \end{table}
 
-\paragraph{The same switch happened in the other papers, and only in the best runs.} Four runs of Parts III-B and
-III-C of this project switched in the same way, among them a run whose reward is the verifier's alone (\texttt{tree\_random}
-seed 2 of Part III-C, which differs from \texttt{rlvr} only in how it samples the completions of a group).
+\paragraph{The same switch happened in the other papers, and only in the best runs.} In Parts III-B and III-C,
+\NUM{alldraftruns_iiib} and \NUM{alldraftruns_iiic} runs switched in the same way, \NUM{allveronlydraft} of them with the
+verifier's reward alone (in both tree conditions of Part III-C; \texttt{tree\_random} differs from \texttt{rlvr} only
+in how it samples the completions of a group). The plain text that opens their completions is not always followed by a
+formatted solution: in the runs of Part III-C that switched, only \NUM{alldraftfmt_treerand_s2} and
+\NUM{alldraftfmt_treekev_s1} of the drafts go on to formatted text.
 Table~\ref{tab:modes-all} lists all \NUM{allruns} GRPO runs of the project by the style of their final policy. The
 \NUM{alldraftruns} runs that switched reach \NUM{alldraftaime24min} to \NUM{alldraftaime24max}\% on AIME24, every other
 run at most \NUM{allotheraime24max}\%; on MATH-500 they reach \NUM{alldraftmathmin} to \NUM{alldraftmathmax}\%, every

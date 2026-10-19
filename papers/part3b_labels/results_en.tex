@@ -84,8 +84,8 @@ and \NUM{acc_subprobe_math_s2}\% on MATH-500, \NUM{acc_subprobe_aime24_s1} and \
 Over both seeds that is \NUM{d_subprobe_math} \ci{\NUM{dlo_subprobe_math}}{\NUM{dhi_subprobe_math}} points above
 \texttt{rlvr\_sub} on MATH-500 and \NUM{d_subprobe_aime24} \ci{\NUM{dlo_subprobe_aime24}}{\NUM{dhi_subprobe_aime24}} on
 AIME24, and above the full-label \texttt{rlvr} as well (\NUM{acc_rlvr_math}\% on MATH-500). Both policies write
-differently from the others: they work the problem in plain text first and then write the formatted solution
-(\S\ref{sec:res-style}).
+differently from the others: they work the problem in plain text first, and in \NUM{sdraftfmt_subprobe_s1} and
+\NUM{sdraftfmt_subprobe_s2} of these drafts then write a formatted solution (\S\ref{sec:res-style}).
 
 \begin{table}[t]
 \centering\small
@@ -117,7 +117,7 @@ evaluation. The two results differ by \NUM{rptabs_math500} points on average and
 \subsection{Drafting first}\label{sec:res-style}
 
 Part II found that some GRPO runs switch, abruptly, to a style in which the completion opens with an informal draft in
-plain text, without LaTeX or markdown, gives the answer, and then writes the formatted solution; and that the runs that
+plain text, without LaTeX or markdown, gives the answer, and often then writes the formatted solution; and that the runs that
 switch are the best ones. We measure the style by the share of completions that open with such a draft (no math
 delimiter, markdown heading or bold in the first 300 characters; Part II, \S8.3, defined after reading the
 completions). The base model opens \NUM{pdraftat_0_min} to \NUM{pdraftat_0_max} of its MATH-500 completions this way.
@@ -157,7 +157,7 @@ more often right than the others in the second half of the run (\NUM{dgverdict_s
 and \NUM{dgfillright_subrecal_s2_150}), and drafts did not spread. In \texttt{sub\_kev\_recal} seed 1 the head paid right
 drafts more over steps 100--199 (\NUM{dgfillright_subrecal_s1_100} and \NUM{dgfillright_subrecal_s1_150}), and drafts
 did not spread either. A few windows of a few runs, read after the fact, do not tell what made the probe's runs switch,
-and Part II has runs that switched with the verifier's reward alone.
+and in Part III-C runs switched with the verifier's reward alone (Part II, \S8.3).
 
 \begin{table}[t]
 \centering\small

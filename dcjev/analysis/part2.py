@@ -81,7 +81,7 @@ DRAFT_MARKS = ("$", "\\(", "\\[", "###", "**")
 def informal_opening(text, n=300, marks=DRAFT_MARKS):
     """Whether a completion opens with an informal draft: its first n characters contain no LaTeX math delimiter ($, \\(
     or \\[) and no markdown heading or bold (### or **), as in "We need to convert (0,3) ... r = sqrt(x^2 + y^2) = 3".
-    Such a completion works the problem in plain text first and writes it up with LaTeX and the boxed answer after."""
+    Such a completion works the problem in plain text first; it may then write it up with LaTeX (style: draft_formatted)."""
     h = text[:n]
     return not any(m in h for m in marks)
 
@@ -121,9 +121,14 @@ def draft_windows(ro, width=50):
     step), per window of `width` steps: the share of drafts and, over the groups that contain both kinds, the mean
     difference draft minus other of the verifier's verdict; of the advantage (completions used in the update only); of
     Kev-4B's P(correct) among completions with the same verdict, right and wrong ones apart (where it was logged); and for
-    the label-budget conditions, of the reward filled in for unlabelled completions with the same verdict."""
-    groups = defaultdict(list)
-    for r in ro: groups[(r["step"], r["id"])].append(r)
+    the label-budget conditions, of the reward filled in for unlabelled completions with the same verdict. For tree
+    rollouts (records with a root), also the number of roots and of roots whose leaves disagree on opening with a draft."""
+    groups, roots = defaultdict(list), defaultdict(list)
+    for r in ro:
+        groups[(r["step"], r["id"])].append(r)
+        if r.get("root") is not None: roots[(r["step"], r["id"], r["root"])].append(r["draft"])
+    rw = defaultdict(lambda: [0, 0])
+    for (step, _, _), ds in roots.items(): rw[step // width][0] += 1; rw[step // width][1] += len(set(ds)) > 1
     w = defaultdict(lambda: defaultdict(list))
     diff = lambda d, o: float(np.mean(d) - np.mean(o)) if d and o else None
     for (step, _), rs in groups.items():
@@ -145,6 +150,7 @@ def draft_windows(ro, width=50):
         e = {"steps": [k * width, k * width + width - 1], "completions": len(o["draft"]), "draft": float(np.mean(o["draft"]))}
         for key in ("verdict", "advantage", "kev_right", "kev_wrong", "fill_right", "fill_wrong"):
             if o[key]: e[key] = {"diff": float(np.mean(o[key])), "groups": len(o[key])}
+        if k in rw: e["roots"], e["roots_mixed"] = rw[k]
         out.append(e)
     return out
 
@@ -179,6 +185,9 @@ def style(path, sname="math500"):
            "draft_opening_w150": float(np.mean([informal_opening(r["text"], 150) for r in recs])),
            "draft_opening_w600": float(np.mean([informal_opening(r["text"], 600) for r in recs])),
            "draft_opening_tex": float(np.mean([informal_opening(r["text"], marks=DRAFT_MARKS[:3]) for r in recs]))}
+    drafts = [r["text"] for r in recs if informal_opening(r["text"])]
+    if drafts:   # of the completions that open with a draft, the share that go on to formatted text (a marker after the opening)
+        out["draft_formatted"] = float(np.mean([any(m in t for m in DRAFT_MARKS) for t in drafts]))
     for v, k in ((1, "kev_right"), (0, "kev_wrong")):
         xs = [r["kev"]["correct"] for r in recs if r["v"] == v and r.get("kev")]
         if xs: out[k] = float(np.mean(xs))
@@ -250,6 +259,8 @@ def main():
             keys = ("acc", "reward_mean", "len_mean", "truncated", "groups_all_wrong", "groups_all_right", "lp_absdiff_mean", "tis_clip_frac", "gen_tokens")
             e["train_last20"] = {k: float(np.mean([np.mean([r[k] for r in st]) for st in last])) for k in keys if all(k in st[0] for st in last)}
             e["train_last20"]["kev_correct"] = float(np.mean([np.mean([r["kev"]["correct"] for r in st]) for st in last]))
+            e["train_last20_per_seed"] = {str(k): {x: float(np.mean([r[x] for r in st[-20:]])) for x in ("len_mean", "gen_tokens") if x in st[-1]}
+                                          for k, st in zip(sorted(seeds), steps) if st}
             e["seconds_per_step"] = float(np.mean([np.mean([sum(r["seconds"].values()) for r in st]) for st in steps if st]))
             cfg = [r for s in seeds.values() for r in s["log"] if r["kind"] == "config"]
             if cfg: e["completions_per_step"] = int(cfg[0]["prompts"] * cfg[0]["group"])

@@ -1,5 +1,4 @@
 % Part III-C, discussion (included by main_en.tex).
-% TODO when rlvr seed 3 is in: check the paragraph on the tree shape against its accuracies.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -13,39 +12,45 @@ the policy's own roots, the separation was weaker still (\NUM{auditotaucw_all_tr
 the share of correct leaves by \NUM{auditgain_all_treekev}
 \ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}} points, against \NUM{auditgain_all_treerand} for a
 random choice and \NUM{auditbest_all_treekev} for the best two in hindsight. The gain was larger early in training
-(\NUM{auditgain_firsthalf_treekev} points in the first half, \NUM{auditgain_secondhalf_treekev} in the second, 20
-audited steps each, without intervals), while the policy's roots came to lead to correct answers more often and the
-room for a choice shrank (best two in hindsight: \NUM{auditbest_firsthalf_treekev} and
-\NUM{auditbest_secondhalf_treekev} points).
+(\NUM{auditgain_firsthalf_treekev} points in the first half, \NUM{auditgain_secondhalf_treekev} in the second, without
+intervals), while the policy's roots came to lead to correct answers more often and the room for a choice shrank (best
+two in hindsight: \NUM{auditbest_firsthalf_treekev} and \NUM{auditbest_secondhalf_treekev} points).
 
 \paragraph{A small gain at the roots did not change what the policy learned.} With the same tree shape, keeping
-\kev{}'s roots instead of random ones left the final accuracy unchanged within the intervals over problems on four of
-the five benchmarks; on GSM8K it was \NUM{dvtreerand_treekev_gsm}
-\ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}} points higher, one interval of five over two seeds,
-which we do not count as an effect. The idea behind the judge's choice is that it gives GRPO more groups with mixed
-outcomes, the only groups with a learning signal. It did not: in the last 20 steps \NUM{allwrong_treekev} of the
-groups had no correct leaf under \texttt{tree\_kev} and \NUM{allwrong_treerand} under \texttt{tree\_random}, and
-\NUM{allright_treekev} and \NUM{allright_treerand} had only correct ones. The choice has a cost in principle: the kept
-roots are no longer samples of the policy, so the gradient is no longer an unbiased estimate of the policy gradient.
-We saw no effect of that on accuracy. One seed of \texttt{tree\_kev} came to repeat its solution after the first
-answer, which neither seed of \texttt{tree\_random} did. Its reward is the verifier's alone, which does not penalise a
-repetition that restates the answer, so this is not the judge paying for repetition; whether the choice of roots
-caused it, one seed of two cannot tell.
+\kev{}'s roots instead of random ones left the final accuracy unchanged within the intervals over problems on all
+five benchmarks; on GSM8K the difference, \NUM{dvtreerand_treekev_gsm}
+\ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}} points, has an interval that just reaches zero. The
+idea behind the judge's choice is that it gives GRPO more groups with mixed outcomes, the only groups with a
+learning signal. It did not: in the last 20 steps \NUM{allwrong_treekev} of the groups had no correct leaf under
+\texttt{tree\_kev} and \NUM{allwrong_treerand} under \texttt{tree\_random}, and \NUM{allright_treekev} and
+\NUM{allright_treerand} had only correct ones. The choice has a cost in principle: the kept roots are no longer samples
+of the policy, so the gradient is no longer an unbiased estimate of the policy gradient. We saw no effect of that on
+accuracy. Nor did the judge's choice make the policy repeat itself: one seed of \texttt{tree\_kev} came to repeat its
+solution after the first answer, but so did one seed of \texttt{rlvr}, which has no judge at all, and \kev{} scores only
+the first 128 tokens of a solution, long before the answer.
 
-\paragraph{Whether the tree shape helps is open.} Both tree conditions end above flat sampling in the seed mean, by
-\NUM{d_treerand_math} and \NUM{d_treekev_math} points on MATH-500 and \NUM{d_treerand_aime24} and
-\NUM{d_treekev_aime24} on AIME24, and \texttt{tree\_random} generated fewer tokens per step than flat sampling
-(\NUM{gentok_treerand} thousand against \NUM{gentok_rlvr} thousand). But each tree condition has one seed well above
-\texttt{rlvr} and one at its level, and at step 100 neither was ahead. The intervals over problems do not include the
-variation between seeds, and with two seeds per condition the difference may be the seeds'. Testing the tree shape
-needs more seeds than we ran.
+\paragraph{The tree shape: the seeds that switched decide the means.} Both tree conditions end above flat sampling in
+the seed mean, by \NUM{d_treerand_math} and \NUM{d_treekev_math} points on MATH-500 and \NUM{d_treerand_aime24} and
+\NUM{d_treekev_aime24} on AIME24, but most of that comes from the \NUM{treedraftruns} tree runs that switched to
+opening their solutions in plain text. These end at \NUM{treedraftaime24min}--\NUM{treedraftaime24max}\% on AIME24,
+the others at \NUM{treeotheraime24min}--\NUM{treeotheraime24max}\% and \texttt{rlvr} at
+\NUM{flataime24min}--\NUM{flataime24max}\%. The same switch marks the best runs of the whole project, whatever their
+reward (Part II, \S8.3). Here \NUM{treedraftruns} of the tree runs made it and none of \texttt{rlvr}'s
+\NUM{flatruns} seeds. Whether trees make it more likely, so few runs cannot tell, the less so as we did not plan for
+the switch, found it after the runs had finished, and classify the runs by a measure defined after reading their
+completions. In a tree the root settles how a completion opens, so the choice of roots is also a choice among
+openings; a random choice of roots was enough for a run to switch. What the tree shape does buy for certain is tokens:
+the trees generated \NUM{treegensavemin}--\NUM{treegensavemax} fewer tokens per step than flat sampling of completions
+of the same lengths would have.
 
 \paragraph{Limitations.} One policy size (4B), one judge question (\emph{on track}) asked of 128-token roots, one tree
 shape (four roots, two kept, four leaves each), 200 steps at the learning rate of Part II, and \NUM{seeds_treekev}
-seeds per tree condition (\texttt{rlvr}: \NUM{seeds_rlvr}). With more roots per prompt a judge has more to choose from,
-and so do its errors. The audit continues all roots only every tenth step, 20 audited steps per run; its intervals
-resample those steps, not seeds. The offline study used the base policy's prefixes, not the training policy's. We
-report tokens, not time: the runs shared GPUs with other experiments.
+seeds per tree condition (\texttt{rlvr}: \NUM{seeds_rlvr}), the third of each added after the first two had finished.
+With more roots per prompt a judge has more to choose from, and so do its errors. The audit continues all roots only
+every tenth step, 20 audited steps per run; its intervals resample those steps, not seeds. The intervals of the final
+accuracies resample problems, not seeds. The offline study used the base policy's prefixes, not the training policy's.
+The style measures were defined after reading the completions. We report tokens, not time: the runs shared GPUs with
+other experiments.
 
 \paragraph{Relation to the earlier versions.} Versions 1--3 of this paper reported pruning speed-ups, KV-cache reuse
 rates, per-node latencies and theorem-proving results (MiniF2F-Lean4, ProofNet) that were not measured (see the notice

@@ -6,14 +6,16 @@ across problems whether a 128-token prefix will end correct (AUROC \NUM{auc_128_
 separate one problem's prefixes only weakly (\NUM{aucw_128_kevcorrect}--\NUM{aucw_128_logprob}); keeping the two of
 four prefixes \kev{} ranks highest raises the share of correct continuations by \NUM{gainpt_128_kevtrack} points,
 the policy's log-probability by \NUM{gainpt_128_logprob}. In GRPO with tree rollouts (four roots of 128 tokens, two of
-them continued four times each, 200 steps, two seeds), \kev{}'s choice of roots raised the share of correct leaves by
-\NUM{auditgain_all_treekev} points \ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}}, a random choice
-by \NUM{auditgain_all_treerand}, and the final policies are as accurate as with random roots on four of five
-benchmarks (GSM8K: \NUM{dvtreerand_treekev_gsm} \ci{\NUM{dvtreerandlo_treekev_gsm}}{\NUM{dvtreerandhi_treekev_gsm}}).
-Both tree conditions end above flat GRPO in the seed mean (MATH-500 \NUM{d_treerand_math} and \NUM{d_treekev_math}
-points, AIME24 \NUM{d_treerand_aime24} and \NUM{d_treekev_aime24}), but each with one seed well above flat sampling and
-one at its level, so whether the tree shape helps is open. One seed with \kev{}'s choice came to repeat its solution
-after the answer, which the verifier's reward does not penalise. The pruning rule of the withdrawn earlier versions,
-prune a prefix when the judge's $p(\text{yes})<0.3$, prunes \NUM{thrpruned_128_kevtrack} of the prefixes. This version
-replaces earlier versions whose results were not produced by experiments. Code, logs and every number in this paper
-are in the repository.
+them continued four times each, 200 steps, three seeds per condition, the third added after the first two had
+finished), \kev{}'s choice of roots raised the share of correct leaves by \NUM{auditgain_all_treekev} points
+\ci{\NUM{auditgainlo_all_treekev}}{\NUM{auditgainhi_all_treekev}}, a random choice by \NUM{auditgain_all_treerand},
+and the final policies are as accurate as with random roots (MATH-500: \NUM{dvtreerand_treekev_math}
+\ci{\NUM{dvtreerandlo_treekev_math}}{\NUM{dvtreerandhi_treekev_math}} points). Both tree conditions end above flat GRPO
+in the seed mean, but that comes mostly from the \NUM{treedraftruns} tree runs that switched to opening their solutions in
+plain text, a switch that marks the best runs of this project whatever their reward and that none of the
+\NUM{flatruns} flat runs made; the other tree runs end close to flat GRPO. The trees generated
+\NUM{treegensavemin}--\NUM{treegensavemax} fewer tokens than flat sampling of completions of the same lengths. One
+seed with \kev{}'s choice came to repeat its solution after the answer, as did one flat seed with no judge at all. The
+pruning rule of the withdrawn earlier versions, prune a prefix when the judge's $p(\text{yes})<0.3$, prunes
+\NUM{thrpruned_128_kevtrack} of the prefixes. This version replaces earlier versions whose results were not produced
+by experiments. Code, logs, every training completion and every number in this paper are in the repository.

@@ -459,6 +459,17 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         # kept ones); for flat sampling it is the completion length times the completions per step.
         if "gen_tokens" in t: o.num(f"{tag}gentok_{ck}", f(t["gen_tokens"] / 1000, 1))
         elif "len_mean" in t and "completions_per_step" in e: o.num(f"{tag}gentok_{ck}", f(t["len_mean"] * e["completions_per_step"] / 1000, 1))
+        for n, x in e.get("train_last20_per_seed", {}).items():   # per seed, e.g. gentok_rlvr_s1 and len_rlvr_s1
+            if "gen_tokens" in x: o.num(f"{tag}gentok_{ck}_s{n}", f(x["gen_tokens"] / 1000, 1))
+            if "len_mean" in x: o.num(f"{tag}len_{ck}_s{n}", f(x["len_mean"], 0))
+        # the share of tokens a tree did not generate, against flat sampling of completions of the same lengths
+        # (gensave_<cond> over the seed means, gensave_<cond>_s<seed>, gensavemin/max_<cond> over its seeds)
+        if "completions_per_step" in e:
+            sv = lambda x: 1 - x["gen_tokens"] / (e["completions_per_step"] * x["len_mean"])
+            if "gen_tokens" in t and "len_mean" in t: o.num(f"{tag}gensave_{ck}", pct(sv(t)))
+            ps = {n: sv(x) for n, x in e.get("train_last20_per_seed", {}).items() if "gen_tokens" in x and "len_mean" in x}
+            for n, v in ps.items(): o.num(f"{tag}gensave_{ck}_s{n}", pct(v))
+            if ps: o.num(f"{tag}gensavemin_{ck}", pct(min(ps.values()))); o.num(f"{tag}gensavemax_{ck}", pct(max(ps.values())))
         if "seconds_per_step" in e: o.num(f"{tag}sps_{ck}", f(e["seconds_per_step"], 0))
         if "math500_kev_correct_auroc" in e:
             o.num(f"{tag}kevauc_{ck}", f(e["math500_kev_correct_auroc"])); o.num(f"{tag}kevm_{ck}", f(e["math500_kev_correct_mean"]))
@@ -496,6 +507,7 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
             if "repeated_lines" in x: o.num(f"{tag}srep_{ck}_s{n}", pct(x["repeated_lines"], 1))
             if "repeats_after_answer" in x: o.num(f"{tag}sansrep_{ck}_s{n}", pct(x["repeats_after_answer"]))
             if "draft_opening" in x: o.num(f"{tag}sdraft_{ck}_s{n}", pct(x["draft_opening"]))
+            if "draft_formatted" in x: o.num(f"{tag}sdraftfmt_{ck}_s{n}", pct(x["draft_formatted"]))   # drafts followed by formatted text
             for k in ("kev_right", "kev_wrong"):
                 if k in x: o.num(f"{tag}s{k.replace('_', '')}_{ck}_s{n}", f(x[k]))
             modes[style_mode(x)] += 1
@@ -531,6 +543,8 @@ REPEAT = 0.05   # a run repeats itself when on average at least 5% of the lines 
 MODES = ("draft", "plain", "repeat")
 # Conditions whose reward contains Kev-4B's score: added to the verifier's, as a gate, alone, or for unlabelled completions.
 KEV_REWARD = ("rlvr_kev_add", "rlvr_kev_gate", "kev_only", "sub_kev", "sub_kev_recal")
+# Conditions whose reward is the verifier's alone (rlvr_sub: on the labelled completions only).
+VERIFIER_ONLY = ("rlvr", "rlvr_sub", "tree_random", "tree_kev")
 
 
 def style_mode(st):
@@ -575,7 +589,9 @@ def drafts(o, s, tag=""):
     completions). Table grpo_draftgroups: per run with training completions and per 50-step window, the share of drafts
     and the mean difference in verdict between the drafts and the other completions of the same group; macros
     dg<stat>_<cond>_s<seed>_<first step>, stat share, groups (groups with both kinds), verdict, adv, kevright, kevwrong,
-    fillright, fillwrong (draft minus other; verdicts, Kev-4B's P(correct) and fill-in rewards in percentage points)."""
+    fillright, fillwrong (draft minus other; verdicts, Kev-4B's P(correct) and fill-in rewards in percentage points).
+    Tree runs: roots_<cond>_s<seed> (roots kept over the run) and prootsmixedmax (the largest share of a run's kept roots
+    whose leaves disagree on whether they open with a draft)."""
     runs = draft_runs(s)
     if not runs: return
     blocks, gblocks = defaultdict(list), defaultdict(list)
@@ -598,9 +614,13 @@ def drafts(o, s, tag=""):
                 w = r["windows"].get(b, {})
                 cells += [pct(w.get("draft")), pts(w["verdict"]["diff"], sign=True) if "verdict" in w else "--"]
             gblocks[r["cond"]].append(f"{tt(r['cond'])} & {n} & " + " & ".join(cells) + " \\\\")
+        nr = sum(w.get("roots", 0) for w in r["windows"].values())   # tree runs: roots whose leaves disagree on the opening
+        if nr: r["roots_mixed"] = sum(w.get("roots_mixed", 0) for w in r["windows"].values()) / nr; o.num(f"{tag}roots_{ck}_s{n}", f"{nr:,}".replace(",", "{,}"))
     for c in s["conditions"]:
         rs = [r for r in runs if r["cond"] == c]
         if rs: o.num(f"{tag}draftsw_{COND_KEY[c]}", str(sum(r["final"] >= SWITCH for r in rs)))
+    mx = [r["roots_mixed"] for r in runs if "roots_mixed" in r]
+    if mx: o.num(f"{tag}prootsmixedmax", pct(max(mx), 1))
     # this part's runs by style (style_mode): p<m>runs, p<m><set>min/max/mean, m also other (every style but draft)
     pgrp = {m: [r for r in runs if style_mode(r["style"]) == m] for m in MODES}
     pgrp["other"] = [r for r in runs if style_mode(r["style"]) != "draft"]
@@ -687,7 +707,8 @@ def style_example(o, exp):
 def modes_all(o, exp):
     """The writing styles of the final policies across the GRPO runs of the three papers (the final summaries of Parts
     II, III-B and III-C, as committed; Part II's rlvr is in all three and counted once). Every run is put in one of
-    MODES by style_mode. Macros, for each mode m: all<m>runs, all<m>conds (conditions with such a run), all<m><set>min,
+    MODES by style_mode. Macros: alldraftruns_<paper> (ii, iiib, iiic) and allveronlydraft (VERIFIER_ONLY conditions)
+    count the runs that switched to drafting; for each mode m: all<m>runs, all<m>conds (conditions with such a run), all<m><set>min,
     ...max, ...mean (final accuracy; repeatv: the repeating runs without kev_only, the one condition without the
     verifier); allkev<m> and allnokev<m> out of allkevruns and allnokevruns (KEV_REWARD conditions or not); the
     separation of the draft runs from the others: alldraft<stat>min_draft and alldraft<stat>max_other for the final
@@ -714,6 +735,9 @@ def modes_all(o, exp):
     grp["repeatv"] = [r for r in grp["repeat"] if r["cond"] != "kev_only"]
     grp["other"] = [r for r in runs if r["mode"] != "draft"]
     o.num("allruns", str(len(runs))); o.num("allconds", str(len({r["cond"] for r in runs})))
+    for _, part in GRPO_PARTS:   # the runs that switched, per paper (alldraftruns_ii, _iiib, _iiic)
+        o.num(f"alldraftruns_{part.replace('-', '').lower()}", str(sum(r["part"] == part for r in grp["draft"])))
+    o.num("allveronlydraft", str(sum(r["cond"] in VERIFIER_ONLY for r in grp["draft"])))
     for m, rs in grp.items():
         o.num(f"all{m}runs", str(len(rs))); o.num(f"all{m}conds", str(len({r["cond"] for r in rs})))
         for x, sk, _ in TEST_SETS:
@@ -732,6 +756,10 @@ def modes_all(o, exp):
     a = [r["style"]["repeated_lines"] for r in grp["repeat"]]; b = [r["style"]["repeated_lines"] for r in runs if r["mode"] != "repeat"]
     if a: o.num("allrepmin_repeat", pct(min(a)))
     if b: o.num("allrepmax_other", pct(max(b), 1))
+    a = [r["style"]["draft_formatted"] for r in grp["draft"] if "draft_formatted" in r["style"]]   # drafts followed by formatted text
+    if a: o.num("alldraftfmtmin", pct(min(a))); o.num("alldraftfmtmax", pct(max(a)))
+    for r in grp["draft"]:   # and per run, e.g. alldraftfmt_kevgate_s2
+        if "draft_formatted" in r["style"]: o.num(f"alldraftfmt_{COND_KEY[r['cond']]}_s{r['seed']}", pct(r["style"]["draft_formatted"]))
     for k in DRAFT_STEPS:
         v = [r["by_step"][k] for r in runs if k in r["by_step"]]
         if v: o.num(f"alldraftat_{k}_min", pct(min(v))); o.num(f"alldraftat_{k}_max", pct(max(v))); o.num(f"alldraftat_{k}_mean", pct(np.mean(v)))
@@ -1014,7 +1042,6 @@ def part3b(o, exp):
         fill_stats(o, s)
     repeat_probe(o, exp, ("sub_kev", "sub_kev_recal"))
     modes_all(o, exp)
-    style_example(o, exp)
 
 
 def repeat_probe(o, exp, table_conds):
@@ -1093,8 +1120,9 @@ RW_COLS = (0, 50, 100, 150, 175)   # the 25-step windows of training shown in ta
 def rollout_repeat(o, s):
     """Part III-C: the training completions per 25-step window (part2.rollout_windows; the tree runs keep their
     rollouts), per run. Macros ro<stat>_<cond>_s<seed>_<first step>, stat ansrep (share that repeat part of the solution
-    after the first answer), rep (repeated lines), boxmany, trunc, tok, right."""
-    rows = []
+    after the first answer), rep (repeated lines), boxmany, trunc, tok, right; roansrepmax_other, the largest
+    share in any window from step 50 on over the runs whose final policy does not repeat itself (style_mode)."""
+    rows, other_late = [], []
     for c, e in s["conditions"].items():
         ck, final = COND_KEY[c], e.get("math500_style_per_seed", {})
         for n, ws in e.get("rollout_windows", {}).items():
@@ -1110,11 +1138,31 @@ def rollout_repeat(o, s):
             o.num(f"roonset_{ck}_s{n}", str(on[0]) if on else "--")
             cells = [pct(by[b]["repeats_after_answer"]) if b in by else "--" for b in RW_COLS]
             fin = final.get(n, {}).get("repeats_after_answer")
+            if late and n in final and style_mode(final[n]) != "repeat": other_late.append(max(late))
             rows.append(f"{tt(c)} & {n} & " + " & ".join(cells) + f" & {pct(fin)} \\\\")
+    if other_late: o.num("roansrepmax_other", pct(max(other_late)))   # over the runs whose final policy does not repeat itself
     if rows:
         o.table("rollout_repeat", "\\begin{tabular}{@{}lcccccccc@{}}\n\\toprule\n & & \\multicolumn{5}{c}{training completions, steps} & final \\\\ "
                 "\\cmidrule(lr){3-7}\ncondition & seed & " + " & ".join(f"{b}--{b + 24}" for b in RW_COLS) + " & MATH-500 \\\\ \\midrule\n"
                 + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def tree_modes(o, s):
+    """Part III-C: the final accuracies of the tree runs (both tree conditions) that switched to drafting and of those
+    that did not, and of the flat reference rlvr. Macros tree<draft|other>runs, tree<draft|other><set>min/max,
+    flatruns, flat<set>min/max; treegensavemin/max, the range over the tree runs of the share of tokens not generated
+    against flat sampling of completions of the same lengths (last 20 steps; grpo_numbers gensave)."""
+    runs = draft_runs(s)
+    tree = [r for r in runs if r["cond"] != "rlvr"]
+    for name, rs in (("treedraft", [r for r in tree if style_mode(r["style"]) == "draft"]),
+                     ("treeother", [r for r in tree if style_mode(r["style"]) != "draft"]), ("flat", [r for r in runs if r["cond"] == "rlvr"])):
+        o.num(f"{name}runs", str(len(rs)))
+        for x, sk, _ in TEST_SETS:
+            v = [r["acc"][x] for r in rs if x in r["acc"]]
+            if v: o.num(f"{name}{sk}min", pts(min(v))); o.num(f"{name}{sk}max", pts(max(v)))
+    sv = [1 - x["gen_tokens"] / (e["completions_per_step"] * x["len_mean"]) for c, e in s["conditions"].items() if c != "rlvr" and "completions_per_step" in e
+          for x in e.get("train_last20_per_seed", {}).values() if "gen_tokens" in x and "len_mean" in x]
+    if sv: o.num("treegensavemin", pct(min(sv))); o.num("treegensavemax", pct(max(sv)))
 
 
 def part3c_grpo(o, exp):
@@ -1123,10 +1171,9 @@ def part3c_grpo(o, exp):
         if not sm.exists(): continue
         s = json.loads(sm.read_text())
         grpo_numbers(o, s, tag=tag, base=base_eval(exp) if not tag else None)
-        if not tag: tree_stats(o, s); rollout_repeat(o, s); drafts(o, s)
+        if not tag: tree_stats(o, s); rollout_repeat(o, s); drafts(o, s); tree_modes(o, s)
     repeat_probe(o, exp, ("tree_kev",))
     modes_all(o, exp)
-    style_example(o, exp)
 
 
 def main():
