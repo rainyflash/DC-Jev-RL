@@ -1,5 +1,4 @@
 % Part III-A, discussion (included by main_en.tex).
-% DRAFT, written with 5 of the 6 GRPO runs; to be checked against the final numbers.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -19,9 +18,9 @@ validation and HumanEval+, and on MBPP+ a gain in one seed and none in the other
 copies of the tests but solutions that are wrong on cases the examples do not show. Whether a judge factor helps where
 a policy does learn to special-case, with weaker tests, harder problems or longer training, these runs cannot say.
 
-\paragraph{Better tests remove false passes, not unsolved problems.} The oracle reward, which pays only for programs
+\paragraph{Better tests remove a few false passes, not unsolved problems.} The oracle reward, which pays only for programs
 that pass every test, ended with fewer wrong programs passing the visible tests than \texttt{vis} on all three sets (by
-an interval that excludes zero on MBPP+ only), and with the same share of problems solved. % TODO hidden/s2: recheck.
+an interval that excludes zero on MBPP+ only), and with the same share of problems solved.
 Within 100 steps, knowing which visible-test passes are wrong did not teach the policy to solve more problems; it
 taught it to pass the visible tests less often when it could not solve them. A perfect judge of correctness, used as
 the factor, would give exactly this reward.

@@ -656,16 +656,16 @@ def code_grpo(o, s):
             + " & ".join(["vis & all & hack"] * len(sets)) + " \\\\ \\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
     bl = next(k for k in s if k.startswith("paired_vs_"))
     rows = []
-    for c, d in s[bl].items():
-        ck, cells = COND_KEY[c], []
+    for c, d in s[bl].items():   # two lines per condition: the differences, then their intervals in a smaller font
+        ck, cells, cis = COND_KEY[c], [], []
         for m in ("all_pass", "hack"):
             for x, sk, _ in sets:
                 v = d.get(x, {}).get(m)
-                if v is None: cells.append("--"); continue
+                if v is None: cells.append("--"); cis.append(""); continue
                 mk = "all" if m == "all_pass" else "hack"
                 o.num(f"cgd{mk}_{ck}_{sk}", pts(v["diff"], sign=True)); o.num(f"cgd{mk}lo_{ck}_{sk}", pts(v["ci95"][0])); o.num(f"cgd{mk}hi_{ck}_{sk}", pts(v["ci95"][1]))
-                cells.append(f"{pts(v['diff'], sign=True)} \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}")
-        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\")
+                cells.append(pts(v["diff"], sign=True)); cis.append(f"{{\\footnotesize \\ci{{{pts(v['ci95'][0])}}}{{{pts(v['ci95'][1])}}}}}")
+        rows.append(f"{tt(c)} & " + " & ".join(cells) + " \\\\\n & " + " & ".join(cis) + " \\\\[2pt]")
     lab = " & ".join(l for _, _, l in sets)
     o.table("code_grpo_paired", "\\begin{tabular}{@{}l" + "c" * (2 * len(sets)) + "@{}}\n\\toprule\n & \\multicolumn{3}{c}{all pass} & \\multicolumn{3}{c}{hack} \\\\ "
             "\\cmidrule(lr){2-4}\\cmidrule(l){5-7}\nminus " + tt(bl[len("paired_vs_"):]) + " & " + lab + " & " + lab + " \\\\ \\midrule\n" + "\n".join(rows)

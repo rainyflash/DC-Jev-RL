@@ -1,5 +1,4 @@
 % Part III-A, results of the GRPO runs (included by main_en.tex).
-% DRAFT, written with 5 of the 6 runs (hidden seed 2 missing); every claim is to be checked against all six.
 
 \section{Training against the visible tests}\label{sec:res-grpo}
 
@@ -33,7 +32,7 @@ policy more fitted to the visible tests than the base policy was, but on MBPP+ i
 \label{tab:code-grpo}
 \end{table}
 
-\paragraph{The oracle reward removes some wrong passes, not more problems solved.} \texttt{hidden} pays only for code
+\paragraph{The oracle reward: slightly fewer wrong passes, no more problems solved.} \texttt{hidden} pays only for code
 that passes every test, so it never pays for a wrong program. Its final policy solves as many problems as
 \texttt{vis}'s: all-pass differs by \NUM{cgdall_hidden_kod} \ci{\NUM{cgdalllo_hidden_kod}}{\NUM{cgdallhi_hidden_kod}}
 points on KodCode validation, \NUM{cgdall_hidden_mbpp} \ci{\NUM{cgdalllo_hidden_mbpp}}{\NUM{cgdallhi_hidden_mbpp}} on
@@ -43,7 +42,7 @@ MBPP+ and \NUM{cgdall_hidden_he} \ci{\NUM{cgdalllo_hidden_he}}{\NUM{cgdallhi_hid
 \NUM{cgdhack_hidden_kod} \ci{\NUM{cgdhacklo_hidden_kod}}{\NUM{cgdhackhi_hidden_kod}},
 \NUM{cgdhack_hidden_mbpp} \ci{\NUM{cgdhacklo_hidden_mbpp}}{\NUM{cgdhackhi_hidden_mbpp}} and
 \NUM{cgdhack_hidden_he} \ci{\NUM{cgdhacklo_hidden_he}}{\NUM{cgdhackhi_hidden_he}} points, an interval that excludes zero
-only on MBPP+. % TODO hidden/s2: recheck which intervals exclude zero.
+only on MBPP+.
 A reward that never pays a wrong program keeps some of them from passing the visible tests; within 100 steps it does
 not turn them into right ones.
 
@@ -58,10 +57,10 @@ over problems, with a 95\% bootstrap interval over problems.}
 \paragraph{The judge factor: an effect on MBPP+ in one seed only.} \texttt{vis\_kev} multiplies the visible-test reward
 by \kev{}'s \emph{genuine} score. On KodCode validation and HumanEval+ its final policies solve as many problems as
 \texttt{vis}'s (\NUM{cgdall_viskev_kod} \ci{\NUM{cgdalllo_viskev_kod}}{\NUM{cgdallhi_viskev_kod}} and
-\NUM{cgdall_viskev_he} \ci{\NUM{cgdalllo_viskev_he}}{\NUM{cgdallhi_viskev_he}}). On MBPP+ the seed mean is higher,
-\NUM{cgdall_viskev_mbpp} \ci{\NUM{cgdalllo_viskev_mbpp}}{\NUM{cgdallhi_viskev_mbpp}} points of all-pass and
-\NUM{cgdhack_viskev_mbpp} \ci{\NUM{cgdhacklo_viskev_mbpp}}{\NUM{cgdhackhi_viskev_mbpp}} of hack rate, and the interval
-over problems excludes zero. The seeds disagree, though: \texttt{vis\_kev} passes every MBPP+ test on
+\NUM{cgdall_viskev_he} \ci{\NUM{cgdalllo_viskev_he}}{\NUM{cgdallhi_viskev_he}}). On MBPP+ its seed mean is better:
+all-pass differs by \NUM{cgdall_viskev_mbpp} \ci{\NUM{cgdalllo_viskev_mbpp}}{\NUM{cgdallhi_viskev_mbpp}} points and
+the hack rate by \NUM{cgdhack_viskev_mbpp} \ci{\NUM{cgdhacklo_viskev_mbpp}}{\NUM{cgdhackhi_viskev_mbpp}}, intervals over
+problems that exclude zero. The seeds disagree, though: \texttt{vis\_kev} passes every MBPP+ test on
 \NUM{cgall_viskev_mbpp_s1}\% of the problems with seed 1 and \NUM{cgall_viskev_mbpp_s2}\% with seed 2, while
 \texttt{vis} gives \NUM{cgall_vis_mbpp_s1}\% and \NUM{cgall_vis_mbpp_s2}\%. One of two seeds is not an effect we can
 claim.

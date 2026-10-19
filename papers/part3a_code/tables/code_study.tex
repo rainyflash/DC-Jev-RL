@@ -1,0 +1,12 @@
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xcccccc@{}}
+\toprule
+ & \multicolumn{5}{c}{held-out tests pass, among visible-pass attempts} & all pass \\ \cmidrule(lr){2-6}\cmidrule(l){7-7}
+ & KodCode val & MBPP+ & HumanEval+ & all [95\% CI] & within & all \\ \midrule
+attempts passing the visible tests & 391 & 225 & 116 & 732 & & \\
+\quad of which fail a held-out test & 169 & 57 & 37 & 263 & & \\ \midrule
+\kev{} \emph{genuine} & 0.89 & 0.83 & 0.85 & 0.87 \ci{0.84}{0.90} & 0.81 & 0.93 \\
+\kev{} \emph{correct} & 0.88 & 0.82 & 0.86 & 0.87 \ci{0.84}{0.90} & 0.79 & 0.93 \\
+AR \emph{genuine} & 0.90 & 0.74 & 0.84 & 0.86 \ci{0.83}{0.89} & 0.85 & 0.94 \\
+AR \emph{correct} & 0.87 & 0.74 & 0.84 & 0.84 \ci{0.81}{0.87} & 0.81 & 0.93 \\
+\bottomrule
+\end{tabularx}

@@ -1,5 +1,4 @@
 % 第三部分 A 结果：GRPO 训练（由 main_zh.tex 引入）。
-% 草稿：用 6 次运行中的 5 次写成（缺 hidden 种子 2）；每个论断都要用全部六次核对。
 
 \section{针对可见测试的训练}\label{sec:res-grpo}
 
@@ -16,7 +15,7 @@
 \label{tab:code-grpo}
 \end{table}
 
-\paragraph{预言机奖励去掉了一部分错误的通过，但没有多解出题目。} \texttt{hidden} 只奖励通过全部测试的代码，因此从不奖励错误的程序。它的最终策略解出的题目与 \texttt{vis} 一样多：all pass 的差值在 KodCode val 上为 \NUM{cgdall_hidden_kod} \ci{\NUM{cgdalllo_hidden_kod}}{\NUM{cgdallhi_hidden_kod}} 个百分点，在 MBPP+ 上为 \NUM{cgdall_hidden_mbpp} \ci{\NUM{cgdalllo_hidden_mbpp}}{\NUM{cgdallhi_hidden_mbpp}}，在 HumanEval+ 上为 \NUM{cgdall_hidden_he} \ci{\NUM{cgdalllo_hidden_he}}{\NUM{cgdallhi_hidden_he}}（表~\ref{tab:code-paired}）。它通过可见测试的频率更低（MBPP+ 上为 \NUM{cgvis_hidden_mbpp}\%，\texttt{vis} 为 \NUM{cgvis_vis_mbpp}\%），而差异的大部分来自错误的程序：hack 率的差值分别为 \NUM{cgdhack_hidden_kod} \ci{\NUM{cgdhacklo_hidden_kod}}{\NUM{cgdhackhi_hidden_kod}}、\NUM{cgdhack_hidden_mbpp} \ci{\NUM{cgdhacklo_hidden_mbpp}}{\NUM{cgdhackhi_hidden_mbpp}} 和 \NUM{cgdhack_hidden_he} \ci{\NUM{cgdhacklo_hidden_he}}{\NUM{cgdhackhi_hidden_he}} 个百分点，只有在 MBPP+ 上区间不含零。% TODO hidden/s2：重新核对哪些区间不含零。
+\paragraph{预言机奖励：错误的通过略少，解出的题目没有增加。} \texttt{hidden} 只奖励通过全部测试的代码，因此从不奖励错误的程序。它的最终策略解出的题目与 \texttt{vis} 一样多：all pass 的差值在 KodCode val 上为 \NUM{cgdall_hidden_kod} \ci{\NUM{cgdalllo_hidden_kod}}{\NUM{cgdallhi_hidden_kod}} 个百分点，在 MBPP+ 上为 \NUM{cgdall_hidden_mbpp} \ci{\NUM{cgdalllo_hidden_mbpp}}{\NUM{cgdallhi_hidden_mbpp}}，在 HumanEval+ 上为 \NUM{cgdall_hidden_he} \ci{\NUM{cgdalllo_hidden_he}}{\NUM{cgdallhi_hidden_he}}（表~\ref{tab:code-paired}）。它通过可见测试的频率更低（MBPP+ 上为 \NUM{cgvis_hidden_mbpp}\%，\texttt{vis} 为 \NUM{cgvis_vis_mbpp}\%），而差异的大部分来自错误的程序：hack 率的差值分别为 \NUM{cgdhack_hidden_kod} \ci{\NUM{cgdhacklo_hidden_kod}}{\NUM{cgdhackhi_hidden_kod}}、\NUM{cgdhack_hidden_mbpp} \ci{\NUM{cgdhacklo_hidden_mbpp}}{\NUM{cgdhackhi_hidden_mbpp}} 和 \NUM{cgdhack_hidden_he} \ci{\NUM{cgdhacklo_hidden_he}}{\NUM{cgdhackhi_hidden_he}} 个百分点，只有在 MBPP+ 上区间不含零。
 一个从不奖励错误程序的奖励，让其中一部分不再通过可见测试；但在 100 步之内，它没有把它们变成正确的程序。
 
 \begin{table}[t]
