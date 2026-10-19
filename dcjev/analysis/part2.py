@@ -104,7 +104,7 @@ def main():
         if not seeds: continue
         e = {"seeds": sorted(seeds)}
         for s in SETS:
-            xs = [r["res"][s]["acc"] for r in seeds.values() if s in r["res"]]
+            xs = [seeds[k]["res"][s]["acc"] for k in sorted(seeds) if s in seeds[k]["res"]]   # in the order of e["seeds"]
             if xs: e[s] = {"mean": float(np.mean(xs)), "std": float(np.std(xs, ddof=1)) if len(xs) > 1 else None, "per_seed": xs}
         st = [r["style"] for r in seeds.values() if r["style"]]
         if st: e["math500_style"] = {k: float(np.mean([x[k] for x in st if k in x])) for k in st[0]}

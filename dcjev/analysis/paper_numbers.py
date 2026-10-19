@@ -413,6 +413,8 @@ def grpo_numbers(o, s, tag="", base=None, sets=TEST_SETS):
         for x, sk, _ in sets:
             if x not in e: cells.append("--"); continue
             o.num(f"{tag}acc_{ck}_{sk}", pts(e[x]["mean"])); o.num(f"{tag}accsd_{ck}_{sk}", pts(e[x]["std"]))
+            if len(e[x]["per_seed"]) == len(e["seeds"]):   # each seed's accuracy, e.g. acc_treekev_math_s2
+                for n, x1 in zip(e["seeds"], e[x]["per_seed"]): o.num(f"{tag}acc_{ck}_{sk}_s{n}", pts(x1))
             cells.append(pts(e[x]["mean"]) + (f" $\\pm$ {pts(e[x]['std'])}" if e[x]["std"] is not None else ""))
         rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")
     o.table(f"{tag}grpo_acc", "\\begin{tabular}{@{}lc" + "c" * len(sets) + "@{}}\n\\toprule\ncondition & seeds & " + head
@@ -616,6 +618,9 @@ def code_grpo(o, s):
                 if v is None: continue
                 o.num(f"cg{mk}_{ck}_{sk}", f(v["mean"], 2) if m == "attempts_mean" else pts(v["mean"]))
                 if v["std"] is not None: o.num(f"cg{mk}sd_{ck}_{sk}", f(v["std"], 2) if m == "attempts_mean" else pts(v["std"]))
+                if len(v["per_seed"]) == len(e["seeds"]):   # each seed's value, e.g. cgall_viskev_mbpp_s2
+                    for n, x1 in zip(e["seeds"], v["per_seed"]):
+                        o.num(f"cg{mk}_{ck}_{sk}_s{n}", f(x1, 2) if m == "attempts_mean" else pts(x1))
             cells += [pts(e.get(x, {}).get(m, {}).get("mean")) for m in ("vis_pass", "all_pass", "hack")]
         for k, v in e.get("train_last20", {}).items(): o.num(f"cgtrain{k.replace('_', '')}_{ck}", f(v, 2) if k == "attempts_mean" else pts(v))
         rows.append(f"{tt(c)} & {len(e['seeds'])} & " + " & ".join(cells) + " \\\\")

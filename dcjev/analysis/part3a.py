@@ -46,7 +46,8 @@ def main():
         for s in SETS:
             e[s] = {}
             for m in METRICS:
-                xs = [r["final"][s][m] for r in runs[c].values() if s in r["final"] and r["final"][s].get(m) is not None]
+                xs = [runs[c][k]["final"][s][m] for k in sorted(runs[c])   # in the order of e["seeds"]
+                      if s in runs[c][k]["final"] and runs[c][k]["final"][s].get(m) is not None]
                 if xs: e[s][m] = {"mean": float(np.mean(xs)), "std": float(np.std(xs, ddof=1)) if len(xs) > 1 else None, "per_seed": xs}
             kv = [r["final"][s].get("kev_genuine_auroc_all_pass_given_vis") for r in runs[c].values() if s in r["final"]]
             kv = [x for x in kv if x is not None]
