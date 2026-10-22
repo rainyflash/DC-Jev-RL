@@ -1,0 +1,17 @@
+L8_last_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.791 wrong 0.319, 10 s
+L8_last_study+policy: lam [0.3, 0.3, 0.3, 0.1, 0.3] full 0.3, OOF mean right 0.795 wrong 0.340, 19 s
+L8_mean_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.768 wrong 0.364, 28 s
+L8_mean_study+policy: lam [0.3, 0.3, 0.3, 0.3, 0.1] full 0.3, OOF mean right 0.779 wrong 0.364, 38 s
+L16_last_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.825 wrong 0.267, 47 s
+L16_last_study+policy: lam [0.1, 0.1, 0.1, 0.1, 0.1] full 0.1, OOF mean right 0.837 wrong 0.261, 56 s
+L16_mean_study: lam [0.3, 0.3, 0.3, 0.3, 0.1] full 0.3, OOF mean right 0.798 wrong 0.319, 65 s
+L16_mean_study+policy: lam [0.3, 0.1, 0.1, 0.1, 0.1] full 0.1, OOF mean right 0.810 wrong 0.305, 75 s
+L24_last_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.814 wrong 0.280, 84 s
+L24_last_study+policy: lam [0.1, 0.1, 0.1, 0.1, 0.1] full 0.1, OOF mean right 0.827 wrong 0.278, 93 s
+L24_mean_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.782 wrong 0.342, 102 s
+L24_mean_study+policy: lam [0.3, 0.1, 0.1, 0.1, 0.1] full 0.1, OOF mean right 0.798 wrong 0.325, 112 s
+L32_last_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.805 wrong 0.301, 121 s
+L32_last_study+policy: lam [0.1, 0.1, 0.1, 0.1, 0.1] full 0.1, OOF mean right 0.818 wrong 0.301, 130 s
+L32_mean_study: lam [0.3, 0.3, 0.3, 0.3, 0.3] full 0.3, OOF mean right 0.771 wrong 0.359, 140 s
+L32_mean_study+policy: lam [0.3, 0.3, 0.1, 0.3, 0.3] full 0.3, OOF mean right 0.783 wrong 0.354, 149 s
+FIT_DONE

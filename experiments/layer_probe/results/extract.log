@@ -1,0 +1,12 @@
+18905 texts, 13511233 tokens; {"cut_changes_or_loses_answer": {"kev_only/s1": 17, "rlvr_kev_gate/s1": 66, "sub_kev/s1": 66, "sub_kev_recal/s1": 44, "rlvr/s3": 54, "tree_kev/s2": 58}, "policy_right_boxed_equals_answer": 0.8223787167449139}
+2062/18905 texts, 400691 tokens, 25 s, 16208 tokens/s
+4063/18905 texts, 1008000 tokens, 58 s, 17295 tokens/s
+6021/18905 texts, 1761669 tokens, 93 s, 18922 tokens/s
+8025/18905 texts, 2708461 tokens, 134 s, 20268 tokens/s
+10010/18905 texts, 3847741 tokens, 180 s, 21337 tokens/s
+12011/18905 texts, 5249442 tokens, 235 s, 22308 tokens/s
+14017/18905 texts, 7009336 tokens, 303 s, 23099 tokens/s
+16018/18905 texts, 9194970 tokens, 387 s, 23759 tokens/s
+18003/18905 texts, 11991598 tokens, 494 s, 24257 tokens/s
+18905/18905 texts, 13511233 tokens, 562 s, 24060 tokens/s
+EXTRACT_DONE {"texts": 18905, "tokens": 13511233, "seconds": 561.5654354095459, "layer_list": "layers", "hidden": 2560, "layers": [8, 16, 24, 32], "reads": ["last", "mean"], "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition", "cut_changes_or_loses_answer": {"kev_only/s1": 17, "rlvr_kev_gate/s1": 66, "sub_kev/s1": 66, "sub_kev_recal/s1": 44, "rlvr/s3": 54, "tree_kev/s2": 58}, "policy_right_boxed_equals_answer": 0.8223787167449139}

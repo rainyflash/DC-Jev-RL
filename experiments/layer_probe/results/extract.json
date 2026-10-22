@@ -1,0 +1,27 @@
+{
+ "texts": 18905,
+ "tokens": 13511233,
+ "seconds": 561.5654354095459,
+ "layer_list": "layers",
+ "hidden": 2560,
+ "layers": [
+  8,
+  16,
+  24,
+  32
+ ],
+ "reads": [
+  "last",
+  "mean"
+ ],
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "cut_changes_or_loses_answer": {
+  "kev_only/s1": 17,
+  "rlvr_kev_gate/s1": 66,
+  "sub_kev/s1": 66,
+  "sub_kev_recal/s1": 44,
+  "rlvr/s3": 54,
+  "tree_kev/s2": 58
+ },
+ "policy_right_boxed_equals_answer": 0.8223787167449139
+}
