@@ -1,0 +1,132 @@
+[
+ {
+  "run": "kev_only/s1",
+  "part": "II",
+  "max_abs_diff": 8.326672684688674e-17
+ },
+ {
+  "run": "kev_only/s2",
+  "part": "II",
+  "max_abs_diff": 1.1102230246251565e-16
+ },
+ {
+  "run": "rlvr/s1",
+  "part": "II",
+  "max_abs_diff": 1.1102230246251565e-16
+ },
+ {
+  "run": "rlvr/s2",
+  "part": "II",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "rlvr/s3",
+  "part": "II",
+  "max_abs_diff": 2.220446049250313e-16
+ },
+ {
+  "run": "rlvr_ar_add/s1",
+  "part": "II",
+  "max_abs_diff": 1.1102230246251565e-16
+ },
+ {
+  "run": "rlvr_ar_add/s2",
+  "part": "II",
+  "max_abs_diff": 2.220446049250313e-16
+ },
+ {
+  "run": "rlvr_kev_add/s1",
+  "part": "II",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "rlvr_kev_add/s2",
+  "part": "II",
+  "max_abs_diff": 2.220446049250313e-16
+ },
+ {
+  "run": "rlvr_kev_add/s3",
+  "part": "II",
+  "max_abs_diff": 9.71445146547012e-17
+ },
+ {
+  "run": "rlvr_kev_gate/s1",
+  "part": "II",
+  "max_abs_diff": 1.3877787807814457e-16
+ },
+ {
+  "run": "rlvr_kev_gate/s2",
+  "part": "II",
+  "max_abs_diff": 2.220446049250313e-16
+ },
+ {
+  "run": "rlvr_sub/s1",
+  "part": "III-B",
+  "max_abs_diff": 2.7755575615628914e-17
+ },
+ {
+  "run": "rlvr_sub/s2",
+  "part": "III-B",
+  "max_abs_diff": 8.326672684688674e-17
+ },
+ {
+  "run": "sub_kev/s1",
+  "part": "III-B",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "sub_kev/s2",
+  "part": "III-B",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "sub_kev_recal/s1",
+  "part": "III-B",
+  "max_abs_diff": 2.7755575615628914e-16
+ },
+ {
+  "run": "sub_kev_recal/s2",
+  "part": "III-B",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "sub_probe/s1",
+  "part": "III-B",
+  "max_abs_diff": 8.326672684688674e-17
+ },
+ {
+  "run": "sub_probe/s2",
+  "part": "III-B",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "tree_kev/s1",
+  "part": "III-C",
+  "max_abs_diff": 4.163336342344337e-17
+ },
+ {
+  "run": "tree_kev/s2",
+  "part": "III-C",
+  "max_abs_diff": 2.2551405187698492e-17
+ },
+ {
+  "run": "tree_kev/s3",
+  "part": "III-C",
+  "max_abs_diff": 2.7755575615628914e-17
+ },
+ {
+  "run": "tree_random/s1",
+  "part": "III-C",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "tree_random/s2",
+  "part": "III-C",
+  "max_abs_diff": 5.551115123125783e-17
+ },
+ {
+  "run": "tree_random/s3",
+  "part": "III-C",
+  "max_abs_diff": 1.1102230246251565e-16
+ }
+]
